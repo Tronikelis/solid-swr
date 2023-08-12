@@ -8,7 +8,11 @@ import {
 } from "solid-js";
 import LRU from "./classes/lru";
 import { SWRContext } from "./context";
-import { dispatchCustomEvent, publishDataEvent } from "./events";
+import {
+    dispatchCustomEvent,
+    publishDataEvent,
+    publishErrorEvent,
+} from "./events";
 
 export type Key = string;
 
@@ -19,20 +23,16 @@ export type Options<Res = any> = {
 };
 
 type CacheItem<T = any> = {
-    data: T | undefined;
+    data?: T;
     busy: boolean;
 };
 
-let lru: LRU<string, CacheItem>;
+const lru = new LRU<string, CacheItem>(10e3);
 
 export default function useSWR<Res = any, Error = any>(
     key: () => Key,
     _options: () => Options<Res> = () => ({})
 ) {
-    if (!lru) {
-        lru = new LRU<string, CacheItem>(10e3);
-    }
-
     function peekCache() {
         return (lru.get(key()) as CacheItem | undefined) || undefined;
     }
@@ -44,35 +44,54 @@ export default function useSWR<Res = any, Error = any>(
 
     const [data, setData] = createSignal<Res | undefined>(peekCache()?.data);
     const [error, setError] = createSignal<Error | undefined>();
-
     const [isLoading, setIsLoading] = createSignal(true);
 
+    function resetBasic() {
+        setData(undefined);
+        setError(undefined);
+        setIsLoading(false);
+    }
+
     onMount(() => {
-        function cb(ev: CustomEvent<Res>) {
-            setIsLoading(false);
+        function publishData(ev: CustomEvent<Res>) {
+            resetBasic();
             setData(() => ev.detail);
         }
 
-        window.addEventListener(publishDataEvent, cb as EventListener);
+        function publishError(ev: CustomEvent<Error>) {
+            resetBasic();
+            setError(() => ev.detail);
+        }
+
+        window.addEventListener(publishDataEvent, publishData as EventListener);
+        window.addEventListener(
+            publishErrorEvent,
+            publishError as EventListener
+        );
 
         onCleanup(() => {
-            console.log("CLEANUP RAN");
-            window.removeEventListener(publishDataEvent, cb as EventListener);
+            window.removeEventListener(
+                publishDataEvent,
+                publishData as EventListener
+            );
+            window.removeEventListener(
+                publishErrorEvent,
+                publishError as EventListener
+            );
         });
     });
 
     createEffect(async () => {
-        setData(undefined);
-        setError(undefined);
+        resetBasic();
         setIsLoading(true);
 
         if (peekCache()?.busy) {
             return;
         }
-        lru.set(key(), { busy: true, data: undefined });
+        lru.set(key(), { busy: true });
 
         const cache = peekCache();
-        if (cache !== undefined) {
+        if (cache !== undefined && cache.data) {
             setData(() => cache.data);
         }
 
@@ -84,6 +103,7 @@ export default function useSWR<Res = any, Error = any>(
             dispatchCustomEvent(publishDataEvent, response);
         } catch (err: any) {
             setError(err);
+            dispatchCustomEvent(publishErrorEvent, err);
         }
 
         setIsLoading(false);
