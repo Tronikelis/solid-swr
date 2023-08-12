@@ -15,21 +15,25 @@ import {
 } from "./events";
 
 export type Key = string;
-
 export type Fetcher<T> = (key: string) => Promise<T>;
 
-export type Options<Res = any> = {
+export type Options<Res = unknown> = {
     fetcher?: Fetcher<Res>;
 };
 
-type CacheItem<T = any> = {
+type CacheItem<T = unknown> = {
     data?: T;
     busy: boolean;
 };
 
+type CustomEventPayload<T = unknown> = {
+    key: string;
+    data: T;
+};
+
 const lru = new LRU<string, CacheItem>(10e3);
 
-export default function useSWR<Res = any, Error = any>(
+export default function useSWR<Res = unknown, Error = unknown>(
     key: () => Key,
     _options: () => Options<Res> = () => ({})
 ) {
@@ -42,25 +46,26 @@ export default function useSWR<Res = any, Error = any>(
         Options<Res>
     >;
 
-    const [data, setData] = createSignal<Res | undefined>(peekCache()?.data);
+    const [data, setData] = createSignal<Res | undefined>(
+        peekCache()?.data as Res | undefined
+    );
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
 
-    function resetStates() {
-        setData(undefined);
-        setError(undefined);
-        setIsLoading(false);
-    }
-
     onMount(() => {
-        function publishData(ev: CustomEvent<Res>) {
-            resetStates();
-            setData(() => ev.detail);
+        function publishData(ev: CustomEvent<CustomEventPayload<Res>>) {
+            if (ev.detail.key !== key()) return;
+
+            setIsLoading(false);
+            setError(undefined);
+            setData(() => ev.detail.data);
         }
 
-        function publishError(ev: CustomEvent<Error>) {
-            resetStates();
-            setError(() => ev.detail);
+        function publishError(ev: CustomEvent<CustomEventPayload<Error>>) {
+            if (ev.detail.key !== key()) return;
+
+            setIsLoading(false);
+            setError(() => ev.detail.data);
         }
 
         window.addEventListener(publishDataEvent, publishData as EventListener);
@@ -82,8 +87,8 @@ export default function useSWR<Res = any, Error = any>(
     });
 
     createEffect(async () => {
-        resetStates();
         setIsLoading(true);
+        setError(undefined);
 
         if (peekCache()?.busy) {
             return;
@@ -92,7 +97,7 @@ export default function useSWR<Res = any, Error = any>(
 
         const cache = peekCache();
         if (cache !== undefined && cache.data) {
-            setData(() => cache.data);
+            setData(() => cache.data as Res);
         }
 
         try {
@@ -100,10 +105,16 @@ export default function useSWR<Res = any, Error = any>(
 
             setData(() => response);
             lru.set(key(), { busy: false, data: response });
-            dispatchCustomEvent(publishDataEvent, response);
+            dispatchCustomEvent(publishDataEvent, {
+                data: response,
+                key: key(),
+            } satisfies CustomEventPayload<Res>);
         } catch (err: any) {
             setError(err);
-            dispatchCustomEvent(publishErrorEvent, err);
+            dispatchCustomEvent(publishErrorEvent, {
+                data: err,
+                key: key(),
+            } satisfies CustomEventPayload<Error>);
         }
 
         setIsLoading(false);

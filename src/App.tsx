@@ -10,24 +10,33 @@ function usePosts(count: Accessor<number>) {
 }
 
 function App() {
-    const [count, setCount] = createSignal(1);
-
-    const data1 = usePosts(count);
-    const data2 = usePosts(count);
+    const [show, setShow] = createSignal(true);
 
     return (
         <div>
-            <p>data1:</p>
-            <pre>{JSON.stringify(data1.data(), null, 4)}</pre>
-            <p>isLoading: {data1.isLoading() ? "YES" : "NO"}</p>
+            {show() && <WithSWR />}
+            <WithSWR />
 
-            <br />
+            <button
+                onClick={() => setShow(x => !x)}
+                style={{ "margin-top": "64px" }}
+            >
+                toggle
+            </button>
+        </div>
+    );
+}
 
-            <p>data2:</p>
-            <pre>{JSON.stringify(data2.data(), null, 4)}</pre>
-            <p>isLoading: {data2.isLoading() ? "YES" : "NO"}</p>
+function WithSWR() {
+    const [count, setCount] = createSignal(1);
+    const posts = usePosts(count);
 
-            <button onClick={() => setCount(x => x + 1)}>+1 post</button>
+    return (
+        <div>
+            <pre>{JSON.stringify(posts.data(), null, 4)}</pre>
+            <p>isLoading: {posts.isLoading() ? "yes" : "no"}</p>
+            <button onClick={() => setCount(x => x + 1)}>+1</button>
+            <p>count: {count()}</p>
         </div>
     );
 }
