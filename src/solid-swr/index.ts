@@ -46,7 +46,7 @@ export default function useSWR<Res = any, Error = any>(
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
 
-    function resetBasic() {
+    function resetStates() {
         setData(undefined);
         setError(undefined);
         setIsLoading(false);
@@ -54,12 +54,12 @@ export default function useSWR<Res = any, Error = any>(
 
     onMount(() => {
         function publishData(ev: CustomEvent<Res>) {
-            resetBasic();
+            resetStates();
             setData(() => ev.detail);
         }
 
         function publishError(ev: CustomEvent<Error>) {
-            resetBasic();
+            resetStates();
             setError(() => ev.detail);
         }
 
@@ -82,7 +82,7 @@ export default function useSWR<Res = any, Error = any>(
     });
 
     createEffect(async () => {
-        resetBasic();
+        resetStates();
         setIsLoading(true);
 
         if (peekCache()?.busy) {
