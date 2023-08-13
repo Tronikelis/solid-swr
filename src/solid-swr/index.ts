@@ -128,6 +128,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
             } satisfies CustomEventPayload<Res>);
         } else {
             setError(err as any);
+            options.cache.set(k, { busy: false });
             dispatchCustomEvent(publishErrorEvent, {
                 data: err,
                 key: k,
