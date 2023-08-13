@@ -15,4 +15,5 @@ const defaultFetcher = async <T>(key: string): Promise<T> => {
 export const SWRContext = createContext<Options>({
     fetcher: defaultFetcher,
     keepPreviousData: false,
+    isEnabled: true,
 });

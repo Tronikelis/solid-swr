@@ -33,7 +33,7 @@ function WithSWR() {
     const [count, setCount] = createSignal(1);
 
     const [options, setOptions] = createStore<Options>({
-        isEnabled: false,
+        isEnabled: true,
     });
 
     const posts = usePosts(count, () => options);
@@ -48,6 +48,7 @@ function WithSWR() {
             <p>isLoading: {posts.isLoading() ? "yes" : "no"}</p>
             <button onClick={() => setCount(x => x + 1)}>+1</button>
             <p>count: {count()}</p>
+
             <button onClick={toggleIsEnabled}>
                 toggleIsEnabled: {options.isEnabled ? "yes" : "no"}
             </button>

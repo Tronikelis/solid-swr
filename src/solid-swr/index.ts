@@ -59,7 +59,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
     useWinEvent(
         publishDataEvent,
         (ev: CustomEvent<CustomEventPayload<Res>>) => {
-            if (ev.detail.key !== key()) return;
+            if (ev.detail.key !== key() || !options.isEnabled) return;
 
             setIsLoading(false);
             setError(undefined);
@@ -69,7 +69,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
     useWinEvent(
         publishErrorEvent,
         (ev: CustomEvent<CustomEventPayload<Error>>) => {
-            if (ev.detail.key !== key()) return;
+            if (ev.detail.key !== key() || !options.isEnabled) return;
 
             setIsLoading(false);
             setError(() => ev.detail.data);
