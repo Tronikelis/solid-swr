@@ -12,4 +12,7 @@ const defaultFetcher = async <T>(key: string): Promise<T> => {
     throw new Error(JSON.stringify(json));
 };
 
-export const SWRContext = createContext<Options>({ fetcher: defaultFetcher });
+export const SWRContext = createContext<Options>({
+    fetcher: defaultFetcher,
+    keepPreviousData: false,
+});

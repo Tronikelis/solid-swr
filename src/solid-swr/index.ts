@@ -14,6 +14,7 @@ export type Fetcher<T> = (key: string) => Promise<T>;
 
 export type Options<Res = unknown> = {
     fetcher?: Fetcher<Res>;
+    keepPreviousData?: boolean;
 };
 
 type CacheItem<T = unknown> = {
@@ -80,7 +81,9 @@ export default function useSWR<Res = unknown, Error = unknown>(
             setData(() => cache.data as Res);
         } else {
             lru.set(key(), { busy: true });
-            setData(undefined);
+            if (!options.keepPreviousData) {
+                setData(undefined);
+            }
         }
 
         const [err, response] = await tryCatch<Error, Res>(() =>
