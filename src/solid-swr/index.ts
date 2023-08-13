@@ -135,11 +135,19 @@ export default function useSWR<Res = unknown, Error = unknown>(
         setIsLoading(false);
     }
 
+    // revalidate on offline/online
+    useWinEvent("online" as keyof WindowEventMap, effect);
+
+    // revalidate on window focus
+    useWinEvent("focus" as keyof WindowEventMap, effect);
+
+    // refresh interval
     createEffect(() => {
         if (options.refreshInterval <= 0) return;
         useInterval(effect, () => options.refreshInterval);
     });
 
+    // core functionality
     createEffect(effect);
 
     return {
