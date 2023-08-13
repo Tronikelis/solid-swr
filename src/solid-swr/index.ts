@@ -11,6 +11,8 @@ import tryCatch from "./utils/tryCatch";
 import useInterval from "./hooks/useInterval";
 import useOptions from "./hooks/useOptions";
 
+export { SWRContext } from "./context";
+
 export type Key = string | undefined;
 export type Fetcher<T> = (key: Exclude<Key, undefined>) => Promise<T>;
 
@@ -134,9 +136,8 @@ export default function useSWR<Res = unknown, Error = unknown>(
     }
 
     createEffect(() => {
-        if (options.refreshInterval > 0) {
-            useInterval(effect, () => options.refreshInterval);
-        }
+        if (options.refreshInterval <= 0) return;
+        useInterval(effect, () => options.refreshInterval);
     });
 
     createEffect(effect);
