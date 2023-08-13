@@ -137,6 +137,26 @@ export default function useSWR<Res = unknown, Error = unknown>(
         setIsLoading(false);
     }
 
+    // first iteration
+    async function mutate(payload: Res | ((curr: Res | undefined) => Res) | undefined) {
+        if (payload === undefined) {
+            await effect();
+            return;
+        }
+
+        const k = key();
+        if (k === undefined) return;
+
+        const fresh = payload instanceof Function ? payload(data()) : payload;
+
+        dispatchCustomEvent(publishDataEvent, {
+            data: fresh,
+            key: k,
+        } satisfies CustomEventPayload<Res>);
+
+        setData(() => fresh);
+    }
+
     // revalidate on offline/online
     useWinEvent("online" as keyof WindowEventMap, effect);
 
@@ -156,5 +176,6 @@ export default function useSWR<Res = unknown, Error = unknown>(
         data,
         error,
         isLoading,
+        mutate,
     };
 }
