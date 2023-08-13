@@ -1,9 +1,11 @@
 import { Accessor, createSignal } from "solid-js";
-import useSWR from "./solid-swr";
+import { createStore } from "solid-js/store";
+import useSWR, { Options } from "./solid-swr";
 
-function usePosts(count: Accessor<number>) {
+function usePosts(count: Accessor<number>, options: () => Options) {
     const swr = useSWR(
-        () => `https://jsonplaceholder.typicode.com/todos/${count()}`
+        () => `https://jsonplaceholder.typicode.com/todos/${count()}`,
+        options
     );
 
     return swr;
@@ -29,7 +31,16 @@ function App() {
 
 function WithSWR() {
     const [count, setCount] = createSignal(1);
-    const posts = usePosts(count);
+
+    const [options, setOptions] = createStore<Options>({
+        isEnabled: false,
+    });
+
+    const posts = usePosts(count, () => options);
+
+    function toggleIsEnabled() {
+        setOptions(x => ({ ...x, isEnabled: !x.isEnabled }));
+    }
 
     return (
         <div>
@@ -37,6 +48,9 @@ function WithSWR() {
             <p>isLoading: {posts.isLoading() ? "yes" : "no"}</p>
             <button onClick={() => setCount(x => x + 1)}>+1</button>
             <p>count: {count()}</p>
+            <button onClick={toggleIsEnabled}>
+                toggleIsEnabled: {options.isEnabled ? "yes" : "no"}
+            </button>
         </div>
     );
 }

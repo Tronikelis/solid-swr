@@ -9,12 +9,18 @@ import {
 import useWinEvent from "./hooks/useWinEvent";
 import tryCatch from "./utils/tryCatch";
 
-export type Key = string;
-export type Fetcher<T> = (key: string) => Promise<T>;
+export type Key = string | undefined;
+export type Fetcher<T> = (key: Exclude<Key, undefined>) => Promise<T>;
 
 export type Options<Res = unknown> = {
     fetcher?: Fetcher<Res>;
     keepPreviousData?: boolean;
+
+    /**
+     * Toggle whether the hook should be enabled,
+     * useful for scenarios where you create key based on derived async data
+     */
+    isEnabled?: boolean;
 };
 
 type CacheItem<T = unknown> = {
@@ -34,7 +40,9 @@ export default function useSWR<Res = unknown, Error = unknown>(
     _options: () => Options<Res> = () => ({})
 ) {
     function peekCache() {
-        return (lru.get(key()) as CacheItem | undefined) || undefined;
+        const k = key();
+        if (k === undefined) return undefined;
+        return (lru.get(k) as CacheItem | undefined) || undefined;
     }
 
     const contextOptions = useContext(SWRContext);
@@ -69,6 +77,13 @@ export default function useSWR<Res = unknown, Error = unknown>(
     );
 
     createEffect(async () => {
+        const k = key();
+
+        if (!options.isEnabled || k === undefined) {
+            setIsLoading(false);
+            return;
+        }
+
         setIsLoading(true);
         setError(undefined);
 
@@ -80,28 +95,28 @@ export default function useSWR<Res = unknown, Error = unknown>(
         if (cache !== undefined && cache.data) {
             setData(() => cache.data as Res);
         } else {
-            lru.set(key(), { busy: true });
+            lru.set(k, { busy: true });
             if (!options.keepPreviousData) {
                 setData(undefined);
             }
         }
 
         const [err, response] = await tryCatch<Error, Res>(() =>
-            options.fetcher(key())
+            options.fetcher(k)
         );
 
         if (!err) {
             setData(() => response);
-            lru.set(key(), { busy: false, data: response });
+            lru.set(k, { busy: false, data: response });
             dispatchCustomEvent(publishDataEvent, {
                 data: response!,
-                key: key(),
+                key: k,
             } satisfies CustomEventPayload<Res>);
         } else {
             setError(err as any);
             dispatchCustomEvent(publishErrorEvent, {
                 data: err,
-                key: key(),
+                key: k,
             } satisfies CustomEventPayload<Error>);
         }
 
