@@ -3,11 +3,7 @@ import { createStore } from "solid-js/store";
 import useSWR, { Options } from "./solid-swr";
 
 function usePosts(count: Accessor<number>, options: () => Options) {
-    const swr = useSWR(
-        () => `https://jsonplaceholder.typicode.com/todos/${count()}`,
-        options
-    );
-
+    const swr = useSWR(() => `https://jsonplaceholder.typicode.com/todos/${count()}`, options);
     return swr;
 }
 
@@ -19,10 +15,7 @@ function App() {
             <WithSWR />
             {show() && <WithSWR />}
 
-            <button
-                onClick={() => setShow(x => !x)}
-                style={{ "margin-top": "64px" }}
-            >
+            <button onClick={() => setShow(x => !x)} style={{ "margin-top": "64px" }}>
                 toggle
             </button>
         </div>

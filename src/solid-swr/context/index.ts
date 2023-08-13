@@ -1,10 +1,11 @@
 import { createContext } from "solid-js";
-import { Options } from "..";
+
 import LRU from "../classes/lru";
+import { Options } from "..";
 
 const defaultFetcher = async <T>(key: string): Promise<T> => {
     const response = await fetch(key);
-    const json = await response.json();
+    const json = (await response.json()) as T;
 
     if (response.ok) {
         return json;

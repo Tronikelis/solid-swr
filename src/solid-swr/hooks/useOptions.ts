@@ -1,4 +1,5 @@
 import { Accessor, mergeProps, useContext } from "solid-js";
+
 import { SWRContext } from "../context";
 import { Options } from "..";
 

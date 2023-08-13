@@ -1,14 +1,10 @@
 import { Accessor, createEffect, createSignal } from "solid-js";
 
-import {
-    dispatchCustomEvent,
-    publishDataEvent,
-    publishErrorEvent,
-} from "./events";
-import useWinEvent from "./hooks/useWinEvent";
-import tryCatch from "./utils/tryCatch";
 import useInterval from "./hooks/useInterval";
 import useOptions from "./hooks/useOptions";
+import useWinEvent from "./hooks/useWinEvent";
+import tryCatch from "./utils/tryCatch";
+import { dispatchCustomEvent, publishDataEvent, publishErrorEvent } from "./events";
 
 export { SWRContext } from "./context";
 
@@ -78,25 +74,19 @@ export default function useSWR<Res = unknown, Error = unknown>(
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
 
-    useWinEvent(
-        publishDataEvent,
-        (ev: CustomEvent<CustomEventPayload<Res>>) => {
-            if (ev.detail.key !== key() || !options.isEnabled) return;
+    useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
 
-            setIsLoading(false);
-            setError(undefined);
-            setData(() => ev.detail.data);
-        }
-    );
-    useWinEvent(
-        publishErrorEvent,
-        (ev: CustomEvent<CustomEventPayload<Error>>) => {
-            if (ev.detail.key !== key() || !options.isEnabled) return;
+        setIsLoading(false);
+        setError(undefined);
+        setData(() => ev.detail.data);
+    });
+    useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Error>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
 
-            setIsLoading(false);
-            setError(() => ev.detail.data);
-        }
-    );
+        setIsLoading(false);
+        setError(() => ev.detail.data);
+    });
 
     async function effect() {
         const k = key();
@@ -123,9 +113,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
             }
         }
 
-        const [err, response] = await tryCatch<Error, Res>(() =>
-            options.fetcher(k)
-        );
+        const [err, response] = await tryCatch<Error, Res>(() => options.fetcher(k));
 
         // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
         // as tracking is not possible after an async function uses await.
