@@ -127,6 +127,10 @@ export default function useSWR<Res = unknown, Error = unknown>(
             options.fetcher(k)
         );
 
+        // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
+        // as tracking is not possible after an async function uses await.
+        // Thus you should use all dependencies before the promise.
+
         if (!err) {
             setData(() => response);
             options.cache.set(k, { busy: false, data: response });
