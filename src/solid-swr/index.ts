@@ -52,7 +52,7 @@ export type Options<Res = unknown> = {
 };
 
 type CustomEventPayload<T = unknown> = {
-    key: string;
+    key: ExistentKey;
     data: T;
 };
 
