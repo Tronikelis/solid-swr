@@ -16,4 +16,5 @@ export const SWRContext = createContext<Options>({
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
+    refreshInterval: 0,
 });

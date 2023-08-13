@@ -34,12 +34,19 @@ function WithSWR() {
 
     const [options, setOptions] = createStore<Options>({
         isEnabled: true,
+        refreshInterval: 0,
     });
 
     const posts = usePosts(count, () => options);
 
     function toggleIsEnabled() {
         setOptions(x => ({ ...x, isEnabled: !x.isEnabled }));
+    }
+    function toggleRefreshInterval() {
+        setOptions(x => ({
+            ...x,
+            refreshInterval: x.refreshInterval === 0 ? 1e3 : 0,
+        }));
     }
 
     return (
@@ -51,6 +58,9 @@ function WithSWR() {
 
             <button onClick={toggleIsEnabled}>
                 toggleIsEnabled: {options.isEnabled ? "yes" : "no"}
+            </button>
+            <button onClick={toggleRefreshInterval}>
+                toggleRefreshInterval {options.refreshInterval}
             </button>
         </div>
     );
