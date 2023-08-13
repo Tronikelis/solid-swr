@@ -1,6 +1,5 @@
 import { Accessor, createEffect, createSignal } from "solid-js";
 
-import LRU from "./classes/lru";
 import {
     dispatchCustomEvent,
     publishDataEvent,
@@ -13,8 +12,20 @@ import useOptions from "./hooks/useOptions";
 
 export { SWRContext } from "./context";
 
+export type CacheItem<T = unknown> = {
+    data?: T;
+    busy: boolean;
+};
+
+export type CacheImplements<K, V> = {
+    set: (key: K, value: V) => void;
+    get: (key: K) => V | undefined;
+};
+
 export type Key = string | undefined;
-export type Fetcher<T> = (key: Exclude<Key, undefined>) => Promise<T>;
+type ExistentKey = Exclude<Key, undefined>;
+
+export type Fetcher<T> = (key: ExistentKey) => Promise<T>;
 
 export type Options<Res = unknown> = {
     fetcher?: Fetcher<Res>;
@@ -36,11 +47,12 @@ export type Options<Res = unknown> = {
      * @default 0
      */
     refreshInterval?: number;
-};
 
-type CacheItem<T = unknown> = {
-    data?: T;
-    busy: boolean;
+    /**
+     * Provide your own cache implementation,
+     * by default a simple in-memory LRU cache is used with 5K max items
+     */
+    cache?: CacheImplements<ExistentKey, CacheItem<Res>>;
 };
 
 type CustomEventPayload<T = unknown> = {
@@ -48,19 +60,17 @@ type CustomEventPayload<T = unknown> = {
     data: T;
 };
 
-const lru = new LRU<string, CacheItem>(10e3);
-
 export default function useSWR<Res = unknown, Error = unknown>(
     key: Accessor<Key>,
     _options: Accessor<Options<Res>> = () => ({})
 ) {
+    const options = useOptions(_options);
+
     function peekCache() {
         const k = key();
         if (k === undefined) return undefined;
-        return (lru.get(k) as CacheItem | undefined) || undefined;
+        return (options.cache.get(k) as CacheItem | undefined) || undefined;
     }
-
-    const options = useOptions(_options);
 
     const [data, setData] = createSignal<Res | undefined>(
         peekCache()?.data as Res | undefined
@@ -107,7 +117,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
         if (cache !== undefined && cache.data) {
             setData(() => cache.data as Res);
         } else {
-            lru.set(k, { busy: true });
+            options.cache.set(k, { busy: true });
             if (!options.keepPreviousData) {
                 setData(undefined);
             }
@@ -119,7 +129,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
         if (!err) {
             setData(() => response);
-            lru.set(k, { busy: false, data: response });
+            options.cache.set(k, { busy: false, data: response });
             dispatchCustomEvent(publishDataEvent, {
                 data: response!,
                 key: k,

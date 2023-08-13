@@ -1,5 +1,6 @@
 import { createContext } from "solid-js";
 import { Options } from "..";
+import LRU from "../classes/lru";
 
 const defaultFetcher = async <T>(key: string): Promise<T> => {
     const response = await fetch(key);
@@ -12,9 +13,15 @@ const defaultFetcher = async <T>(key: string): Promise<T> => {
     throw new Error(JSON.stringify(json));
 };
 
+type CacheItem<T = unknown> = {
+    data?: T;
+    busy: boolean;
+};
+
 export const SWRContext = createContext<Options>({
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
     refreshInterval: 0,
+    cache: new LRU<string, CacheItem>(5e3),
 });
