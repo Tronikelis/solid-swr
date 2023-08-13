@@ -1,5 +1,6 @@
 import { Accessor, createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
+
 import useSWR, { Options } from "./solid-swr";
 
 function usePosts(count: Accessor<number>, options: () => Options) {
