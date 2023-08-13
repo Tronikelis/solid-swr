@@ -14,8 +14,8 @@ function App() {
 
     return (
         <div>
-            {show() && <WithSWR />}
             <WithSWR />
+            {show() && <WithSWR />}
 
             <button
                 onClick={() => setShow(x => !x)}

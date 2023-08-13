@@ -1,11 +1,4 @@
-import {
-    createEffect,
-    createSignal,
-    mergeProps,
-    onCleanup,
-    onMount,
-    useContext,
-} from "solid-js";
+import { createEffect, createSignal, mergeProps, useContext } from "solid-js";
 import LRU from "./classes/lru";
 import { SWRContext } from "./context";
 import {
@@ -13,6 +6,8 @@ import {
     publishDataEvent,
     publishErrorEvent,
 } from "./events";
+import useWinEvent from "./hooks/useWinEvent";
+import tryCatch from "./utils/tryCatch";
 
 export type Key = string;
 export type Fetcher<T> = (key: string) => Promise<T>;
@@ -52,39 +47,25 @@ export default function useSWR<Res = unknown, Error = unknown>(
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
 
-    onMount(() => {
-        function publishData(ev: CustomEvent<CustomEventPayload<Res>>) {
+    useWinEvent(
+        publishDataEvent,
+        (ev: CustomEvent<CustomEventPayload<Res>>) => {
             if (ev.detail.key !== key()) return;
 
             setIsLoading(false);
             setError(undefined);
             setData(() => ev.detail.data);
         }
-
-        function publishError(ev: CustomEvent<CustomEventPayload<Error>>) {
+    );
+    useWinEvent(
+        publishErrorEvent,
+        (ev: CustomEvent<CustomEventPayload<Error>>) => {
             if (ev.detail.key !== key()) return;
 
             setIsLoading(false);
             setError(() => ev.detail.data);
         }
-
-        window.addEventListener(publishDataEvent, publishData as EventListener);
-        window.addEventListener(
-            publishErrorEvent,
-            publishError as EventListener
-        );
-
-        onCleanup(() => {
-            window.removeEventListener(
-                publishDataEvent,
-                publishData as EventListener
-            );
-            window.removeEventListener(
-                publishErrorEvent,
-                publishError as EventListener
-            );
-        });
-    });
+    );
 
     createEffect(async () => {
         setIsLoading(true);
@@ -93,24 +74,28 @@ export default function useSWR<Res = unknown, Error = unknown>(
         if (peekCache()?.busy) {
             return;
         }
-        lru.set(key(), { busy: true });
 
         const cache = peekCache();
         if (cache !== undefined && cache.data) {
             setData(() => cache.data as Res);
+        } else {
+            lru.set(key(), { busy: true });
+            setData(undefined);
         }
 
-        try {
-            const response = await options.fetcher(key());
+        const [err, response] = await tryCatch<Error, Res>(() =>
+            options.fetcher(key())
+        );
 
+        if (!err) {
             setData(() => response);
             lru.set(key(), { busy: false, data: response });
             dispatchCustomEvent(publishDataEvent, {
-                data: response,
+                data: response!,
                 key: key(),
             } satisfies CustomEventPayload<Res>);
-        } catch (err: any) {
-            setError(err);
+        } else {
+            setError(err as any);
             dispatchCustomEvent(publishErrorEvent, {
                 data: err,
                 key: key(),
