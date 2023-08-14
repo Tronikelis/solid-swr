@@ -59,7 +59,7 @@ it("keepPreviousData works", async () => {
         await waitForMs(fetcherWait);
         expect(result.data()).not.toBe(undefined);
 
-        setKey("1");
+        setKey(`${Math.random()}`);
         expect(result.data()).toBe(undefined);
     }
     {
@@ -72,7 +72,7 @@ it("keepPreviousData works", async () => {
         await waitForMs(fetcherWait);
         expect(result.data()).not.toBe(undefined);
 
-        setKey("2");
+        setKey(`${Math.random()}`);
         expect(result.data()).not.toBe(undefined);
     }
 
