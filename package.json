@@ -11,6 +11,16 @@
         "require": "./dist/index.cjs",
         "default": "./dist/index.cjs"
     },
+    "keywords": [
+        "solid",
+        "swr",
+        "solid-swr",
+        "swr",
+        "hooks",
+        "request",
+        "cache",
+        "fetch"
+    ],
     "files": [
         "dist"
     ],
