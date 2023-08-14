@@ -8,25 +8,6 @@ function usePosts(count: Accessor<number>, options: () => Options) {
     return swr;
 }
 
-function App() {
-    const [show, setShow] = createSignal(true);
-
-    const arr = new Array(100).fill(false);
-
-    return (
-        <div>
-            <WithSWR />
-            {show() && <WithSWR />}
-
-            <button onClick={() => setShow(x => !x)} style={{ "margin-top": "64px" }}>
-                toggle
-            </button>
-
-            <For each={arr}>{() => <WithSWR />}</For>
-        </div>
-    );
-}
-
 function WithSWR() {
     const [count, setCount] = createSignal(1);
 
@@ -64,4 +45,40 @@ function WithSWR() {
     );
 }
 
-export default App;
+function Nested(props: { count: number }) {
+    return (
+        <>
+            {props.count < 100 && (
+                <div>
+                    <WithSWR />
+                    <div>
+                        <WithSWR />
+                        <div>
+                            <WithSWR />
+                            <div>
+                                <WithSWR />
+                                <div>
+                                    <WithSWR />
+                                    <div>
+                                        <WithSWR />
+                                        <Nested count={props.count + 1} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </>
+    );
+}
+
+export default function App() {
+    const arr = new Array(10).fill(false);
+
+    return (
+        <div>
+            <For each={arr}>{() => <Nested count={0} />}</For>
+        </div>
+    );
+}
