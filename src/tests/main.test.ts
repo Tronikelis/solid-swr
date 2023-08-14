@@ -3,6 +3,8 @@ import { renderHook } from "@solidjs/testing-library";
 
 import useSWR from "../lib";
 
+import waitForTruthy from "./utils/waitForTruthy";
+
 it("at least boots up", async () => {
     const { result } = renderHook(useSWR, [
         () => "https://jsonplaceholder.typicode.com/todos/1",
@@ -12,9 +14,7 @@ it("at least boots up", async () => {
     expect(result.error()).toBe(undefined);
     expect(result.isLoading()).toBe(true);
 
-    while (result.data() === undefined) {
-        await new Promise(r => setTimeout(r, 100));
-    }
+    await waitForTruthy(result.data);
 
     expect(result.data()).not.toBe(undefined);
     expect(result.error()).toBe(undefined);
