@@ -15,8 +15,6 @@
         "jsxImportSource": "solid-js",
 
         "strict": true,
-        "noUnusedLocals": true,
-        "noUnusedParameters": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedIndexedAccess": true
     },
