@@ -2,3 +2,5 @@ node_modules/
 vite.config.ts
 dist/
 tsup.config.ts
+jest.config.ts
+jest.setup.ts
