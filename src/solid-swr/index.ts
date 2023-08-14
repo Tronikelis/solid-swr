@@ -105,9 +105,14 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
         const cache = peekCache();
         if (cache !== undefined && cache.data) {
+            // mark as busy
+            options.cache.set(k, { busy: true, data: cache.data as Res });
+
             setData(() => cache.data as Res);
         } else {
+            // mark as busy
             options.cache.set(k, { busy: true });
+
             if (!options.keepPreviousData) {
                 setData(undefined);
             }
@@ -120,15 +125,19 @@ export default function useSWR<Res = unknown, Error = unknown>(
         // Thus you should use all dependencies before the promise.
 
         if (!err) {
-            setData(() => response);
+            // not busy anymore
             options.cache.set(k, { busy: false, data: response });
+
+            setData(() => response);
             dispatchCustomEvent(publishDataEvent, {
                 data: response!,
                 key: k,
             } satisfies CustomEventPayload<Res>);
         } else {
-            setError(err as any);
+            // not busy anymore
             options.cache.set(k, { busy: false });
+
+            setError(err as any);
             dispatchCustomEvent(publishErrorEvent, {
                 data: err,
                 key: k,

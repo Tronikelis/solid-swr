@@ -1,4 +1,4 @@
-import { Accessor, createSignal } from "solid-js";
+import { Accessor, createSignal, For } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import useSWR, { Options } from "./solid-swr";
@@ -11,6 +11,8 @@ function usePosts(count: Accessor<number>, options: () => Options) {
 function App() {
     const [show, setShow] = createSignal(true);
 
+    const arr = new Array(100).fill(false);
+
     return (
         <div>
             <WithSWR />
@@ -19,6 +21,8 @@ function App() {
             <button onClick={() => setShow(x => !x)} style={{ "margin-top": "64px" }}>
                 toggle
             </button>
+
+            <For each={arr}>{() => <WithSWR />}</For>
         </div>
     );
 }
