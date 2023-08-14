@@ -1,3 +1,4 @@
+import { dequal as equals } from "dequal";
 import { Accessor, createEffect, createSignal } from "solid-js";
 
 import useInterval from "./hooks/useInterval";
@@ -69,7 +70,8 @@ export default function useSWR<Res = unknown, Error = unknown>(
     }
 
     const [data, setData] = createSignal<Res | undefined>(
-        peekCache()?.data as Res | undefined
+        peekCache()?.data as Res | undefined,
+        { equals }
     );
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
