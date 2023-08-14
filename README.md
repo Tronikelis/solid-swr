@@ -11,7 +11,7 @@
 
 ## Note
 
-npm package currently is WIP and is not ready production use
+npm package currently is WIP and is not ready for production use
 
 ## Introduction
 
