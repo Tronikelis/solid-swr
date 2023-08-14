@@ -1,7 +1,5 @@
 <h1 align="center">solidjs-swr</h1>
 
-<br />
-
 <div align="center">
 
 <img src="https://img.shields.io/bundlephobia/minzip/solidjs-swr?style=flat-square" />
