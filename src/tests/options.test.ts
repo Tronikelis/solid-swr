@@ -21,7 +21,7 @@ it("polls the fetcher based on an interval", async () => {
 
     const [key] = createKey();
 
-    renderHook(useSWR, [key, () => ({ fetcher, refreshInterval })]);
+    renderHook(useSWR, [key, { fetcher, refreshInterval }]);
     expect(fetcher).toBeCalledTimes(1);
 
     await waitForMs(refreshInterval);
@@ -39,7 +39,7 @@ it("isEnabled works", () => {
 
     const [key] = createKey();
 
-    renderHook(useSWR, [key, () => ({ fetcher, isEnabled: false })]);
+    renderHook(useSWR, [key, { fetcher, isEnabled: false }]);
     expect(fetcher).toBeCalledTimes(0);
 });
 
@@ -51,10 +51,7 @@ it("keepPreviousData works", async () => {
 
     {
         const [key, setKey] = createKey();
-        const { result } = renderHook(useSWR, [
-            key,
-            () => ({ fetcher, keepPreviousData: false }),
-        ]);
+        const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: false }]);
 
         await waitForMs(fetcherWait);
         expect(result.data()).not.toBe(undefined);
@@ -64,10 +61,7 @@ it("keepPreviousData works", async () => {
     }
     {
         const [key, setKey] = createKey();
-        const { result } = renderHook(useSWR, [
-            key,
-            () => ({ fetcher, keepPreviousData: true }),
-        ]);
+        const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: true }]);
 
         await waitForMs(fetcherWait);
         expect(result.data()).not.toBe(undefined);

@@ -30,11 +30,11 @@ it("passes thrown error into the error signal", async () => {
 
     const { result } = renderHook(useSWR, [
         key,
-        () => ({
+        {
             fetcher: async () => {
                 throw new Error("foo");
             },
-        }),
+        },
     ]);
 
     await waitForTruthy(result.error);
@@ -48,7 +48,7 @@ it("returns stale result from cache instantly and refetches", async () => {
     });
 
     const [key] = createKey();
-    const settings = () => ({ fetcher });
+    const settings = { fetcher };
 
     {
         // eslint-disable-next-line solid/reactivity
@@ -82,7 +82,7 @@ it("deduplicates requests and syncs responses", async () => {
         for (const _ of new Array(100).fill(false)) {
             promises.push(
                 new Promise(r => {
-                    const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
+                    const { result } = renderHook(useSWR, [key, { fetcher }]);
                     void waitForTruthy(result.data).then(() => r(result.data()));
                 })
             );
@@ -99,7 +99,7 @@ it("deduplicates requests and syncs responses", async () => {
         for (const _ of new Array(100).fill(false)) {
             promises.push(
                 new Promise(r => {
-                    const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
+                    const { result } = renderHook(useSWR, [key, { fetcher }]);
                     void waitForTruthy(result.data).then(() => r(result.data()));
                 })
             );

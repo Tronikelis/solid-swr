@@ -59,20 +59,18 @@ type CustomEventPayload<T = unknown> = {
 
 export default function useSWR<Res = unknown, Error = unknown>(
     key: Accessor<Key>,
-    _options: Accessor<Options<Res>> = () => ({})
+    /** If you want this value to change at runtime, please pass a store (createStore) */
+    _options: Options<Res> = {}
 ) {
     const options = useOptions(_options);
 
     function peekCache() {
         const k = key();
         if (k === undefined) return undefined;
-        return (options.cache.get(k) as CacheItem | undefined) || undefined;
+        return options.cache.get(k) || undefined;
     }
 
-    const [data, setData] = createSignal<Res | undefined>(
-        peekCache()?.data as Res | undefined,
-        { equals }
-    );
+    const [data, setData] = createSignal<Res | undefined>(peekCache()?.data, { equals });
     const [error, setError] = createSignal<Error | undefined>();
     const [isLoading, setIsLoading] = createSignal(true);
 
