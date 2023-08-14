@@ -1,6 +1,7 @@
 {
     "name": "solidjs-swr",
-    "version": "0.1.1",
+    "description": "The beloved swr package ported over to solid",
+    "version": "0.1.2",
     "type": "module",
     "main": "./dist/index.cjs",
     "types": "./dist/index.d.ts",
@@ -13,6 +14,11 @@
     "files": [
         "dist"
     ],
+    "author": "Tronikelis",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Tronikelis/solid-swr.git"
+    },
     "scripts": {
         "dev": "vite",
         "preview": "vite preview",
