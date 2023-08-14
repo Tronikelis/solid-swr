@@ -20,8 +20,6 @@
         "url": "https://github.com/Tronikelis/solid-swr.git"
     },
     "scripts": {
-        "dev": "vite",
-        "preview": "vite preview",
         "build": "tsup",
         "lint": "eslint . -c ./.eslintrc.cjs",
         "prepublishOnly": "npm run build && npm run lint"
@@ -37,8 +35,6 @@
         "eslint-config-tronikelis-solid": "1.0.0",
         "prettier": "3.0.1",
         "tsup": "7.2.0",
-        "typescript": "5.0.2",
-        "vite": "4.4.5",
-        "vite-plugin-solid": "2.7.0"
+        "typescript": "5.0.2"
     }
 }
