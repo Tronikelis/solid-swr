@@ -6,6 +6,7 @@ import { renderHook } from "@solidjs/testing-library";
 import useSWR from "../lib";
 
 import createKey from "./utils/createKey";
+import waitForMs from "./utils/waitForMs";
 import waitForTruthy from "./utils/waitForTruthy";
 
 it("at least boots up", async () => {
@@ -42,7 +43,7 @@ it("passes thrown error into the error signal", async () => {
 
 it("returns stale result from cache instantly and refetches", async () => {
     const fetcher = jest.fn(async (x: string) => {
-        await new Promise(r => setTimeout(r, 100));
+        await waitForMs();
         return x;
     });
 
@@ -68,25 +69,45 @@ it("returns stale result from cache instantly and refetches", async () => {
 
 it("deduplicates requests and syncs responses", async () => {
     const fetcher = jest.fn(async (x: string) => {
-        await new Promise(r => setTimeout(r, 100));
+        await waitForMs();
         return x;
     });
 
     const [key] = createKey();
-    let promises = [];
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    for (const _ of new Array(100).fill(false)) {
-        promises.push(
-            new Promise(r => {
-                const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
-                void waitForTruthy(result.data).then(() => r(result.data()));
-            })
-        );
+    // without cache filled
+    {
+        let promises = [];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const _ of new Array(100).fill(false)) {
+            promises.push(
+                new Promise(r => {
+                    const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
+                    void waitForTruthy(result.data).then(() => r(result.data()));
+                })
+            );
+        }
+
+        promises = await Promise.all(promises);
+        expect(new Set(promises).size).toBe(1);
     }
 
-    promises = await Promise.all(promises);
+    // with cache filled
+    {
+        let promises = [];
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        for (const _ of new Array(100).fill(false)) {
+            promises.push(
+                new Promise(r => {
+                    const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
+                    void waitForTruthy(result.data).then(() => r(result.data()));
+                })
+            );
+        }
 
-    expect(fetcher).toBeCalledTimes(1);
-    expect(new Set(promises).size).toBe(1);
+        promises = await Promise.all(promises);
+        expect(new Set(promises).size).toBe(1);
+    }
+
+    expect(fetcher).toBeCalledTimes(2);
 });
