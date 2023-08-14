@@ -5,7 +5,7 @@ export default {
     testMatch: ["**/tests/**/*.test.ts"],
     testEnvironment: "jsdom",
     setupFiles: ["<rootDir>/jest.setup.ts"],
-    testTimeout: 30e3,
+    testTimeout: 10e3,
     // globals: {
     //     "ts-jest": {
     //         tsconfig: "tsconfig.json",
