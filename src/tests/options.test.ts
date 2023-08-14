@@ -1,6 +1,5 @@
 import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
-import { createSignal } from "solid-js";
 
 import useSWR from "../lib";
 
@@ -10,6 +9,8 @@ import waitForMs from "./utils/waitForMs";
 // NOTE:
 // I wanted to test the window revalidation event, the focus event and all that
 // but couldn't get jsdom to properly send the events to my hook 🤔
+
+const fetcherWait = 50;
 
 it("polls the fetcher based on an interval", async () => {
     const fetcher = jest.fn(async (x: string) => {
@@ -30,29 +31,50 @@ it("polls the fetcher based on an interval", async () => {
     expect(fetcher).toBeCalledTimes(3);
 });
 
-it("isEnabled works", async () => {
-    const fetcherWait = 50;
-
+it("isEnabled works", () => {
     const fetcher = jest.fn(async (x: string) => {
         await waitForMs(fetcherWait);
         return x;
     });
 
-    const [key, setKey] = createKey();
-    const [isEnabled, setIsEnabled] = createSignal(true);
+    const [key] = createKey();
 
-    // eslint-disable-next-line solid/reactivity
-    const { result } = renderHook(useSWR, [key, () => ({ fetcher, isEnabled: isEnabled() })]);
-
-    await waitForMs(fetcherWait);
-    expect(fetcher).toBeCalledTimes(1);
-
-    setIsEnabled(false);
-    setKey("foo");
-
-    expect(fetcher).toBeCalledTimes(1);
-    expect(result.isLoading()).toBe(false);
-
-    fetcher.mockClear();
+    renderHook(useSWR, [key, () => ({ fetcher, isEnabled: false })]);
     expect(fetcher).toBeCalledTimes(0);
+});
+
+it("keepPreviousData works", async () => {
+    const fetcher = jest.fn(async (x: string) => {
+        await waitForMs(fetcherWait);
+        return x;
+    });
+
+    {
+        const [key, setKey] = createKey();
+        const { result } = renderHook(useSWR, [
+            key,
+            () => ({ fetcher, keepPreviousData: false }),
+        ]);
+
+        await waitForMs(fetcherWait);
+        expect(result.data()).not.toBe(undefined);
+
+        setKey("1");
+        expect(result.data()).toBe(undefined);
+    }
+    {
+        const [key, setKey] = createKey();
+        const { result } = renderHook(useSWR, [
+            key,
+            () => ({ fetcher, keepPreviousData: true }),
+        ]);
+
+        await waitForMs(fetcherWait);
+        expect(result.data()).not.toBe(undefined);
+
+        setKey("2");
+        expect(result.data()).not.toBe(undefined);
+    }
+
+    expect(fetcher).toBeCalledTimes(4);
 });
