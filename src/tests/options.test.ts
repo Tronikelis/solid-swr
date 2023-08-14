@@ -1,9 +1,15 @@
 import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 
 import useSWR from "../lib";
 
+import createKey from "./utils/createKey";
 import waitForMs from "./utils/waitForMs";
+
+// NOTE:
+// I wanted to test the window revalidation event, the focus event and all that
+// but couldn't get jsdom to properly send the events to my hook 🤔
 
 it("polls the fetcher based on an interval", async () => {
     const fetcher = jest.fn(async (x: string) => {
@@ -12,7 +18,9 @@ it("polls the fetcher based on an interval", async () => {
     });
     const refreshInterval = 1e3;
 
-    renderHook(useSWR, [() => "_", () => ({ fetcher, refreshInterval })]);
+    const [key] = createKey();
+
+    renderHook(useSWR, [key, () => ({ fetcher, refreshInterval })]);
     expect(fetcher).toBeCalledTimes(1);
 
     await waitForMs(refreshInterval);
@@ -22,21 +30,29 @@ it("polls the fetcher based on an interval", async () => {
     expect(fetcher).toBeCalledTimes(3);
 });
 
-it("revalidates on focus", async () => {
-    const fetcherTime = 50;
+it("isEnabled works", async () => {
+    const fetcherWait = 50;
 
     const fetcher = jest.fn(async (x: string) => {
-        await waitForMs(fetcherTime);
+        await waitForMs(fetcherWait);
         return x;
     });
 
-    renderHook(useSWR, [() => "_", () => ({ fetcher })]);
+    const [key, setKey] = createKey();
+    const [isEnabled, setIsEnabled] = createSignal(true);
 
-    // would deduplicate the request otherwise (desired behavior)
-    await waitForMs(fetcherTime * 2);
+    // eslint-disable-next-line solid/reactivity
+    const { result } = renderHook(useSWR, [key, () => ({ fetcher, isEnabled: isEnabled() })]);
 
-    window.dispatchEvent(new Event("focus", { bubbles: true }));
+    await waitForMs(fetcherWait);
+    expect(fetcher).toBeCalledTimes(1);
 
-    await waitForMs(fetcherTime * 2);
-    expect(fetcher).toBeCalledTimes(2);
+    setIsEnabled(false);
+    setKey("foo");
+
+    expect(fetcher).toBeCalledTimes(1);
+    expect(result.isLoading()).toBe(false);
+
+    fetcher.mockClear();
+    expect(fetcher).toBeCalledTimes(0);
 });

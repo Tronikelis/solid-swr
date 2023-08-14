@@ -5,6 +5,7 @@ import { renderHook } from "@solidjs/testing-library";
 
 import useSWR from "../lib";
 
+import createKey from "./utils/createKey";
 import waitForTruthy from "./utils/waitForTruthy";
 
 it("at least boots up", async () => {
@@ -24,8 +25,10 @@ it("at least boots up", async () => {
 });
 
 it("passes thrown error into the error signal", async () => {
+    const [key] = createKey();
+
     const { result } = renderHook(useSWR, [
-        () => "",
+        key,
         () => ({
             fetcher: async () => {
                 throw new Error("foo");
@@ -38,14 +41,12 @@ it("passes thrown error into the error signal", async () => {
 });
 
 it("returns stale result from cache instantly and refetches", async () => {
-    const value = "foo";
-
     const fetcher = jest.fn(async (x: string) => {
         await new Promise(r => setTimeout(r, 100));
         return x;
     });
 
-    const key = () => value;
+    const [key] = createKey();
     const settings = () => ({ fetcher });
 
     {
@@ -54,14 +55,14 @@ it("returns stale result from cache instantly and refetches", async () => {
 
         await waitForTruthy(result.data);
 
-        expect(result.data()).toBe(value);
+        expect(result.data()).toBe(key());
         expect(fetcher).toBeCalledTimes(1);
     }
 
     // eslint-disable-next-line solid/reactivity
     const { result } = renderHook(useSWR, [key, settings]);
 
-    expect(result.data()).toBe(value);
+    expect(result.data()).toBe(key());
     expect(fetcher).toBeCalledTimes(2);
 });
 
@@ -71,13 +72,14 @@ it("deduplicates requests and syncs responses", async () => {
         return x;
     });
 
+    const [key] = createKey();
     let promises = [];
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     for (const _ of new Array(100).fill(false)) {
         promises.push(
             new Promise(r => {
-                const { result } = renderHook(useSWR, [() => "_", () => ({ fetcher })]);
+                const { result } = renderHook(useSWR, [key, () => ({ fetcher })]);
                 void waitForTruthy(result.data).then(() => r(result.data()));
             })
         );
