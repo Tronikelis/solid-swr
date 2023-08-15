@@ -1,5 +1,6 @@
 import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { createStore } from "solid-js/store";
 
 import useSWR from "../lib";
 
@@ -10,7 +11,7 @@ import waitForMs from "./utils/waitForMs";
 // I wanted to test the window revalidation event, the focus event and all that
 // but couldn't get jsdom to properly send the events to my hook 🤔
 
-const fetcherWait = 50;
+const msWait = 50;
 
 it("polls the fetcher based on an interval", async () => {
     const fetcher = jest.fn(async (x: string) => {
@@ -31,21 +32,36 @@ it("polls the fetcher based on an interval", async () => {
     expect(fetcher).toBeCalledTimes(3);
 });
 
-it("isEnabled works", () => {
+it("isEnabled works", async () => {
     const fetcher = jest.fn(async (x: string) => {
-        await waitForMs(fetcherWait);
+        await waitForMs(msWait);
         return x;
     });
 
-    const [key] = createKey();
+    const [key, setKey] = createKey();
+    const [options, setOptions] = createStore({
+        fetcher,
+        isEnabled: true,
+    });
 
     renderHook(useSWR, [key, { fetcher, isEnabled: false }]);
     expect(fetcher).toBeCalledTimes(0);
+
+    renderHook(useSWR, [key, options]);
+
+    await waitForMs(msWait);
+    expect(fetcher).toBeCalledTimes(1);
+
+    setOptions({ isEnabled: false });
+    setKey(`${Math.random()}`);
+
+    await waitForMs(msWait);
+    expect(fetcher).toBeCalledTimes(1);
 });
 
 it("keepPreviousData works", async () => {
     const fetcher = jest.fn(async (x: string) => {
-        await waitForMs(fetcherWait);
+        await waitForMs(msWait);
         return x;
     });
 
@@ -53,7 +69,7 @@ it("keepPreviousData works", async () => {
         const [key, setKey] = createKey();
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: false }]);
 
-        await waitForMs(fetcherWait);
+        await waitForMs(msWait);
         expect(result.data()).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
@@ -63,7 +79,7 @@ it("keepPreviousData works", async () => {
         const [key, setKey] = createKey();
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: true }]);
 
-        await waitForMs(fetcherWait);
+        await waitForMs(msWait);
         expect(result.data()).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
