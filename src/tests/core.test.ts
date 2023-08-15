@@ -51,7 +51,6 @@ it("returns stale result from cache instantly and refetches", async () => {
     const settings = { fetcher };
 
     {
-        // eslint-disable-next-line solid/reactivity
         const { result } = renderHook(useSWR, [key, settings]);
 
         await waitForTruthy(result.data);
@@ -60,7 +59,6 @@ it("returns stale result from cache instantly and refetches", async () => {
         expect(fetcher).toBeCalledTimes(1);
     }
 
-    // eslint-disable-next-line solid/reactivity
     const { result } = renderHook(useSWR, [key, settings]);
 
     expect(result.data()).toBe(key());
