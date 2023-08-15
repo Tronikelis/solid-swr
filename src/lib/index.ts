@@ -176,7 +176,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
      * If revalidation is enabled or payload is `undefined` this function resolves
      * when revalidation has finished.
      *
-     * Revalidation is bound to the hook, not to the key!
+     * This function is bound to the hook, not to the key!
      */
     async function mutate(
         payload: Res | ((curr: Res | undefined) => Res) | undefined,
