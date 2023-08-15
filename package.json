@@ -1,7 +1,7 @@
 {
     "name": "solidjs-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "0.2.2",
+    "version": "0.3.0",
     "type": "module",
     "main": "./dist/index.cjs",
     "types": "./dist/index.d.ts",
