@@ -32,8 +32,7 @@
     "scripts": {
         "build": "tsup",
         "lint": "eslint . -c ./.eslintrc.cjs",
-        "test": "jest",
-        "prepublishOnly": "npm run lint && npm run test && npm run build"
+        "test": "jest"
     },
     "peerDependencies": {
         "solid-js": "^1.7.8"
