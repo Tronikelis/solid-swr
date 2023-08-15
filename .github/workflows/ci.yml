@@ -1,6 +1,8 @@
 name: ci
 
-on: push
+on:
+    push:
+    workflow_call:
 
 jobs:
     lint:
