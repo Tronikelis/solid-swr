@@ -1,5 +1,5 @@
 import { dequal as equals } from "dequal";
-import { Accessor, createEffect, createSignal } from "solid-js";
+import { Accessor, createEffect, createSignal, mergeProps } from "solid-js";
 
 import useInterval from "./hooks/useInterval";
 import useOptions from "./hooks/useOptions";
@@ -52,6 +52,15 @@ export type Options<Res = unknown> = {
     cache?: CacheImplements<ExistentKey, CacheItem<Res>>;
 };
 
+export type MutationOptions = {
+    /**
+     * Should the hook refetch the data after the mutation?
+     * If the payload is undefined it will **always** refetch
+     * @default true
+     */
+    revalidate?: boolean;
+};
+
 type CustomEventPayload<T = unknown> = {
     key: ExistentKey;
     data: T;
@@ -59,7 +68,9 @@ type CustomEventPayload<T = unknown> = {
 
 export default function useSWR<Res = unknown, Error = unknown>(
     key: Accessor<Key>,
-    /** If you want this value to change at runtime, please pass a store (createStore) */
+    /**
+     * If you want this value to change at runtime, please pass a store (createStore)
+     */
     _options: Options<Res> = {}
 ) {
     const options = useOptions(_options);
@@ -137,7 +148,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false });
 
-            setError(err as any);
+            setError(() => err);
             dispatchCustomEvent(publishErrorEvent, {
                 data: err,
                 key: k,
@@ -147,10 +158,34 @@ export default function useSWR<Res = unknown, Error = unknown>(
         setIsLoading(false);
     }
 
-    // first iteration
-    async function mutate(payload: Res | ((curr: Res | undefined) => Res) | undefined) {
+    async function revalidate() {
+        const k = key();
+        if (k === undefined) return;
+
+        const [err, response] = await tryCatch<Error, Res>(() => options.fetcher(k));
+
+        if (!err) {
+            setData(() => response);
+            return;
+        }
+
+        setError(() => err);
+    }
+
+    /**
+     * If revalidation is enabled or payload is `undefined` this function resolves
+     * when revalidation has finished.
+     *
+     * Revalidation is bound to the hook, not to the key!
+     */
+    async function mutate(
+        payload: Res | ((curr: Res | undefined) => Res) | undefined,
+        _mutationOptions: MutationOptions = {}
+    ) {
+        const mutationOptions = mergeProps({ revalidate: true }, _mutationOptions);
+
         if (payload === undefined) {
-            await effect();
+            await revalidate();
             return;
         }
 
@@ -159,12 +194,12 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
         const fresh = payload instanceof Function ? payload(data()) : payload;
 
-        dispatchCustomEvent(publishDataEvent, {
-            data: fresh,
-            key: k,
-        } satisfies CustomEventPayload<Res>);
-
         setData(() => fresh);
+
+        // eslint-disable-next-line solid/reactivity
+        if (mutationOptions.revalidate === true) {
+            await revalidate();
+        }
     }
 
     // revalidate on offline/online
@@ -180,7 +215,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
     });
 
     // core functionality
-    createEffect(effect);
+    createEffect(() => effect());
 
     return {
         data,
