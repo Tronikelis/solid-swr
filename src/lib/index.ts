@@ -215,7 +215,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
     });
 
     // core functionality
-    createEffect(() => effect());
+    createEffect(effect);
 
     return {
         data,
