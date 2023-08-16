@@ -19,7 +19,7 @@ type CacheItem<T = unknown> = {
     busy: boolean;
 };
 
-export const SWRContext = createContext<Options>({
+export const SWRConfig = createContext<Options>({
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,

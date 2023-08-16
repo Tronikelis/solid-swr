@@ -18,7 +18,7 @@
 - [Returned values](#returned-values)
 - [Options](#options)
   - [API](#api)
-- [Context](#context)
+- [Config with context](#config-with-context)
   - [API](#api-1)
 - [Bound mutation](#bound-mutation)
   - [Options](#options-1)
@@ -124,49 +124,51 @@ The options are merged with context, [read more](#context)
 | `isEnabled`        |                        Is the hook enabled                         |                                           `true` |
 | `cache`            |             A data source for storing fetcher results              |                           A simple in-memory LRU |
 
-# Context
+# Config with context
 
-Currently the only use for the context is to provide your own default [settings](#options) for hooks
+Provide your own default [settings](#options) for hooks
 
 ```tsx
-import { SWRContext } from "solid-swr"
+import { SWRConfig } from "solid-swr";
 
 const yourOwnFetcher = async (x: string) => {};
 
 function Root() {
     return (
-        <SWContext.Provider value={{
-            fetcher: yourOwnFetcher
-        }}>
+        <SWRConfig.Provider
+            value={{
+                fetcher: yourOwnFetcher,
+            }}
+        >
             <App />
-        </SWRContext.Provider>
-    )
+        </SWRConfig.Provider>
+    );
 }
-
 ```
 
 Beware that if you nest these contexts, the hook will only get the nearest parent context,
 contexts themselves don't get merged like in the original `swr` package:
 
 ```tsx
-import { SWRContext } from "solid-swr"
+import { SWRConfig } from "solid-swr";
 
 const yourOwnFetcher = async (x: string) => {};
 
 function Root() {
     return (
-        <SWContext.Provider value={{
-            fetcher: yourOwnFetcher
-        }}>
+        <SWRConfig.Provider
+            value={{
+                fetcher: yourOwnFetcher,
+            }}
+        >
             <App1 />
-            <SWRContext.Provider value={{}}>
+            <SWRConfig.Provider value={{}}>
                 {/** App2 here does not get the `yourOwnFetcher` */}
                 <App2 />
-            </SWRContext.Provider>
-        </SWRContext.Provider>
-    )
+            </SWRConfig.Provider>
+        </SWRConfig.Provider>
+    );
 }
-
 ```
 
 ## API

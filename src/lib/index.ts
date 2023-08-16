@@ -7,7 +7,7 @@ import useWinEvent from "./hooks/useWinEvent";
 import tryCatch from "./utils/tryCatch";
 import { dispatchCustomEvent, publishDataEvent, publishErrorEvent } from "./events";
 
-export { SWRContext } from "./context";
+export { SWRConfig } from "./context/config";
 
 export type CacheItem<T = unknown> = {
     data?: T;
