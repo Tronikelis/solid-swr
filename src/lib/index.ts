@@ -1,7 +1,7 @@
 import { dequal as equals } from "dequal";
 import { Accessor, createEffect, createSignal, mergeProps, useContext } from "solid-js";
 
-import { SWRFallback } from "./context/ssr";
+import { SWRFallback } from "./context/fallback";
 import useInterval from "./hooks/useInterval";
 import useOptions from "./hooks/useOptions";
 import useWinEvent from "./hooks/useWinEvent";
@@ -97,7 +97,8 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
     const [data, setData] = createSignal<Res | undefined>(peekCache()?.data, { equals });
     const [error, setError] = createSignal<Error | undefined>();
-    const [isLoading, setIsLoading] = createSignal(true);
+    // eslint-disable-next-line solid/reactivity
+    const [isLoading, setIsLoading] = createSignal(!data());
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
