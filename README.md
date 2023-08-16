@@ -18,11 +18,12 @@
 - [Returned values](#returned-values)
 - [Options](#options)
   - [API](#api)
-- [Context](#context)
+- [Config with context](#config-with-context)
   - [API](#api-1)
 - [Bound mutation](#bound-mutation)
   - [Options](#options-1)
   - [API](#api-2)
+  - [SSR](#ssr)
 
 # Introduction
 
@@ -117,56 +118,58 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                |                              Explain                               |                                          Default |
-| :----------------- | :----------------------------------------------------------------: | -----------------------------------------------: |
-| `fetcher`          |  The function responsible for throwing errors and returning data   | The native fetch which throws on >=400 responses |
-| `keepPreviousData` | If cache is empty and the key changes, should we keep the old data |                                          `false` |
-| `isEnabled`        |                        Is the hook enabled                         |                                           `true` |
-| `cache`            |             A data source for storing fetcher results              |                           A simple in-memory LRU |
+| Key                |                              Explain                               |                                                          Default |
+| :----------------- | :----------------------------------------------------------------: | ---------------------------------------------------------------: |
+| `fetcher`          |  The function responsible for throwing errors and returning data   | The native fetch which parses json and throws on >=400 responses |
+| `keepPreviousData` | If cache is empty and the key changes, should we keep the old data |                                                          `false` |
+| `isEnabled`        |                        Is the hook enabled                         |                                                           `true` |
+| `cache`            |             A data source for storing fetcher results              |                                           A simple in-memory LRU |
 
-# Context
+# Config with context
 
-Currently the only use for the context is to provide your own default [settings](#options) for hooks
+Provide your own default [settings](#options) for hooks
 
 ```tsx
-import { SWRContext } from "solid-swr"
+import { SWRConfig } from "solid-swr";
 
 const yourOwnFetcher = async (x: string) => {};
 
 function Root() {
     return (
-        <SWContext.Provider value={{
-            fetcher: yourOwnFetcher
-        }}>
+        <SWRConfig.Provider
+            value={{
+                fetcher: yourOwnFetcher,
+            }}
+        >
             <App />
-        </SWRContext.Provider>
-    )
+        </SWRConfig.Provider>
+    );
 }
-
 ```
 
 Beware that if you nest these contexts, the hook will only get the nearest parent context,
 contexts themselves don't get merged like in the original `swr` package:
 
 ```tsx
-import { SWRContext } from "solid-swr"
+import { SWRConfig } from "solid-swr";
 
 const yourOwnFetcher = async (x: string) => {};
 
 function Root() {
     return (
-        <SWContext.Provider value={{
-            fetcher: yourOwnFetcher
-        }}>
+        <SWRConfig.Provider
+            value={{
+                fetcher: yourOwnFetcher,
+            }}
+        >
             <App1 />
-            <SWRContext.Provider value={{}}>
+            <SWRConfig.Provider value={{}}>
                 {/** App2 here does not get the `yourOwnFetcher` */}
                 <App2 />
-            </SWRContext.Provider>
-        </SWRContext.Provider>
-    )
+            </SWRConfig.Provider>
+        </SWRConfig.Provider>
+    );
 }
-
 ```
 
 ## API
@@ -234,3 +237,33 @@ The `mutate` util is an _async_ function, but it only actually acts as an async 
 | Key          |                                                   Explain                                                   | Default |
 | :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
 | `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
+
+## SSR
+
+For SSR there is another context `SWRFallback` which as you can guess by the name let's you add fallback data for specific keys
+
+Example usage:
+
+```tsx
+import useSWR, { SWRFallback } from "solid-js";
+
+const key = "foo";
+
+function Root(props: { fallback: any }) {
+    return (
+        <SWRFallback.Provider
+            value={{
+                [key]: fallback,
+            }}
+        >
+            <App />
+        </SWRFallback.Provider>
+    );
+}
+
+function App() {
+    const { data } = useSWR(() => key);
+    console.log(data()); // "foo"
+    return <></>;
+}
+```

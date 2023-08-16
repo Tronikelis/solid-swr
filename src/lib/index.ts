@@ -1,13 +1,15 @@
 import { dequal as equals } from "dequal";
-import { Accessor, createEffect, createSignal, mergeProps } from "solid-js";
+import { Accessor, createEffect, createSignal, mergeProps, useContext } from "solid-js";
 
+import { SWRFallback } from "./context/fallback";
 import useInterval from "./hooks/useInterval";
 import useOptions from "./hooks/useOptions";
 import useWinEvent from "./hooks/useWinEvent";
 import tryCatch from "./utils/tryCatch";
 import { dispatchCustomEvent, publishDataEvent, publishErrorEvent } from "./events";
 
-export { SWRContext } from "./context";
+export { SWRConfig } from "./context/config";
+export { SWRFallback };
 
 export type CacheItem<T = unknown> = {
     data?: T;
@@ -78,16 +80,25 @@ export default function useSWR<Res = unknown, Error = unknown>(
     _options: Options<Res> = {}
 ) {
     const options = useOptions(_options);
+    const fallback = useContext(SWRFallback);
 
-    function peekCache() {
+    function peekCache(): CacheItem<Res> | undefined {
         const k = key();
         if (k === undefined) return undefined;
-        return options.cache.get(k) || undefined;
+
+        const fromCache = options.cache.get(k);
+        if (fromCache) return fromCache;
+
+        const fromFallback = fallback[k] as Res | undefined;
+        if (fromFallback) return { busy: false, data: fromFallback };
+
+        return undefined;
     }
 
     const [data, setData] = createSignal<Res | undefined>(peekCache()?.data, { equals });
     const [error, setError] = createSignal<Error | undefined>();
-    const [isLoading, setIsLoading] = createSignal(true);
+    // eslint-disable-next-line solid/reactivity
+    const [isLoading, setIsLoading] = createSignal(!data());
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
