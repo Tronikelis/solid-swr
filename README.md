@@ -23,7 +23,7 @@
 - [Bound mutation](#bound-mutation)
   - [Options](#options-1)
   - [API](#api-2)
-  - [SSR](#ssr)
+- [SSR](#ssr)
 
 # Introduction
 
@@ -238,7 +238,7 @@ The `mutate` util is an _async_ function, but it only actually acts as an async 
 | :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
 | `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
 
-## SSR
+# SSR
 
 For SSR there is another context `SWRFallback` which as you can guess by the name let's you add fallback data for specific keys
 
