@@ -22,7 +22,7 @@ it("sets new value instantly and respects revalidation option", async () => {
     expect(result.data()).not.toBe(value);
     expect(fetcher).toBeCalledTimes(1);
 
-    void result.mutate(value);
+    void result.mutate(value, { revalidate: true });
     expect(result.data()).toBe(value);
     expect(fetcher).toBeCalledTimes(2);
 

@@ -25,9 +25,13 @@ type ExistentKey = Exclude<Key, undefined>;
 export type Fetcher<T> = (key: ExistentKey) => Promise<T>;
 
 export type Options<Res = unknown> = {
+    /**
+     * The function responsible for throwing errors and returning data
+     */
     fetcher?: Fetcher<Res>;
 
     /**
+     * If cache is empty and the key changes, should we keep the old data
      * @default false
      */
     keepPreviousData?: boolean;
@@ -56,7 +60,7 @@ export type MutationOptions = {
     /**
      * Should the hook refetch the data after the mutation?
      * If the payload is undefined it will **always** refetch
-     * @default true
+     * @default false
      */
     revalidate?: boolean;
 };
@@ -182,7 +186,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
         payload: Res | ((curr: Res | undefined) => Res) | undefined,
         _mutationOptions: MutationOptions = {}
     ) {
-        const mutationOptions = mergeProps({ revalidate: true }, _mutationOptions);
+        const mutationOptions = mergeProps({ revalidate: false }, _mutationOptions);
 
         if (payload === undefined) {
             await revalidate();

@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/require-await */
-
 import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
 
@@ -31,6 +29,7 @@ it("passes thrown error into the error signal", async () => {
     const { result } = renderHook(useSWR, [
         key,
         {
+            // eslint-disable-next-line @typescript-eslint/require-await
             fetcher: async () => {
                 throw new Error("foo");
             },
