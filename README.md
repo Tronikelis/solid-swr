@@ -2,8 +2,8 @@
 
 <div align="center">
 
-<img src="https://img.shields.io/bundlephobia/minzip/solidjs-swr?style=flat-square" />
-<img src="https://img.shields.io/npm/v/solidjs-swr?style=flat-square" />
+<img src="https://img.shields.io/bundlephobia/minzip/solid-swr?style=flat-square" />
+<img src="https://img.shields.io/npm/v/solid-swr?style=flat-square" />
  
 </div>
 
