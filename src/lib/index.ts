@@ -177,7 +177,9 @@ export default function useSWR<Res = unknown, Error = unknown>(
         const k = key();
         if (k === undefined) return;
 
+        setIsLoading(true);
         const [err, response] = await tryCatch<Error, Res>(() => options.fetcher(k));
+        setIsLoading(false);
 
         if (!err) {
             setData(() => response);
