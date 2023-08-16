@@ -218,7 +218,7 @@ Currently only 1 option is available:
 
 -   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
 
-The `mutate` hook is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
+The `mutate` util is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
 
 ## API
 
