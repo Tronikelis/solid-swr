@@ -29,6 +29,7 @@
         "type": "git",
         "url": "https://github.com/Tronikelis/solid-swr.git"
     },
+    "license": "MIT",
     "scripts": {
         "build": "tsup",
         "lint": "eslint . -c ./.eslintrc.cjs",
