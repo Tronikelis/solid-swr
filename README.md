@@ -70,6 +70,15 @@ function Profile() {
 }
 ```
 
+```ts
+function useSWR<Res = unknown, Error = unknown>(key: Accessor<Key>, _options?: Options<Res>): {
+    data: Accessor<Res | undefined>;
+    error: Accessor<Error | undefined>;
+    isLoading: Accessor<boolean>;
+    mutate: (payload: Res | ... 1 more ... | undefined, _mutationOptions?: MutationOptions) => Promise<...>;
+}
+```
+
 # Returned values
 
 The hook returns an object containing 3 signals and 1 function:
