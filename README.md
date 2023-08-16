@@ -185,7 +185,13 @@ function Profile() {
 
                     // await waits when revalidation of the mutate is enabled
                     // more on that later
-                    await mutate({ ...data, name: newName });
+                    await mutate(
+                        { ...data, name: newName },
+                        {
+                            // this is false by default
+                            revalidate: false,
+                        }
+                    );
 
                     // send a request to the API to update the data
                     await requestUpdateUsername(newName);
@@ -211,6 +217,8 @@ mutate(x => x, {
 Currently only 1 option is available:
 
 -   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
+
+The `mutate` hook is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
 
 ## API
 
