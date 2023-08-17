@@ -10,10 +10,10 @@ export type CacheItem<T = unknown> = {
     busy: boolean;
 };
 
-export type CacheImplements<K, V> = {
-    set: (key: K, value: V) => void;
-    get: (key: K) => V | undefined;
-    keys: () => K[];
+export type CacheImplements<Res = unknown> = {
+    set: (key: ExistentKey, value: CacheItem<Res>) => void;
+    get: (key: ExistentKey) => CacheItem<Res> | undefined;
+    keys: () => ExistentKey[];
 };
 
 export type Key = string | undefined;
@@ -49,7 +49,7 @@ export type Options<Res = unknown> = {
      * Provide your own cache implementation,
      * by default a simple in-memory LRU cache is used with 5K max items
      */
-    cache?: CacheImplements<ExistentKey, CacheItem<Res>>;
+    cache?: CacheImplements<Res>;
 };
 
 export type MutationOptions = {

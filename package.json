@@ -33,7 +33,8 @@
     "scripts": {
         "build": "tsup",
         "lint": "eslint . -c ./.eslintrc.cjs",
-        "test": "jest"
+        "test": "jest",
+        "tsc": "tsc --noEmit"
     },
     "peerDependencies": {
         "solid-js": "^1.7.8"
