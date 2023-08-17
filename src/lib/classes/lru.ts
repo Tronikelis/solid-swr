@@ -52,6 +52,10 @@ export default class LRU<K, V> {
         }
     }
 
+    keys(): K[] {
+        return Array.from(this.lookup.keys());
+    }
+
     private trimCache(): void {
         if (this.length <= this.capacity) return;
 
