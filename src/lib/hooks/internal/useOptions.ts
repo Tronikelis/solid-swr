@@ -3,6 +3,7 @@ import { mergeProps, useContext } from "solid-js";
 import LRU from "~/classes/lru";
 import { SWRConfig } from "~/context/config";
 import { CacheItem, Options } from "~/types";
+import noop from "~/utils/noop";
 
 async function defaultFetcher<T>(key: string): Promise<T> {
     const response = await fetch(key);
@@ -15,9 +16,11 @@ async function defaultFetcher<T>(key: string): Promise<T> {
     throw new Error(JSON.stringify(json));
 }
 
-const cache = new LRU<string, CacheItem>(5e3);
+const cache = new LRU<string, CacheItem<unknown>>(5e3);
 
-export default function useOptions<T>(options: Options<T>): Required<Options<T>> {
+export default function useOptions<Res, Err>(
+    options: Options<Res, Err>
+): Required<Options<Res, Err>> {
     const context = useContext(SWRConfig);
 
     const merged = mergeProps(
@@ -27,10 +30,12 @@ export default function useOptions<T>(options: Options<T>): Required<Options<T>>
             isEnabled: true,
             refreshInterval: 0,
             cache,
-        },
+            onSuccess: noop,
+            onError: noop,
+        } satisfies Required<Options<unknown, unknown>>,
         context,
         options
     );
 
-    return merged as Required<Options<T>>;
+    return merged as Required<Options<Res, Err>>;
 }
