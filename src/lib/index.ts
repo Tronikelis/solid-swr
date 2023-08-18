@@ -2,10 +2,10 @@ import { dequal as equals } from "dequal";
 import { Accessor, createEffect, createSignal, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
-import useInterval from "./hooks/useInterval";
-import useMutationOptions from "./hooks/useMutationOptions";
-import useOptions from "./hooks/useOptions";
-import useWinEvent from "./hooks/useWinEvent";
+import useInterval from "./hooks/internal/useInterval";
+import useMutationOptions from "./hooks/internal/useMutationOptions";
+import useOptions from "./hooks/internal/useOptions";
+import useWinEvent from "./hooks/internal/useWinEvent";
 import tryCatch from "./utils/tryCatch";
 import {
     dispatchCustomEvent,

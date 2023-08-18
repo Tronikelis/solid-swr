@@ -18,4 +18,9 @@ export default {
             },
         ],
     },
+
+    // bruh
+    moduleNameMapper: {
+        "^~/(.*)$": "<rootDir>/src/lib/$1",
+    },
 } satisfies JestConfigWithTsJest;

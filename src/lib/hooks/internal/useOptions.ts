@@ -1,8 +1,8 @@
 import { mergeProps, useContext } from "solid-js";
 
-import LRU from "../classes/lru";
-import { SWRConfig } from "../context/config";
-import { CacheItem, Options } from "../types";
+import LRU from "~/classes/lru";
+import { SWRConfig } from "~/context/config";
+import { CacheItem, Options } from "~/types";
 
 async function defaultFetcher<T>(key: string): Promise<T> {
     const response = await fetch(key);
