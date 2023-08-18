@@ -2,7 +2,7 @@ import { mergeProps, useContext } from "solid-js";
 
 import LRU from "../classes/lru";
 import { SWRConfig } from "../context/config";
-import { Options } from "..";
+import { CacheItem, Options } from "../types";
 
 async function defaultFetcher<T>(key: string): Promise<T> {
     const response = await fetch(key);
@@ -16,11 +16,6 @@ async function defaultFetcher<T>(key: string): Promise<T> {
 }
 
 const cache = new LRU<string, CacheItem>(5e3);
-
-type CacheItem<T = unknown> = {
-    data?: T;
-    busy: boolean;
-};
 
 export default function useOptions<T>(options: Options<T>): Required<Options<T>> {
     const context = useContext(SWRConfig);

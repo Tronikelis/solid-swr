@@ -19,12 +19,15 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 18
+
             - name: Install node_modules
-              run: >
-                  npm ci
+              run: npm ci
+
             - name: ESLint
-              run: >
-                  npm run lint
+              run: npm run lint
+
+            - name: tsc
+              run: npm run tsc
 
     test:
         runs-on: ubuntu-latest
@@ -41,9 +44,9 @@ jobs:
               uses: actions/setup-node@v3
               with:
                   node-version: 18
+
             - name: Install node_modules
-              run: >
-                  npm ci
+              run: npm ci
+
             - name: Jest
-              run: >
-                  npm run test
+              run: npm run test

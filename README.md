@@ -20,7 +20,9 @@
   - [API](#api)
 - [Config with context](#config-with-context)
   - [API](#api-1)
-- [Bound mutation](#bound-mutation)
+- [Mutation](#mutation)
+  - [Bound mutation](#bound-mutation)
+  - [Global mutation](#global-mutation)
   - [Options](#options-1)
   - [API](#api-2)
 - [SSR](#ssr)
@@ -176,7 +178,9 @@ function Root() {
 
 Refer to the [options api](#api)
 
-# Bound mutation
+# Mutation
+
+## Bound mutation
 
 This refers to using the `mutate` function returned by individual hooks
 
@@ -216,6 +220,26 @@ function Profile() {
 }
 ```
 
+## Global mutation
+
+There is an exported hook `useMatchMutate` using which you can filter all keys and mutate them at once
+
+```ts
+import { useMatchMutate } from "solid-swr";
+
+function onClickOrWhatever() {
+    const mutate = useMatchMutate();
+    mutate(
+        // all keys
+        key => true,
+        // payload
+        undefined,
+        // settings
+        { revalidate: true }
+    );
+}
+```
+
 ## Options
 
 Options are passed as a second parameter to `mutate`:
@@ -226,17 +250,25 @@ mutate(x => x, {
 });
 ```
 
+And as a third parameter when using `useMatchMutate`:
+
+```ts
+mutate(x => true, payload, {
+    // here
+});
+```
+
 Currently only 1 option is available:
 
--   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
+-   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch (only applies to bound mutation)
 
-The `mutate` util is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
+The `mutate` util is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined` (only applies to bound mutation)
 
 ## API
 
-| Key          |                                                   Explain                                                   | Default |
-| :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
-| `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
+| Key          |                                                                   Explain                                                                    | Default |
+| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------: | ------: |
+| `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch (only applies to bound mutation) | `false` |
 
 # SSR
 

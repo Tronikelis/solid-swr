@@ -1,7 +1,7 @@
 import { expect, it, jest } from "@jest/globals";
 import { render } from "@solidjs/testing-library";
 
-import useSWR, { SWRConfig, SWRFallback } from "../lib";
+import useSWR, { CacheImplements, SWRConfig, SWRFallback } from "../lib";
 
 import createKey from "./utils/createKey";
 import waitForMs from "./utils/waitForMs";
@@ -41,7 +41,16 @@ it("merges the settings correctly", async () => {
         return x;
     });
 
-    const cache = new Map();
+    const cache: CacheImplements = (() => {
+        const map = new Map();
+        return {
+            get: key => map.get(key),
+            set: (key, value) => {
+                map.set(key, value);
+            },
+            keys: () => Array.from(map.keys()),
+        };
+    })();
 
     function WithConfig(props: { children: any }) {
         return <SWRConfig.Provider value={{ fetcher }}>{props.children}</SWRConfig.Provider>;
@@ -60,7 +69,7 @@ it("merges the settings correctly", async () => {
 
     await waitForMs();
 
-    expect(cache.size).toBe(1);
+    expect(cache.keys().length).toBe(1);
     expect(fetcher).toBeCalledTimes(1);
 });
 

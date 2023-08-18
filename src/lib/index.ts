@@ -1,76 +1,36 @@
 import { dequal as equals } from "dequal";
-import { Accessor, createEffect, createSignal, mergeProps, useContext } from "solid-js";
+import { Accessor, createEffect, createSignal, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
 import useInterval from "./hooks/useInterval";
+import useMutationOptions from "./hooks/useMutationOptions";
 import useOptions from "./hooks/useOptions";
 import useWinEvent from "./hooks/useWinEvent";
 import tryCatch from "./utils/tryCatch";
-import { dispatchCustomEvent, publishDataEvent, publishErrorEvent } from "./events";
+import {
+    dispatchCustomEvent,
+    publishDataEvent,
+    publishErrorEvent,
+    triggerEffectEvent,
+} from "./events";
+import {
+    CacheImplements,
+    CacheItem,
+    CustomEventPayload,
+    Fetcher,
+    Key,
+    MutationOptions,
+    Options,
+} from "./types";
 
+export type { CacheImplements, CacheItem, Fetcher, Key, MutationOptions, Options };
+
+// contexts
 export { SWRConfig } from "./context/config";
 export { SWRFallback };
 
-export type CacheItem<T = unknown> = {
-    data?: T;
-    busy: boolean;
-};
-
-export type CacheImplements<K, V> = {
-    set: (key: K, value: V) => void;
-    get: (key: K) => V | undefined;
-};
-
-export type Key = string | undefined;
-type ExistentKey = Exclude<Key, undefined>;
-
-export type Fetcher<T> = (key: ExistentKey) => Promise<T>;
-
-export type Options<Res = unknown> = {
-    /**
-     * The function responsible for throwing errors and returning data
-     */
-    fetcher?: Fetcher<Res>;
-
-    /**
-     * If cache is empty and the key changes, should we keep the old data
-     * @default false
-     */
-    keepPreviousData?: boolean;
-
-    /**
-     * Toggle whether the hook should be enabled (you can do the same by passing in () => undefined as key),
-     * useful for scenarios where you create key based on derived async data
-     * @default true
-     */
-    isEnabled?: boolean;
-
-    /**
-     * In milliseconds, 0 is disabled
-     * @default 0
-     */
-    refreshInterval?: number;
-
-    /**
-     * Provide your own cache implementation,
-     * by default a simple in-memory LRU cache is used with 5K max items
-     */
-    cache?: CacheImplements<ExistentKey, CacheItem<Res>>;
-};
-
-export type MutationOptions = {
-    /**
-     * Should the hook refetch the data after the mutation?
-     * If the payload is undefined it will **always** refetch
-     * @default false
-     */
-    revalidate?: boolean;
-};
-
-type CustomEventPayload<T = unknown> = {
-    key: ExistentKey;
-    data: T;
-};
+// hooks
+export { default as useMatchMutate } from "./hooks/useMatchMutate";
 
 export default function useSWR<Res = unknown, Error = unknown>(
     key: Accessor<Key>,
@@ -114,6 +74,11 @@ export default function useSWR<Res = unknown, Error = unknown>(
         setError(() => ev.detail.data);
     });
 
+    useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+        await effect();
+    });
+
     async function effect() {
         const k = key();
 
@@ -155,25 +120,25 @@ export default function useSWR<Res = unknown, Error = unknown>(
             options.cache.set(k, { busy: false, data: response });
 
             setData(() => response);
-            dispatchCustomEvent(publishDataEvent, {
+            dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
                 data: response!,
                 key: k,
-            } satisfies CustomEventPayload<Res>);
+            });
         } else {
             // not busy anymore
             options.cache.set(k, { busy: false });
 
             setError(() => err);
-            dispatchCustomEvent(publishErrorEvent, {
+            dispatchCustomEvent<NonNullable<Error>>(publishErrorEvent, {
                 data: err,
                 key: k,
-            } satisfies CustomEventPayload<Error>);
+            });
         }
 
         setIsLoading(false);
     }
 
-    async function revalidate() {
+    async function revalidateLocal() {
         const k = key();
         if (k === undefined) return;
 
@@ -199,10 +164,10 @@ export default function useSWR<Res = unknown, Error = unknown>(
         payload: Res | ((curr: Res | undefined) => Res) | undefined,
         _mutationOptions: MutationOptions = {}
     ) {
-        const mutationOptions = mergeProps({ revalidate: false }, _mutationOptions);
+        const mutationOptions = useMutationOptions(_mutationOptions);
 
         if (payload === undefined) {
-            await revalidate();
+            await revalidateLocal();
             return;
         }
 
@@ -215,7 +180,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
         // eslint-disable-next-line solid/reactivity
         if (mutationOptions.revalidate === true) {
-            await revalidate();
+            await revalidateLocal();
         }
     }
 

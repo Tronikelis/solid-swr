@@ -1,5 +1,5 @@
 import { createContext } from "solid-js";
 
-import { Options } from "..";
+import { Options } from "../types";
 
 export const SWRConfig = createContext<Options>({});
