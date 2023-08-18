@@ -20,7 +20,9 @@
   - [API](#api)
 - [Config with context](#config-with-context)
   - [API](#api-1)
-- [Bound mutation](#bound-mutation)
+- [Mutation](#mutation)
+  - [Bound mutation](#bound-mutation)
+  - [Global mutation](#global-mutation)
   - [Options](#options-1)
   - [API](#api-2)
 - [SSR](#ssr)
@@ -176,7 +178,9 @@ function Root() {
 
 Refer to the [options api](#api)
 
-# Bound mutation
+# Mutation
+
+## Bound mutation
 
 This refers to using the `mutate` function returned by individual hooks
 
@@ -216,12 +220,40 @@ function Profile() {
 }
 ```
 
+## Global mutation
+
+There is an exported hook `useMatchMutate` using which you can filter all keys and mutate them at once
+
+```ts
+import { useMatchMutate } from "solid-swr";
+
+function onClickOrWhatever() {
+    const mutate = useMatchMutate();
+    mutate(
+        // all keys
+        key => true,
+        // payload
+        undefined,
+        // settings
+        { revalidate: true }
+    );
+}
+```
+
 ## Options
 
 Options are passed as a second parameter to `mutate`:
 
 ```ts
 mutate(x => x, {
+    // here
+});
+```
+
+And as a third parameter when using `useMatchMutate`:
+
+```ts
+mutate(x => true, payload, {
     // here
 });
 ```
