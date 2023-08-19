@@ -1,10 +1,11 @@
 import { createEffect, createSignal, mergeProps, on } from "solid-js";
+import { createStore } from "solid-js/store";
 
 import { Options } from "~/types";
 
 import useSWR from "..";
 
-type GetKey<Res> = (index: number, prev: Res | undefined) => string;
+type GetKey<Res> = (index: number, prev: Res | undefined) => string | undefined;
 
 export default function useSWRInfinite<Res = unknown, Err = unknown>(
     getKey: GetKey<Res>,
@@ -12,13 +13,19 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
 ) {
     const [index, setIndex] = createSignal(0);
 
-    const [data, setData] = createSignal<(Res | undefined)[]>([]);
+    const [data, setData] = createStore<(Res | undefined)[]>([]);
     const [isLoading, setIsLoading] = createSignal(true);
     const [error, setError] = createSignal<Err | undefined>(undefined);
 
     createEffect(
-        // this might be (pretty sure actually is) a gc nightmare lmao
+        // now this works pretty well
+        // but it loses data
+        // if you set another index while swr is still fetching an older index
+        // it will cleanup all effects of the older swr instance (onSuccess and all that)
+        // and start the new index fetching, so basically, loses data
         on(index, index => {
+            setIsLoading(true);
+
             const onSuccess = (data: Res) => {
                 setData(prev => {
                     const clone = [...prev];
@@ -32,8 +39,7 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
             });
 
             // not inlining this into useSWR to remove reactivity of the key
-            const key = getKey(index, data().at(-1));
-
+            const key = getKey(index, data.at(-1));
             const swr = useSWR<Res, Err>(() => key, options);
 
             createEffect(() => {

@@ -1,17 +1,19 @@
-import { createSignal } from "solid-js";
+import { createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
 
 import useSWR, { useSWRInfinite } from "~/index";
 
 function App() {
-    const { data, setIndex } = useSWRInfinite(index => {
+    const { data, setIndex, isLoading } = useSWRInfinite((index, prev) => {
+        console.log(prev);
         return `https://jsonplaceholder.typicode.com/todos/${index + 1}`;
     });
 
     return (
         <div>
-            <pre>{JSON.stringify(data(), null, 4)}</pre>
+            <For each={data}>{item => <pre>{JSON.stringify(item, null, 4)}</pre>}</For>
             <button onClick={() => setIndex(x => x + 1)}>load more</button>
+            <p>isLoading: {isLoading() ? "yes" : "no"}</p>
         </div>
     );
 }
