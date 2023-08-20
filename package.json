@@ -1,7 +1,7 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "type": "module",
     "main": "./dist/index.cjs",
     "types": "./dist/index.d.ts",
@@ -31,6 +31,7 @@
     },
     "license": "MIT",
     "scripts": {
+        "dev": "vite",
         "build": "tsup",
         "lint": "eslint . -c ./.eslintrc.cjs",
         "test": "jest",
@@ -56,6 +57,9 @@
         "ts-node": "10.9.1",
         "tsup": "7.2.0",
         "typescript": "5.0.2",
+        "vite": "4.4.9",
+        "vite-plugin-solid": "2.7.0",
+        "vite-tsconfig-paths": "4.2.0",
         "whatwg-fetch": "3.6.17"
     }
 }

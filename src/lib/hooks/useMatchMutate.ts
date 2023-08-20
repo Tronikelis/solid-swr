@@ -1,8 +1,8 @@
-import { dispatchCustomEvent, publishDataEvent, triggerEffectEvent } from "../events";
-import { MutationOptions } from "../types";
+import { dispatchCustomEvent, publishDataEvent, triggerEffectEvent } from "~/events";
+import { MutationOptions } from "~/types";
 
-import useMutationOptions from "./useMutationOptions";
-import useOptions from "./useOptions";
+import useMutationOptions from "./internal/useMutationOptions";
+import useOptions from "./internal/useOptions";
 
 type FilterKeyFn = (key: string) => boolean;
 

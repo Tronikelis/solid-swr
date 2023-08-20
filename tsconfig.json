@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "rootDir": "./src",
+        "baseUrl": ".",
 
         "target": "ESNext",
         "module": "ESNext",
@@ -16,7 +17,11 @@
 
         "strict": true,
         "noFallthroughCasesInSwitch": true,
-        "noUncheckedIndexedAccess": true
+        "noUncheckedIndexedAccess": true,
+
+        "paths": {
+            "~/*": ["./src/lib/*"]
+        }
     },
 
     "include": ["src"]

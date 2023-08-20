@@ -1,4 +1,4 @@
-import { CustomEventPayload } from "../types";
+import { CustomEventPayload } from "~/types";
 
 const prefix = "solid-swr:";
 

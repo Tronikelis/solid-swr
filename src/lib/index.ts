@@ -2,10 +2,10 @@ import { dequal as equals } from "dequal";
 import { Accessor, createEffect, createSignal, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
-import useInterval from "./hooks/useInterval";
-import useMutationOptions from "./hooks/useMutationOptions";
-import useOptions from "./hooks/useOptions";
-import useWinEvent from "./hooks/useWinEvent";
+import useInterval from "./hooks/internal/useInterval";
+import useMutationOptions from "./hooks/internal/useMutationOptions";
+import useOptions from "./hooks/internal/useOptions";
+import useWinEvent from "./hooks/internal/useWinEvent";
 import tryCatch from "./utils/tryCatch";
 import {
     dispatchCustomEvent,
@@ -31,15 +31,16 @@ export { SWRFallback };
 
 // hooks
 export { default as useMatchMutate } from "./hooks/useMatchMutate";
+export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 
-export default function useSWR<Res = unknown, Error = unknown>(
+export default function useSWR<Res = unknown, Err = unknown>(
     key: Accessor<Key>,
     /**
      * If you want this value to change at runtime, please pass a store (createStore)
      */
-    _options: Options<Res> = {}
+    _options: Options<Res, Err> = {}
 ) {
-    const options = useOptions(_options);
+    const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
     function peekCache(): CacheItem<Res> | undefined {
@@ -56,7 +57,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
     }
 
     const [data, setData] = createSignal<Res | undefined>(peekCache()?.data, { equals });
-    const [error, setError] = createSignal<Error | undefined>();
+    const [error, setError] = createSignal<Err | undefined>();
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data());
 
@@ -67,7 +68,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
         setError(undefined);
         setData(() => ev.detail.data);
     });
-    useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Error>>) => {
+    useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         setIsLoading(false);
@@ -109,7 +110,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
             }
         }
 
-        const [err, response] = await tryCatch<Error, Res>(() => options.fetcher(k));
+        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k));
 
         // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
         // as tracking is not possible after an async function uses await.
@@ -129,7 +130,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
             options.cache.set(k, { busy: false });
 
             setError(() => err);
-            dispatchCustomEvent<NonNullable<Error>>(publishErrorEvent, {
+            dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
                 data: err,
                 key: k,
             });
@@ -143,7 +144,7 @@ export default function useSWR<Res = unknown, Error = unknown>(
         if (k === undefined) return;
 
         setIsLoading(true);
-        const [err, response] = await tryCatch<Error, Res>(() => options.fetcher(k));
+        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k));
         setIsLoading(false);
 
         if (!err) {
@@ -198,6 +199,17 @@ export default function useSWR<Res = unknown, Error = unknown>(
 
     // core functionality
     createEffect(effect);
+
+    createEffect(() => {
+        const d = data();
+        if (d === undefined) return;
+        options.onSuccess(d);
+    });
+    createEffect(() => {
+        const e = error();
+        if (e === undefined) return;
+        options.onError(e);
+    });
 
     return {
         data,

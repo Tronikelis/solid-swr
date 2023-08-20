@@ -1,16 +1,16 @@
-export type CustomEventPayload<T = unknown> = {
+export type CustomEventPayload<T> = {
     key: ExistentKey;
     data: T;
 };
 
 export type ExistentKey = Exclude<Key, undefined>;
 
-export type CacheItem<T = unknown> = {
+export type CacheItem<T> = {
     data?: T;
     busy: boolean;
 };
 
-export type CacheImplements<Res = unknown> = {
+export type CacheImplements<Res = any> = {
     set: (key: ExistentKey, value: CacheItem<Res>) => void;
     get: (key: ExistentKey) => CacheItem<Res> | undefined;
     keys: () => ExistentKey[];
@@ -20,7 +20,7 @@ export type Key = string | undefined;
 
 export type Fetcher<T> = (key: ExistentKey) => Promise<T>;
 
-export type Options<Res = unknown> = {
+export type Options<Res, Err> = {
     /**
      * The function responsible for throwing errors and returning data
      */
@@ -50,6 +50,10 @@ export type Options<Res = unknown> = {
      * by default a simple in-memory LRU cache is used with 5K max items
      */
     cache?: CacheImplements<Res>;
+
+    onSuccess?: (data: Res) => void;
+
+    onError?: (err: Err) => void;
 };
 
 export type MutationOptions = {
