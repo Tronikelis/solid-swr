@@ -5,7 +5,6 @@ import useSWR, { useSWRInfinite } from "~/index";
 
 function App() {
     const { data, setIndex, isLoading } = useSWRInfinite((index, prev) => {
-        console.log(prev);
         return `https://jsonplaceholder.typicode.com/todos/${index + 1}`;
     });
 

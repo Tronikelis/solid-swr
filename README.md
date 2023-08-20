@@ -26,6 +26,8 @@
   - [Options](#options-1)
   - [API](#api-2)
 - [SSR](#ssr)
+- [useSWRInfinite](#useswrinfinite)
+  - [⚠️ Important note](#️-important-note)
 
 # Introduction
 
@@ -111,6 +113,8 @@ useSWR(() => "_", {
     isEnabled: true,
     refreshInterval: 0,
     cache: new LRU<string, CacheItem>(5e3),
+    onSuccess: noop,
+    onError: noop,
 });
 ```
 
@@ -120,12 +124,14 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                |                              Explain                               |                                                          Default |
-| :----------------- | :----------------------------------------------------------------: | ---------------------------------------------------------------: |
-| `fetcher`          |  The function responsible for throwing errors and returning data   | The native fetch which parses json and throws on >=400 responses |
-| `keepPreviousData` | If cache is empty and the key changes, should we keep the old data |                                                          `false` |
-| `isEnabled`        |                        Is the hook enabled                         |                                                           `true` |
-| `cache`            |             A data source for storing fetcher results              |                                           A simple in-memory LRU |
+| Key                |                                     Explain                                     |                                                          Default |
+| :----------------- | :-----------------------------------------------------------------------------: | ---------------------------------------------------------------: |
+| `fetcher`          |         The function responsible for throwing errors and returning data         | The native fetch which parses json and throws on >=400 responses |
+| `keepPreviousData` |       If cache is empty and the key changes, should we keep the old data        |                                                          `false` |
+| `isEnabled`        |                               Is the hook enabled                               |                                                           `true` |
+| `cache`            |                    A data source for storing fetcher results                    |                                           A simple in-memory LRU |
+| `onSuccess`        |   A callback that gets the data when the signal gets updated with truthy data   |                                                           `noop` |
+| `onError`          | A callback that gets the error when the signal gets updated with a truthy error |                                                           `noop` |
 
 # Config with context
 
@@ -297,5 +303,64 @@ function App() {
     const { data } = useSWR(() => key);
     console.log(data()); // "foo"
     return <></>;
+}
+```
+
+# useSWRInfinite
+
+A hook for infinite loading behavior
+
+This is a wrapper around the normal `useSWR`, so it automatically gets all of its features
+
+The differences between it and `useSWR` are:
+
+-   bound mutation is removed (mutate with global mutation)
+-   data is now a store, not a signal, with an array of responses
+
+Basic usage goes like this
+
+```tsx
+import { useSWRInfinite } from "solid-swr";
+
+function App() {
+    const { data, error, index, setIndex, isLoading } = useSWRInfinite((index, prevData) => {
+        if (prevData && prevData.next === false) return undefined;
+        return `https://example.com?page=${index + 1}`;
+    });
+
+    return (
+        <div>
+            <For each={data}>{(_, item) => <div>{item}</div>}</For>
+        </div>
+    );
+}
+```
+
+## ⚠️ Important note
+
+This behavior will most likely be removed in a future update when I figure out a simple way to do so
+
+If you set another index while `useSWRInfinite` is still fetching an older index it will cleanup all effects of the older swr instance (onSuccess and all that) and start the new index fetching, so basically, loses data
+
+Example
+
+```tsx
+function App() {
+    const { setIndex, data } = useSWRInfinite(/** omitted */);
+
+    onMount(() => {
+        setIndex(x => x + 1);
+    });
+
+    createEffect(() => {
+        console.log([...data]);
+
+        // []
+
+        // [
+        //     undefined (data that came from the 0 index was aborted),
+        //     {... (data that came from the first index)}
+        // ]
+    });
 }
 ```
