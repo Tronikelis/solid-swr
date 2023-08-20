@@ -364,3 +364,5 @@ function App() {
     });
 }
 ```
+
+To mitigate this don't set a new index when `isLoading() === true`
