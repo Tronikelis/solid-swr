@@ -24,6 +24,14 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
         // it will cleanup all effects of the older swr instance (onSuccess and all that)
         // and start the new index fetching, so basically, loses data
         on(index, index => {
+            if (isLoading() && index !== 0) {
+                console.warn(
+                    "You have set another index while one was still loading, " +
+                        "so the older index got cleaned up and the data won't be updated. " +
+                        "More info at the docs (this behavior will probably be eliminated when I figure out how to do it simply :P"
+                );
+            }
+
             setIsLoading(true);
 
             const onSuccess = (data: Res) => {
