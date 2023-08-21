@@ -7,6 +7,10 @@ import useOptions from "./internal/useOptions";
 export type FilterKeyFn = (key: string) => boolean;
 export type Payload<Res> = Res | ((key: string, res: Res | undefined) => Res | undefined);
 
+/**
+ * The hook's behavior is the same as the bound mutation,
+ * just this hook can mutate many keys at once
+ */
 export default function useMatchMutate<Res = unknown>() {
     const options = useOptions({});
 
