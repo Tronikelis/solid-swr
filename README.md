@@ -28,6 +28,8 @@
 - [SSR](#ssr)
 - [useSWRInfinite](#useswrinfinite)
   - [⚠️ Important note](#️-important-note)
+- [useSWRMutation](#useswrmutation)
+  - [API](#api-3)
 
 # Introduction
 
@@ -266,15 +268,15 @@ mutate(x => true, payload, {
 
 Currently only 1 option is available:
 
--   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch (only applies to bound mutation)
+-   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
 
 The `mutate` util is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
 
 ## API
 
-| Key          |                                                                   Explain                                                                    | Default |
-| :----------- | :------------------------------------------------------------------------------------------------------------------------------------------: | ------: |
-| `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch (only applies to bound mutation) | `false` |
+| Key          |                                                   Explain                                                   | Default |
+| :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
+| `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
 
 # SSR
 
@@ -366,3 +368,74 @@ function App() {
 ```
 
 To mitigate this don't set a new index when `isLoading() === true`
+
+# useSWRMutation
+
+A helper hook for remote mutations that wraps the global mutation hook `useMatchMutate`
+
+Basic usage
+
+```tsx
+import useSWR, { useSWRMutation } from "solid-swr";
+
+function App() {
+    const key = () => "foo";
+    const swr = useSWR(key);
+
+    const mutation = useSWRMutation(
+        k => k === key(),
+        async (arg: any) => {
+            return await updateUser(arg);
+        }
+    );
+
+    async function onClick(arg: any) {
+        try {
+            const response = await mutation.trigger(arg);
+
+            // do you want to just revalidate?
+            mutation.populateCache();
+
+            // or do optimistic updates ?
+            // current is useSWR data
+            mutation.populateCache((key, current) => {
+                if (current === undefined) {
+                    // ...
+                    return;
+                }
+
+                const clone = { ...current };
+                clone.foo = response.foo;
+                return clone;
+            });
+        } catch (err) {
+            // handle error
+            // or don't, the mutation.error() is there
+        }
+    }
+
+    return (
+        <div>
+            {swr.data()}
+            {mutation.isTriggering()}
+            {mutation.error()}
+        </div>
+    );
+}
+```
+
+The `populateCache` returned method is just a wrapper for the global `useMatchMutate` hook, read up on it [here](#global-mutation)
+
+## API
+
+```ts
+function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = unknown>(
+    filter: FilterKeyFn,
+    fetcher: Fetcher<Res, Arg>
+): {
+    isTriggering: Accessor<boolean>;
+    trigger: (arg: Arg) => Promise<Res>;
+    populateCache: (payload: Payload<Pld>, mutationOptions?: MutationOptions) => void;
+    error: Accessor<Err | undefined>;
+};
+```

@@ -20,7 +20,7 @@ it("simply mutates the correct hook without revalidation", () => {
     const { result: result1 } = renderHook(useSWR, [key1, { fetcher }]);
     const { result: result2 } = renderHook(useSWR, [key2, { fetcher }]);
 
-    const mutate = useMatchMutate();
+    const { result: mutate } = renderHook(useMatchMutate);
 
     mutate(key => key === key1(), mutatedValue, {
         // false is default anyways
@@ -51,7 +51,7 @@ it("mutates the hooks and deduplicates revalidation and syncs responses", async 
     expect(result1.data()).toBe(key());
     expect(result2.data()).toBe(key());
 
-    const mutate = useMatchMutate();
+    const { result: mutate } = renderHook(useMatchMutate);
 
     mutate(x => x === key(), mutatedValue, {
         revalidate: true,
@@ -87,7 +87,7 @@ it("revalidates when payload is undefined", async () => {
 
     switchReturn = true;
 
-    const mutate = useMatchMutate();
+    const { result: mutate } = renderHook(useMatchMutate);
     mutate(x => x === key(), undefined);
 
     await waitForMs();
