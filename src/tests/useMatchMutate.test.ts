@@ -20,7 +20,7 @@ it("simply mutates the correct hook without revalidation", () => {
     const { result: result1 } = renderHook(useSWR, [key1, { fetcher }]);
     const { result: result2 } = renderHook(useSWR, [key2, { fetcher }]);
 
-    const mutate = useMatchMutate();
+    const { result: mutate } = renderHook(useMatchMutate);
 
     mutate(key => key === key1(), mutatedValue, {
         // false is default anyways
@@ -32,7 +32,7 @@ it("simply mutates the correct hook without revalidation", () => {
     expect(fetcher).toBeCalledTimes(2);
 });
 
-it("it mutates the hooks and deduplicates revalidation and syncs responses", async () => {
+it("mutates the hooks and deduplicates revalidation and syncs responses", async () => {
     const mutatedValue = `${Math.random()}`;
 
     const fetcher = jest.fn(async (x: string) => {
@@ -51,7 +51,7 @@ it("it mutates the hooks and deduplicates revalidation and syncs responses", asy
     expect(result1.data()).toBe(key());
     expect(result2.data()).toBe(key());
 
-    const mutate = useMatchMutate();
+    const { result: mutate } = renderHook(useMatchMutate);
 
     mutate(x => x === key(), mutatedValue, {
         revalidate: true,
@@ -65,4 +65,33 @@ it("it mutates the hooks and deduplicates revalidation and syncs responses", asy
 
     expect(result1.data()).toBe(key());
     expect(result2.data()).toBe(key());
+});
+
+it("revalidates when payload is undefined", async () => {
+    let switchReturn = false;
+
+    const fetcher = jest.fn(async (x: string) => {
+        await waitForMs();
+        return switchReturn ? x.repeat(2) : x;
+    });
+
+    const [key] = createKey();
+
+    const { result: result1 } = renderHook(useSWR, [key, { fetcher }]);
+    const { result: result2 } = renderHook(useSWR, [key, { fetcher }]);
+
+    await waitForMs();
+    expect(fetcher).toBeCalledTimes(1);
+    expect(result1.data()).toBe(key());
+    expect(result2.data()).toBe(key());
+
+    switchReturn = true;
+
+    const { result: mutate } = renderHook(useMatchMutate);
+    mutate(x => x === key(), undefined);
+
+    await waitForMs();
+    expect(fetcher).toBeCalledTimes(2);
+    expect(result1.data()).toBe(key().repeat(2));
+    expect(result2.data()).toBe(key().repeat(2));
 });
