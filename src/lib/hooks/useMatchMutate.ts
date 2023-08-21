@@ -4,14 +4,22 @@ import { MutationOptions } from "~/types";
 import useMutationOptions from "./internal/useMutationOptions";
 import useOptions from "./internal/useOptions";
 
-type FilterKeyFn = (key: string) => boolean;
+export type FilterKeyFn = (key: string) => boolean;
+export type Payload<Res> = Res | ((key: string, res: Res | undefined) => Res | undefined);
 
 export default function useMatchMutate<Res = unknown>() {
     const options = useOptions({});
 
+    function revalidate(key: string, data: Res | undefined) {
+        dispatchCustomEvent<Res | undefined>(triggerEffectEvent, {
+            key,
+            data,
+        });
+    }
+
     function mutate(
         filter: FilterKeyFn,
-        payload: Res | ((key: string) => Res),
+        payload: Payload<Res>,
         _mutationOptions: MutationOptions = {}
     ) {
         const mutationOptions = useMutationOptions(_mutationOptions);
@@ -19,7 +27,13 @@ export default function useMatchMutate<Res = unknown>() {
         const keys = options.cache.keys().filter(filter);
 
         for (const key of keys) {
-            const fresh = payload instanceof Function ? payload(key) : payload;
+            const res = options.cache.get(key)?.data as Res | undefined;
+            const fresh = payload instanceof Function ? payload(key, res) : payload;
+
+            if (fresh === undefined) {
+                revalidate(key, undefined);
+                return;
+            }
 
             options.cache.set(key, { busy: false, data: fresh });
 
@@ -33,10 +47,7 @@ export default function useMatchMutate<Res = unknown>() {
             if (!mutationOptions.revalidate) return;
 
             // optionally revalidates the key
-            dispatchCustomEvent<undefined>(triggerEffectEvent, {
-                key,
-                data: undefined,
-            });
+            revalidate(key, fresh);
         }
     }
 

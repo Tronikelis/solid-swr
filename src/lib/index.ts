@@ -32,6 +32,7 @@ export { SWRFallback };
 // hooks
 export { default as useMatchMutate } from "./hooks/useMatchMutate";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
+export { default as useSWRMutation } from "./hooks/useSWRMutation";
 
 export default function useSWR<Res = unknown, Err = unknown>(
     key: Accessor<Key>,
