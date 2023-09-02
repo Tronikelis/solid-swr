@@ -19,6 +19,8 @@ export default function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = 
      * This function propagates the thrown error from the fetcher function and sets the error signal
      */
     async function trigger(arg: Arg): Promise<Res> {
+        setError(undefined);
+
         setIsTriggering(true);
         const [err, res] = await tryCatch<Err, Res>(() => fetcher(arg));
         setIsTriggering(false);
