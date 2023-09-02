@@ -13,6 +13,8 @@ export default function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = 
     const [isTriggering, setIsTriggering] = createSignal(false);
     const [error, setError] = createSignal<Err | undefined>(undefined);
 
+    const mutate = useMatchMutate<Pld>();
+
     /**
      * This function propagates the thrown error from the fetcher function and sets the error signal
      */
@@ -29,8 +31,7 @@ export default function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = 
         return res as Res;
     }
 
-    function populateCache(payload: Payload<Pld>, mutationOptions: MutationOptions = {}) {
-        const mutate = useMatchMutate<Pld>();
+    function populateCache(payload?: Payload<Pld>, mutationOptions: MutationOptions = {}) {
         return mutate(filter, payload, mutationOptions);
     }
 

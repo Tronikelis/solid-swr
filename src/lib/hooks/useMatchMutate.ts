@@ -5,7 +5,10 @@ import useMutationOptions from "./internal/useMutationOptions";
 import useOptions from "./internal/useOptions";
 
 export type FilterKeyFn = (key: string) => boolean;
-export type Payload<Res> = Res | ((key: string, res: Res | undefined) => Res | undefined);
+export type Payload<Res> =
+    | Res
+    | ((key: string, res: Res | undefined) => Res | undefined)
+    | undefined;
 
 /**
  * The hook's behavior is the same as the bound mutation,

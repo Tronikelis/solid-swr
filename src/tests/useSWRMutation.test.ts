@@ -57,3 +57,30 @@ it("propagates and sets the error signal", async () => {
     expect(mut.isTriggering()).toBe(false);
     expect(mut.error()).toBe("foo");
 });
+
+it("revalidates when populateCache is called without args", async () => {
+    const swrFetcher = jest.fn(async (x: string) => {
+        await waitForMs();
+        return x;
+    });
+
+    const mutationFetcher = jest.fn(async (arg: string) => {
+        await waitForMs();
+        return arg;
+    });
+
+    const [key] = createKey();
+
+    renderHook(useSWR, [key, { fetcher: swrFetcher }]);
+
+    const { result: mut } = renderHook(useSWRMutation, [
+        k => k === key(),
+        mutationFetcher as any,
+    ]);
+
+    await waitForMs();
+    expect(swrFetcher).toBeCalledTimes(1);
+
+    mut.populateCache();
+    expect(swrFetcher).toBeCalledTimes(2);
+});
