@@ -28,6 +28,7 @@ export default function useOptions<Res, Err>(
             fetcher: defaultFetcher,
             keepPreviousData: false,
             isEnabled: true,
+            autoRevalidate: true,
             refreshInterval: 0,
             cache,
             onSuccess: noop,

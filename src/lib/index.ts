@@ -186,11 +186,15 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     }
 
-    // revalidate on offline/online
-    useWinEvent("online" as keyof WindowEventMap, effect);
+    createEffect(() => {
+        if (!options.autoRevalidate) return;
 
-    // revalidate on window focus
-    useWinEvent("focus" as keyof WindowEventMap, effect);
+        // revalidate on offline/online
+        useWinEvent("online" as keyof WindowEventMap, effect);
+
+        // revalidate on window focus
+        useWinEvent("focus" as keyof WindowEventMap, effect);
+    });
 
     // refresh interval
     createEffect(() => {

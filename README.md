@@ -113,6 +113,7 @@ useSWR(() => "_", {
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
+    autoRevalidate: true,
     refreshInterval: 0,
     cache: new LRU<string, CacheItem>(5e3),
     onSuccess: noop,
@@ -126,14 +127,15 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                |                                     Explain                                     |                                                          Default |
-| :----------------- | :-----------------------------------------------------------------------------: | ---------------------------------------------------------------: |
-| `fetcher`          |         The function responsible for throwing errors and returning data         | The native fetch which parses json and throws on >=400 responses |
-| `keepPreviousData` |       If cache is empty and the key changes, should we keep the old data        |                                                          `false` |
-| `isEnabled`        |                               Is the hook enabled                               |                                                           `true` |
-| `cache`            |                    A data source for storing fetcher results                    |                                           A simple in-memory LRU |
-| `onSuccess`        |   A callback that gets the data when the signal gets updated with truthy data   |                                                           `noop` |
-| `onError`          | A callback that gets the error when the signal gets updated with a truthy error |                                                           `noop` |
+| Key                |                                                           Explain                                                           |                                                          Default |
+| :----------------- | :-------------------------------------------------------------------------------------------------------------------------: | ---------------------------------------------------------------: |
+| `fetcher`          |                               The function responsible for throwing errors and returning data                               | The native fetch which parses json and throws on >=400 responses |
+| `keepPreviousData` |                             If cache is empty and the key changes, should we keep the old data                              |                                                          `false` |
+| `isEnabled`        |                                                     Is the hook enabled                                                     |                                                           `true` |
+| `cache`            |                                          A data source for storing fetcher results                                          |                                           A simple in-memory LRU |
+| `onSuccess`        |                         A callback that gets the data when the signal gets updated with truthy data                         |                                                           `noop` |
+| `onError`          |                       A callback that gets the error when the signal gets updated with a truthy error                       |                                                           `noop` |
+| `autoRevalidate`   | If enabled, the hook will automatically refetch when the window has been focused or the browser reconnected to the internet |                                                           `true` |
 
 # Config with context
 
