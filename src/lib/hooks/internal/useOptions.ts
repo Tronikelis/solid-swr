@@ -7,13 +7,9 @@ import noop from "~/utils/noop";
 
 const defaultFetcher: Fetcher<unknown> = async (key, { signal }) => {
     const response = await fetch(key, { signal });
-    const json = (await response.json()) as unknown;
+    if (!response.ok) throw response;
 
-    if (response.ok) {
-        return json;
-    }
-
-    throw new Error(JSON.stringify(json));
+    return (await response.json()) as unknown;
 };
 
 const cache = new LRU<string, CacheItem<unknown>>(5e3);
