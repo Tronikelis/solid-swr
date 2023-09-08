@@ -30,6 +30,8 @@
   - [⚠️ Important note](#️-important-note)
 - [useSWRMutation](#useswrmutation)
   - [API](#api-3)
+- [Aborting requests](#aborting-requests)
+  - [Note](#note)
 
 # Introduction
 
@@ -144,7 +146,7 @@ Provide your own default [settings](#options) for hooks
 ```tsx
 import { SWRConfig } from "solid-swr";
 
-const yourOwnFetcher = async (x: string) => {};
+const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
 
 function Root() {
     return (
@@ -165,7 +167,7 @@ contexts themselves don't get merged like in the original `swr` package:
 ```tsx
 import { SWRConfig } from "solid-swr";
 
-const yourOwnFetcher = async (x: string) => {};
+const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
 
 function Root() {
     return (
@@ -441,3 +443,21 @@ function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = unknown>(
     error: Accessor<Err | undefined>;
 };
 ```
+
+# Aborting requests
+
+The core `useSWR` fetcher always gets an `AbortSignal` which will abort the older request if a new one comes in
+
+The default fetcher utilizes this mechanic
+
+The signal is passed to the fetcher as the second parameter in an object:
+
+```ts
+const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
+    return await fetch("...", { signal });
+};
+```
+
+## Note
+
+The signal is only passed in the core effect of `swr`, not in mutations both global and bound
