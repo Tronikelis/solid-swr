@@ -2,19 +2,19 @@ import { mergeProps, useContext } from "solid-js";
 
 import LRU from "~/classes/lru";
 import { SWRConfig } from "~/context/config";
-import { CacheItem, Options } from "~/types";
+import { CacheItem, Fetcher, Options } from "~/types";
 import noop from "~/utils/noop";
 
-async function defaultFetcher<T>(key: string): Promise<T> {
-    const response = await fetch(key);
-    const json = (await response.json()) as T;
+const defaultFetcher: Fetcher<unknown> = async (key, { signal }) => {
+    const response = await fetch(key, { signal });
+    const json = (await response.json()) as unknown;
 
-    if (response.ok) {
-        return json;
+    if (!response.ok) {
+        throw json;
     }
 
-    throw new Error(JSON.stringify(json));
-}
+    return json;
+};
 
 const cache = new LRU<string, CacheItem<unknown>>(5e3);
 

@@ -23,6 +23,16 @@ it("at least boots up", async () => {
     expect(result.isLoading()).toBe(false);
 });
 
+it("throws the default fetch response when error", async () => {
+    const { result } = renderHook(useSWR, [
+        () => "https://jsonplaceholder.typicode.com/todos/999999999999999999",
+    ]);
+
+    await waitForTruthy(result.error);
+
+    expect(result.error()).toEqual({});
+});
+
 it("passes thrown error into the error signal", async () => {
     const [key] = createKey();
 

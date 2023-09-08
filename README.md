@@ -30,6 +30,8 @@
   - [⚠️ Important note](#️-important-note)
 - [useSWRMutation](#useswrmutation)
   - [API](#api-3)
+- [Aborting requests](#aborting-requests)
+  - [Note](#note)
 
 # Introduction
 
@@ -127,15 +129,15 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                |                                                           Explain                                                           |                                                          Default |
-| :----------------- | :-------------------------------------------------------------------------------------------------------------------------: | ---------------------------------------------------------------: |
-| `fetcher`          |                               The function responsible for throwing errors and returning data                               | The native fetch which parses json and throws on >=400 responses |
-| `keepPreviousData` |                             If cache is empty and the key changes, should we keep the old data                              |                                                          `false` |
-| `isEnabled`        |                                                     Is the hook enabled                                                     |                                                           `true` |
-| `cache`            |                                          A data source for storing fetcher results                                          |                                           A simple in-memory LRU |
-| `onSuccess`        |                         A callback that gets the data when the signal gets updated with truthy data                         |                                                           `noop` |
-| `onError`          |                       A callback that gets the error when the signal gets updated with a truthy error                       |                                                           `noop` |
-| `autoRevalidate`   | If enabled, the hook will automatically refetch when the window has been focused or the browser reconnected to the internet |                                                           `true` |
+| Key                |                                                           Explain                                                           |                                                                                 Default |
+| :----------------- | :-------------------------------------------------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
+| `fetcher`          |                               The function responsible for throwing errors and returning data                               | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData` |                             If cache is empty and the key changes, should we keep the old data                              |                                                                                 `false` |
+| `isEnabled`        |                                                     Is the hook enabled                                                     |                                                                                  `true` |
+| `cache`            |                                          A data source for storing fetcher results                                          |                                                                  A simple in-memory LRU |
+| `onSuccess`        |                         A callback that gets the data when the signal gets updated with truthy data                         |                                                                                  `noop` |
+| `onError`          |                       A callback that gets the error when the signal gets updated with a truthy error                       |                                                                                  `noop` |
+| `autoRevalidate`   | If enabled, the hook will automatically refetch when the window has been focused or the browser reconnected to the internet |                                                                                  `true` |
 
 # Config with context
 
@@ -144,7 +146,7 @@ Provide your own default [settings](#options) for hooks
 ```tsx
 import { SWRConfig } from "solid-swr";
 
-const yourOwnFetcher = async (x: string) => {};
+const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
 
 function Root() {
     return (
@@ -165,7 +167,7 @@ contexts themselves don't get merged like in the original `swr` package:
 ```tsx
 import { SWRConfig } from "solid-swr";
 
-const yourOwnFetcher = async (x: string) => {};
+const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
 
 function Root() {
     return (
@@ -441,3 +443,21 @@ function useSWRMutation<Pld, Res = unknown, Err = unknown, Arg = unknown>(
     error: Accessor<Err | undefined>;
 };
 ```
+
+# Aborting requests
+
+The core `useSWR` fetcher always gets an `AbortSignal` which will abort the older request if a new one comes in
+
+The default fetcher utilizes this mechanic
+
+The signal is passed to the fetcher as the second parameter in an object:
+
+```ts
+const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
+    return await fetch("...", { signal });
+};
+```
+
+## Note
+
+The signal is only passed in the core effect of `swr`, not in mutations both global and bound

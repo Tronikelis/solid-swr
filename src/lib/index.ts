@@ -41,6 +41,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
      */
     _options: Options<Res, Err> = {}
 ) {
+    let globalController = new AbortController();
+
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
@@ -111,7 +113,16 @@ export default function useSWR<Res = unknown, Err = unknown>(
             }
         }
 
-        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k));
+        const controller = new AbortController();
+
+        globalController.abort();
+        globalController = controller;
+
+        const [err, response] = await tryCatch<Err, Res>(() =>
+            options.fetcher(k, { signal: controller.signal })
+        );
+
+        if (controller.signal.aborted) return;
 
         // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
         // as tracking is not possible after an async function uses await.
@@ -145,7 +156,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (k === undefined) return;
 
         setIsLoading(true);
-        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k));
+        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
         setIsLoading(false);
 
         if (!err) {
