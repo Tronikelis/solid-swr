@@ -30,8 +30,7 @@ it("throws the default fetch response when error", async () => {
 
     await waitForTruthy(result.error);
 
-    expect((result.error() as Response).status).toBe(404);
-    expect(await (result.error() as Response).text()).toBe("{}");
+    expect(result.error()).toEqual({});
 });
 
 it("passes thrown error into the error signal", async () => {
