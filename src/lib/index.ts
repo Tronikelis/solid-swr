@@ -122,7 +122,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.fetcher(k, { signal: controller.signal })
         );
 
-        if (controller.signal.aborted) return;
+        if (
+            // for older requests this is always true
+            controller.signal.aborted &&
+            // make sure that fetch aborted as well
+            err
+        ) {
+            return;
+        }
 
         // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
         // as tracking is not possible after an async function uses await.

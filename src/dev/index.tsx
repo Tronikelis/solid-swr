@@ -4,15 +4,17 @@ import { render } from "solid-js/web";
 import useSWR, { useSWRInfinite } from "~/index";
 
 function App() {
-    const { data, setIndex, isLoading } = useSWRInfinite((index, prev) => {
-        return `https://jsonplaceholder.typicode.com/todos/${index + 1}`;
-    });
+    const [index, setIndex] = createSignal(0);
+
+    const { data } = useSWR(
+        () => `https://jsonplaceholder.typicode.com/todos/${index() + 1}`,
+        { keepPreviousData: true }
+    );
 
     return (
         <div>
-            <For each={data}>{item => <pre>{JSON.stringify(item, null, 4)}</pre>}</For>
-            <button onClick={() => setIndex(x => x + 1)}>load more</button>
-            <p>isLoading: {isLoading() ? "yes" : "no"}</p>
+            <pre>{JSON.stringify(data(), null, 4)}</pre>
+            <button onClick={() => setIndex(x => x + 1)}>+1</button>
         </div>
     );
 }
