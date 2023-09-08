@@ -458,6 +458,9 @@ const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
 };
 ```
 
+
 ## Note
 
-The signal is only passed in the core effect of `swr`, not in mutations both global and bound
+The signal is only passed in the core effect of `swr`, not in mutations
+
+So bound mutate and `useSWRMutation` don't get a signal, thus don't get aborted
