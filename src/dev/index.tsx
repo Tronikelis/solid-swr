@@ -8,7 +8,7 @@ function App() {
 
     const { data, error, isLoading } = useSWR(
         () => `https://jsonplaceholder.typicode.com/todos/${index()}`,
-        { keepPreviousData: true, fetcher: key => fetch(key).then(x => x.json()) }
+        { keepPreviousData: true }
     );
 
     createEffect(() => {
@@ -19,7 +19,7 @@ function App() {
         <div>
             <p>{isLoading() ? "Loading" : "NOT LOADING"}</p>
             <pre>{JSON.stringify(data(), null, 4)}</pre>
-            <button onClick={() => setIndex(x => x + 1)}>+1</button>
+            <button onClick={() => setIndex(x => (x + 1) % 10)}>+1</button>
         </div>
     );
 }

@@ -46,8 +46,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
-    function peekCache(): CacheItem<Res> | undefined {
-        const k = key();
+    function peekCache(k: string | undefined): CacheItem<Res> | undefined {
         if (k === undefined) return undefined;
 
         const fromCache = options.cache.get(k);
@@ -59,7 +58,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         return undefined;
     }
 
-    const [data, setData] = createSignal<Res | undefined>(peekCache()?.data, { equals });
+    const [data, setData] = createSignal<Res | undefined>(peekCache(key())?.data, { equals });
     const [error, setError] = createSignal<Err | undefined>();
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data());
@@ -94,11 +93,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
         setIsLoading(true);
         setError(undefined);
 
-        if (peekCache()?.busy) {
+        if (peekCache(k)?.busy) {
             return;
         }
 
-        const cache = peekCache();
+        const cache = peekCache(k);
         if (cache !== undefined && cache.data) {
             // mark as busy
             options.cache.set(k, { busy: true, data: cache.data as Res });
@@ -122,13 +121,13 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.fetcher(k, { signal: controller.signal })
         );
 
-        // it's fine to early return here without releasing the cache,
-        // cause the other request is currently at this point and will release the cache
         if (
             controller.signal.aborted &&
             err instanceof DOMException &&
             err.name === "AbortError"
         ) {
+            // this request was aborted, so return early and release the cache without changing it
+            options.cache.set(k, { busy: false, data: peekCache(k)?.data });
             return;
         }
 
