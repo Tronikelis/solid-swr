@@ -122,6 +122,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.fetcher(k, { signal: controller.signal })
         );
 
+        // it's fine to early return here without releasing the cache,
+        // cause the other request is currently at this point and will release the cache
         if (err instanceof DOMException && err.name === "AbortError") return;
 
         // But note that subsequent use of reactive state (such as signals) will not trigger the effect to rerun,
