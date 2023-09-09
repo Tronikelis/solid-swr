@@ -6,9 +6,9 @@ import useSWR, { useSWRInfinite } from "~/index";
 function App() {
     const [index, setIndex] = createSignal(1);
 
-    const { data, error } = useSWR(
+    const { data, error, isLoading } = useSWR(
         () => `https://jsonplaceholder.typicode.com/todos/${index()}`,
-        { keepPreviousData: true }
+        { keepPreviousData: true, fetcher: key => fetch(key).then(x => x.json()) }
     );
 
     createEffect(() => {
@@ -17,6 +17,7 @@ function App() {
 
     return (
         <div>
+            <p>{isLoading() ? "Loading" : "NOT LOADING"}</p>
             <pre>{JSON.stringify(data(), null, 4)}</pre>
             <button onClick={() => setIndex(x => x + 1)}>+1</button>
         </div>
