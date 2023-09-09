@@ -1,15 +1,19 @@
-import { createSignal, For } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
 
 import useSWR, { useSWRInfinite } from "~/index";
 
 function App() {
-    const [index, setIndex] = createSignal(0);
+    const [index, setIndex] = createSignal(1);
 
-    const { data } = useSWR(
-        () => `https://jsonplaceholder.typicode.com/todos/${index() + 1}`,
+    const { data, error } = useSWR(
+        () => `https://jsonplaceholder.typicode.com/todos/${index()}`,
         { keepPreviousData: true }
     );
+
+    createEffect(() => {
+        console.log(error());
+    });
 
     return (
         <div>
