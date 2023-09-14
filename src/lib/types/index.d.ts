@@ -37,11 +37,10 @@ export type Options<Res, Err> = {
     keepPreviousData?: boolean;
 
     /**
-     * If enabled, the hook will automatically refetch when the window has been focused,
-     * or the browser reconnected to the internet
-     * @default true
+     * If enabled, the hook will "freeze" after the data is set
+     * @default false
      */
-    autoRevalidate?: boolean;
+    isImmutable?: boolean;
 
     /**
      * Toggle whether the hook should be enabled (you can do the same by passing in () => undefined as key),

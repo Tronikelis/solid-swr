@@ -115,7 +115,7 @@ useSWR(() => "_", {
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
-    autoRevalidate: true,
+    isImmutable: false,
     refreshInterval: 0,
     cache: new LRU<string, CacheItem>(5e3),
     onSuccess: noop,
@@ -129,15 +129,15 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                |                                                           Explain                                                           |                                                                                 Default |
-| :----------------- | :-------------------------------------------------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
-| `fetcher`          |                               The function responsible for throwing errors and returning data                               | The native fetch which parses only json and throws the response json on >=400 responses |
-| `keepPreviousData` |                             If cache is empty and the key changes, should we keep the old data                              |                                                                                 `false` |
-| `isEnabled`        |                                                     Is the hook enabled                                                     |                                                                                  `true` |
-| `cache`            |                                          A data source for storing fetcher results                                          |                                                                  A simple in-memory LRU |
-| `onSuccess`        |                         A callback that gets the data when the signal gets updated with truthy data                         |                                                                                  `noop` |
-| `onError`          |                       A callback that gets the error when the signal gets updated with a truthy error                       |                                                                                  `noop` |
-| `autoRevalidate`   | If enabled, the hook will automatically refetch when the window has been focused or the browser reconnected to the internet |                                                                                  `true` |
+| Key                |                                     Explain                                     |                                                                                 Default |
+| :----------------- | :-----------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
+| `fetcher`          |         The function responsible for throwing errors and returning data         | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData` |       If cache is empty and the key changes, should we keep the old data        |                                                                                 `false` |
+| `isEnabled`        |                               Is the hook enabled                               |                                                                                  `true` |
+| `cache`            |                    A data source for storing fetcher results                    |                                                                  A simple in-memory LRU |
+| `onSuccess`        |   A callback that gets the data when the signal gets updated with truthy data   |                                                                                  `noop` |
+| `onError`          | A callback that gets the error when the signal gets updated with a truthy error |                                                                                  `noop` |
+| `isImmutable`      |            If enabled, the hook will "freeze" after the data is set             |                                                                                 `false` |
 
 # Config with context
 
@@ -457,7 +457,6 @@ const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
     return await fetch("...", { signal });
 };
 ```
-
 
 ## Note
 
