@@ -1,7 +1,15 @@
 import { expect, it, jest } from "@jest/globals";
 import { render } from "@solidjs/testing-library";
+import { createEffect, onMount } from "solid-js";
+import { createStore } from "solid-js/store";
 
-import useSWR, { CacheImplements, SWRConfig, SWRFallback } from "../lib";
+import useSWR, {
+    CacheImplements,
+    Options,
+    SWRFallback,
+    SWROptionsProvider,
+    useOptions,
+} from "../lib";
 
 import createKey from "./utils/createKey";
 import waitForMs from "./utils/waitForMs";
@@ -15,7 +23,7 @@ it("gets the settings from the SWRConfig", async () => {
     });
 
     function WithConfig(props: { children: any }) {
-        return <SWRConfig.Provider value={{ fetcher }}>{props.children}</SWRConfig.Provider>;
+        return <SWROptionsProvider value={{ fetcher }}>{props.children}</SWROptionsProvider>;
     }
 
     function App() {
@@ -53,7 +61,7 @@ it("merges the settings correctly", async () => {
     })();
 
     function WithConfig(props: { children: any }) {
-        return <SWRConfig.Provider value={{ fetcher }}>{props.children}</SWRConfig.Provider>;
+        return <SWROptionsProvider value={{ fetcher }}>{props.children}</SWROptionsProvider>;
     }
 
     function App() {
@@ -88,9 +96,9 @@ it("prioritizes the hook settings most", async () => {
 
     function WithConfig(props: { children: any }) {
         return (
-            <SWRConfig.Provider value={{ fetcher: badFetcher }}>
+            <SWROptionsProvider value={{ fetcher: badFetcher }}>
                 {props.children}
-            </SWRConfig.Provider>
+            </SWROptionsProvider>
         );
     }
 
@@ -138,4 +146,88 @@ it("SSRFallback fallbacks for ssr purposes", () => {
             <App />
         </WithFallback>
     ));
+});
+
+it("merges nested options", () => {
+    let i = 0;
+
+    function A() {
+        const config = useOptions();
+        expect(config.keepPreviousData).toBe(true);
+        expect(config.refreshInterval).toBe(0);
+        expect(config.cache).toBe("foo");
+
+        i++;
+
+        return <></>;
+    }
+
+    function B() {
+        const config = useOptions();
+        expect(config.keepPreviousData).toBe(true);
+        expect(config.refreshInterval).toBe(1);
+        expect(config.cache).toBe("foo");
+
+        i++;
+
+        return <></>;
+    }
+
+    render(() => (
+        <SWROptionsProvider
+            value={{
+                keepPreviousData: false,
+                refreshInterval: 0,
+                cache: "foo" as unknown as CacheImplements,
+            }}
+        >
+            <SWROptionsProvider value={{ keepPreviousData: true }}>
+                <A />
+                <SWROptionsProvider value={{ refreshInterval: 1 }}>
+                    <B />
+                </SWROptionsProvider>
+            </SWROptionsProvider>
+        </SWROptionsProvider>
+    ));
+
+    expect(i).toBe(2);
+});
+
+it("nested options preserve reactivity", async () => {
+    let i = 0;
+
+    function B() {
+        const options = useOptions();
+
+        createEffect(() => {
+            if (i++ === 0) {
+                expect(options.refreshInterval).toBe(0);
+                return;
+            }
+
+            expect(options.refreshInterval).toBe(1);
+        });
+
+        return <></>;
+    }
+
+    function A() {
+        const [store, setStore] = createStore<Options<unknown, unknown>>({});
+
+        onMount(async () => {
+            await waitForMs();
+            setStore("refreshInterval", 1);
+        });
+
+        return (
+            <SWROptionsProvider value={store}>
+                <B />
+            </SWROptionsProvider>
+        );
+    }
+
+    render(() => <A />);
+
+    await waitForMs();
+    expect(i).toBe(2);
 });

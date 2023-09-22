@@ -2,7 +2,7 @@ import { dispatchCustomEvent, publishDataEvent, triggerEffectEvent } from "~/eve
 import { MutationOptions } from "~/types";
 
 import useMutationOptions from "./internal/useMutationOptions";
-import useOptions from "./internal/useOptions";
+import useOptions from "./useOptions";
 
 export type FilterKeyFn = (key: string) => boolean;
 export type Payload<Res> =
@@ -15,7 +15,7 @@ export type Payload<Res> =
  * just this hook can mutate many keys at once
  */
 export default function useMatchMutate<Res = unknown>() {
-    const options = useOptions({});
+    const options = useOptions();
 
     function revalidate(key: string, data: Res | undefined) {
         dispatchCustomEvent<Res | undefined>(triggerEffectEvent, {

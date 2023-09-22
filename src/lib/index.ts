@@ -4,8 +4,8 @@ import { Accessor, createEffect, createSignal, useContext } from "solid-js";
 import { SWRFallback } from "./context/fallback";
 import useInterval from "./hooks/internal/useInterval";
 import useMutationOptions from "./hooks/internal/useMutationOptions";
-import useOptions from "./hooks/internal/useOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
+import useOptions from "./hooks/useOptions";
 import tryCatch from "./utils/tryCatch";
 import {
     dispatchCustomEvent,
@@ -26,11 +26,12 @@ import {
 export type { CacheImplements, CacheItem, Fetcher, Key, MutationOptions, Options };
 
 // contexts
-export { SWRConfig } from "./context/config";
+export { SWROptionsProvider } from "./context/options";
 export { SWRFallback };
 
 // hooks
 export { default as useMatchMutate } from "./hooks/useMatchMutate";
+export { default as useOptions } from "./hooks/useOptions";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 export { default as useSWRMutation } from "./hooks/useSWRMutation";
 
