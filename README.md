@@ -18,7 +18,7 @@
 - [Returned values](#returned-values)
 - [Options](#options)
   - [API](#api)
-- [Config with context](#config-with-context)
+- [Options with context](#options-with-context)
   - [API](#api-1)
 - [Mutation](#mutation)
   - [Bound mutation](#bound-mutation)
@@ -139,52 +139,29 @@ The options are merged with context, [read more](#context)
 | `onError`          | A callback that gets the error when the signal gets updated with a truthy error |                                                                                  `noop` |
 | `isImmutable`      |            If enabled, the hook will "freeze" after the data is set             |                                                                                 `false` |
 
-# Config with context
+# Options with context
 
 Provide your own default [settings](#options) for hooks
 
 ```tsx
-import { SWRConfig } from "solid-swr";
+import { SWROptionsProvider } from "solid-swr";
 
 const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
 
 function Root() {
     return (
-        <SWRConfig.Provider
+        <SWROptionsProvider
             value={{
                 fetcher: yourOwnFetcher,
             }}
         >
             <App />
-        </SWRConfig.Provider>
+        </SWROptionsProvider>
     );
 }
 ```
 
-Beware that if you nest these contexts, the hook will only get the nearest parent context,
-contexts themselves don't get merged like in the original `swr` package:
-
-```tsx
-import { SWRConfig } from "solid-swr";
-
-const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
-
-function Root() {
-    return (
-        <SWRConfig.Provider
-            value={{
-                fetcher: yourOwnFetcher,
-            }}
-        >
-            <App1 />
-            <SWRConfig.Provider value={{}}>
-                {/** App2 here does not get the `yourOwnFetcher` */}
-                <App2 />
-            </SWRConfig.Provider>
-        </SWRConfig.Provider>
-    );
-}
-```
+Note: providers merge their options with the parent provider, so you can have 1 options provider at the root of your app, for example with only the fetcher, and another provider deeper in the app tree with some specific options and it will preserve the fetcher from the parent provider
 
 ## API
 
