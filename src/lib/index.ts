@@ -34,6 +34,7 @@ export { default as useMatchMutate } from "./hooks/useMatchMutate";
 export { default as useOptions } from "./hooks/useOptions";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 export { default as useSWRMutation } from "./hooks/useSWRMutation";
+export { default as useSWRSuspense } from "./hooks/useSWRSuspense";
 
 export default function useSWR<Res = unknown, Err = unknown>(
     key: Accessor<Key>,
@@ -242,5 +243,13 @@ export default function useSWR<Res = unknown, Err = unknown>(
         error,
         isLoading,
         mutate,
+
+        /**
+         * this is an internal function that interacts with the cache
+         * and is only exported because it is used in the `useSWRSuspense` hook
+         *
+         * **you should probably never use this**
+         */
+        _effect: effect,
     };
 }

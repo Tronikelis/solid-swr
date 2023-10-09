@@ -1,35 +1,86 @@
-import { createEffect, createSignal, For } from "solid-js";
+import { createEffect, createSignal, For, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { render } from "solid-js/web";
 
-import useSWR, { Options, SWROptionsProvider, useOptions, useSWRInfinite } from "~/index";
+import useSWR, { useOptions, useSWRSuspense } from "~/index";
 
-function PrintOptions() {
-    const options = useOptions();
-    return <pre>{JSON.stringify({ ...options }, null, 4)}</pre>;
+function useFetch() {
+    const swr = useSWRSuspense(() => `https://jsonplaceholder.typicode.com/todos/1`);
+    return swr;
 }
 
-function App() {
-    const [store, setStore] = createStore<Options<unknown, unknown>>({
-        isEnabled: false,
-        refreshInterval: 1,
+function InnerB() {
+    const { data } = useFetch();
+
+    const { data: data1, error } = useSWR<string>(() => "foo", {
+        fetcher: () => new Promise(r => setTimeout(() => r("foo"), 2e3)),
     });
 
     return (
-        <SWROptionsProvider value={store}>
-            <button
-                onClick={() => {
-                    setStore("refreshInterval", Math.floor(Math.random() * 100));
-                }}
-            >
-                btn
-            </button>
+        <Suspense fallback={<h2>Inner B is loading</h2>}>
+            <div>
+                inner B delay: {data1()}
+                <pre>{JSON.stringify(data(), null, 4)}</pre>
+            </div>
+        </Suspense>
+    );
+}
 
-            <PrintOptions />
-            <SWROptionsProvider value={{ isEnabled: true }}>
-                <PrintOptions />
-            </SWROptionsProvider>
-        </SWROptionsProvider>
+function InnerA() {
+    const { data } = useFetch();
+
+    return (
+        <div>
+            <div>
+                inner A: <pre>{JSON.stringify(data(), null, 4)}</pre>
+            </div>
+
+            <InnerB />
+            <InnerB />
+        </div>
+    );
+}
+
+function Inner() {
+    const { data } = useFetch();
+
+    return (
+        <>
+            <div>
+                inner: <pre>{JSON.stringify(data(), null, 4)}</pre>
+            </div>
+
+            <InnerA />
+            <InnerA />
+        </>
+    );
+}
+
+function OnlyError() {
+    const { error } = useSWRSuspense<undefined, Record<string, never>>(
+        () => `https://jsonplaceholder.typicode.com/todos/XD`
+    );
+
+    createEffect(() => {
+        console.log("OnlyError", error());
+    });
+
+    return (
+        <div>
+            <pre>{JSON.stringify(error(), null, 4)}</pre>
+        </div>
+    );
+}
+
+function App() {
+    return (
+        <Suspense fallback={<h1>wait for me idiot</h1>}>
+            <Inner />
+
+            <Suspense fallback={<h1>OnlyError</h1>}>
+                <OnlyError />
+            </Suspense>
+        </Suspense>
     );
 }
 
