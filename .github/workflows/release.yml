@@ -32,8 +32,9 @@ jobs:
                     # This is a release, publish without a tag
                     npm publish --provenance --access public
                   else
-                    ref="${{ github.ref }}"
                     branch="${{ github.ref_name }}"
+                    tmp=$(mktemp)
+                    jq '.version += -${{ github.sha }}' package.json > "$tmp" && mv "$tmp" package.json
 
                     if [ "$branch" != "master" ]; then
                       # This is not the master branch, publish with the branch name as a tag
