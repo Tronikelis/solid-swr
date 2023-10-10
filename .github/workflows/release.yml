@@ -3,6 +3,7 @@ name: Release
 on:
     release:
         types: ["created"]
+    push:
 
 jobs:
     ci:
@@ -26,6 +27,18 @@ jobs:
               run: npm ci && npm run build
 
             - name: publish
-              run: npm publish --provenance --access public
+              run: |
+                  if [ "${{ github.event_name }}" == "release" ]; then
+                    # This is a release, publish without a tag
+                    npm publish --provenance --access public
+                  else
+                    ref="${{ github.ref }}"
+                    branch="${{ github.ref_name }}"
+
+                    if [ "$branch" != "master" ]; then
+                      # This is not the master branch, publish with the branch name as a tag
+                      npm publish --provenance --access public --tag "$branch"
+                    fi
+                  fi
               env:
                   NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
