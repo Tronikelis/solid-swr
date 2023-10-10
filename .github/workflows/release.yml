@@ -35,7 +35,8 @@ jobs:
                     branch="${{ github.ref_name }}"
                     tmp=$(mktemp)
                     short_sha=$(echo "${{ github.sha }}" | cut -c 1-8)
-                    jq '.version += "-$short_sha"' package.json > "$tmp" && mv "$tmp" package.json
+
+                    jq --arg x "-$short_sha" '.version += $x' package.json > "$tmp" && mv "$tmp" package.json
 
                     if [ "$branch" != "master" ]; then
                       # This is not the master branch, publish with the branch name as a tag
