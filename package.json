@@ -28,7 +28,7 @@
     "author": "Tronikelis",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Tronikelis/solid-swr.git"
+        "url": "https://github.com/Tronikelis/solid-swr"
     },
     "license": "MIT",
     "scripts": {
