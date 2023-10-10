@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, Suspense } from "solid-js";
+import { createEffect, createSignal, ErrorBoundary, For, Suspense } from "solid-js";
 import { createStore } from "solid-js/store";
 import { render } from "solid-js/web";
 
@@ -13,7 +13,7 @@ function InnerB() {
     const { data } = useFetch();
 
     const { data: data1, error } = useSWR<string>(() => "foo", {
-        fetcher: () => new Promise(r => setTimeout(() => r("foo"), 2e3)),
+        fetcher: () => new Promise(res => setTimeout(() => res("foo"), 2e3)),
     });
 
     return (
@@ -58,7 +58,18 @@ function Inner() {
 
 function OnlyError() {
     const { error } = useSWRSuspense<undefined, Record<string, never>>(
-        () => `https://jsonplaceholder.typicode.com/todos/XD`
+        () => `https://jsonplaceholder.typicode.com/posts/XD/comments`,
+        {
+            fetcher: async () => {
+                await new Promise(r => setTimeout(r, 4e3));
+                throw {
+                    status: 404,
+                    data: {
+                        foo: "bar",
+                    },
+                };
+            },
+        }
     );
 
     createEffect(() => {
@@ -67,6 +78,7 @@ function OnlyError() {
 
     return (
         <div>
+            <p>Bruh what</p>
             <pre>{JSON.stringify(error(), null, 4)}</pre>
         </div>
     );
@@ -74,13 +86,13 @@ function OnlyError() {
 
 function App() {
     return (
-        <Suspense fallback={<h1>wait for me idiot</h1>}>
-            <Inner />
-
-            <Suspense fallback={<h1>OnlyError</h1>}>
-                <OnlyError />
+        <>
+            <Suspense fallback={<h1>wait for me idiot</h1>}>
+                <Inner />
             </Suspense>
-        </Suspense>
+
+            <OnlyError />
+        </>
     );
 }
 
