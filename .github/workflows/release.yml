@@ -40,7 +40,7 @@ jobs:
 
                     if [ "$branch" != "master" ]; then
                       # This is not the master branch, publish with the branch name as a tag
-                      npm publish --provenance --access public --tag "$branch"
+                      npm publish --provenance --access public --tag "$(branch)-dev"
                     fi
                   fi
               env:
