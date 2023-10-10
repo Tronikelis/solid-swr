@@ -29,6 +29,21 @@ function InnerB() {
 function InnerA() {
     const { data } = useFetch();
 
+    const [key, setKey] = createSignal<string | undefined>(undefined);
+
+    createEffect(() => {
+        if (data()) {
+            setKey("foo");
+        }
+    });
+
+    const { data: d } = useSWRSuspense(key, {
+        fetcher: async () => {
+            await new Promise(r => setTimeout(r, 2e3));
+            return "foo";
+        },
+    });
+
     return (
         <div>
             <div>
@@ -37,6 +52,10 @@ function InnerA() {
 
             <InnerB />
             <InnerB />
+
+            <div>
+                <h3>DEPENDENT SUS: {d() ? "YES" : "NO"}</h3>
+            </div>
         </div>
     );
 }
