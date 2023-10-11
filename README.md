@@ -1,16 +1,18 @@
-<h1 align="center">solid-swr</h1>
+# solid-swr
 
-<div align="center">
+<div>
 
+<img src="https://img.shields.io/github/stars/Tronikelis/solid-swr?style=flat-square" />
 <img src="https://img.shields.io/bundlephobia/minzip/solid-swr?style=flat-square" />
 <img src="https://img.shields.io/npm/v/solid-swr?style=flat-square" />
- 
+
 </div>
 
 <br />
 
 # Table of contents
 
+- [solid-swr](#solid-swr)
 - [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
   - [Features](#features)
