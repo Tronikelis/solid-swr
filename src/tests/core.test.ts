@@ -118,3 +118,22 @@ it("deduplicates requests and syncs responses", async () => {
 
     expect(fetcher).toBeCalledTimes(2);
 });
+
+it("retries exponentially", async () => {
+    const fetcher = jest.fn(async (key: string) => {
+        await waitForMs();
+        throw new Error(key);
+    });
+
+    const [key] = createKey();
+
+    const { result } = renderHook(useSWR, [key, { fetcher }]);
+
+    await waitForMs();
+    expect(result.error()).toBeTruthy();
+    expect(fetcher).toBeCalledTimes(1);
+
+    await waitForMs(2e3);
+    expect(result.error()).toBeTruthy();
+    expect(fetcher).toBeCalledTimes(2);
+});
