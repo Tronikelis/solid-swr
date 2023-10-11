@@ -1,8 +1,7 @@
-import { createEffect, createSignal, ErrorBoundary, For, Suspense } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createEffect, createSignal, Suspense } from "solid-js";
 import { render } from "solid-js/web";
 
-import useSWR, { useOptions, useSWRSuspense } from "~/index";
+import useSWR, { useSWRSuspense } from "~/index";
 
 function useFetch() {
     const swr = useSWRSuspense(() => `https://jsonplaceholder.typicode.com/todos/1`);
@@ -12,7 +11,7 @@ function useFetch() {
 function InnerB() {
     const { data } = useFetch();
 
-    const { data: data1, error } = useSWR<string>(() => "foo", {
+    const { data: data1 } = useSWR<string>(() => "foo", {
         fetcher: () => new Promise(res => setTimeout(() => res("foo"), 2e3)),
     });
 
