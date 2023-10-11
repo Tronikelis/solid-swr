@@ -34,7 +34,7 @@ jobs:
                   else
                     branch="${{ github.ref_name }}"
                     tmp=$(mktemp)
-                    short_sha=$(echo "${{ github.sha }}" | cut -c 1-8)
+                    short_sha=$(echo "${{ github.sha }}" | cut -c 1-7)
 
                     jq --arg x "-$short_sha" '.version += $x' package.json > "$tmp" && mv "$tmp" package.json
 
