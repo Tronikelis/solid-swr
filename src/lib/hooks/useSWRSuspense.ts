@@ -1,4 +1,4 @@
-import { createResource } from "solid-js";
+import { Accessor, createResource } from "solid-js";
 
 import noop from "~/utils/noop";
 
@@ -13,35 +13,42 @@ import useSWR from "..";
 const useSWRSuspense: typeof useSWR = (key, options) => {
     const swr = useSWR(key, options);
 
-    let resolveResource: undefined | ((val?: never) => void);
-    let rejectResource: undefined | ((val: unknown) => void);
+    let resource: undefined | Accessor<undefined>;
 
-    const [resource] = createResource(() => {
-        return new Promise<undefined>((res, rej) => {
-            resolveResource = res;
-            rejectResource = rej;
+    if (key()) {
+        let resolveResource: undefined | ((val?: never) => void);
+        let rejectResource: undefined | ((val: unknown) => void);
+
+        const [r] = createResource(() => {
+            return new Promise<undefined>((res, rej) => {
+                resolveResource = res;
+                rejectResource = rej;
+            });
         });
-    });
 
-    // not in an createEffect, because suspense disables them
-    (async () => {
-        await swr._effect(); // this never throws
-        if (swr.error()) {
-            // resource casts error into new Error(), thus needs a string
-            rejectResource?.(JSON.stringify(swr.error()));
-            return;
-        }
+        // eslint-disable-next-line solid/reactivity
+        resource = r;
 
-        resolveResource?.();
-    })().catch(noop);
+        // not in an createEffect, because suspense disables them
+        (async () => {
+            await swr._effect(); // this never throws
+            if (swr.error()) {
+                // resource casts error into new Error(), thus needs a string
+                rejectResource?.(JSON.stringify(swr.error()));
+                return;
+            }
+
+            resolveResource?.();
+        })().catch(noop);
+    }
 
     const dataWithResource = () => {
-        resource();
+        resource?.();
         return swr.data();
     };
 
     const errorWithResource = () => {
-        resource();
+        resource?.();
         return swr.error();
     };
 
