@@ -1,6 +1,10 @@
-# solid-swr
+<h1 align="center">solid-swr</h1>
 
-<div>
+<h3 align="center">The beloved swr package ported to solid</h3>
+
+<br />
+
+<div align="center">
 
 <img src="https://img.shields.io/github/stars/Tronikelis/solid-swr?style=flat-square" />
 <img src="https://img.shields.io/bundlephobia/minzip/solid-swr?style=flat-square" />
@@ -12,7 +16,6 @@
 
 # Table of contents
 
-- [solid-swr](#solid-swr)
 - [Table of contents](#table-of-contents)
 - [Introduction](#introduction)
   - [Features](#features)
