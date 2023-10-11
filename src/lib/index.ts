@@ -2,6 +2,7 @@ import { dequal as equals } from "dequal";
 import { Accessor, createEffect, createSignal, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
+import useExponential from "./hooks/internal/useExponential";
 import useInterval from "./hooks/internal/useInterval";
 import useMutationOptions from "./hooks/internal/useMutationOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
@@ -61,7 +62,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     }
 
     const [data, setData] = createSignal<Res | undefined>(peekCache(key())?.data, { equals });
-    const [error, setError] = createSignal<Err | undefined>();
+    const [error, setError] = createSignal<Err | undefined>(undefined, { equals });
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data());
 
@@ -95,7 +96,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
 
         setIsLoading(true);
-        setError(undefined);
 
         if (peekCache(k)?.busy) {
             return;
@@ -144,6 +144,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.cache.set(k, { busy: false, data: response });
 
             setData(() => response);
+            setError(undefined);
             dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
                 data: response!,
                 key: k,
@@ -237,6 +238,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (e === undefined) return;
         options.onError(e);
     });
+
+    useExponential(() => !!error(), effect, 5);
 
     return {
         data,
