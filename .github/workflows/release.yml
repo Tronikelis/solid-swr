@@ -37,7 +37,7 @@ jobs:
                     short_sha=$(echo "${{ github.sha }}" | cut -c 1-7)
 
                     # skip tag push events
-                    if [ $branch == *v* && $branch == *.* ]; then
+                    if [[ $branch == *v* && $branch == *.* ]]; then
                       exit 0
                     fi
 
