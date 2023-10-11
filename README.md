@@ -59,6 +59,8 @@ Quote from [vercel's SWR](https://swr.vercel.app/) for react:
 -   Revalidation on **focus**
 -   Revalidation on **network recovery**
 -   **Local mutation** (Optimistic UI)
+-   Exponential error retries
+-   Suspense support with [useSWRSuspense](#useswrsuspense)
 
 ## Quick Start
 

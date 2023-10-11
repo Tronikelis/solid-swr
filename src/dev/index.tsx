@@ -76,18 +76,7 @@ function Inner() {
 
 function OnlyError() {
     const { error } = useSWRSuspense<undefined, Record<string, never>>(
-        () => `https://jsonplaceholder.typicode.com/posts/XD/comments`,
-        {
-            fetcher: async () => {
-                await new Promise(r => setTimeout(r, 4e3));
-                throw {
-                    status: 404,
-                    data: {
-                        foo: "bar",
-                    },
-                };
-            },
-        }
+        () => `https://jsonplaceholder.typicode.com/todos/XD`
     );
 
     createEffect(() => {
