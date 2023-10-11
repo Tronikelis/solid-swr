@@ -38,7 +38,7 @@ jobs:
 
                     jq --arg x "-$short_sha" '.version += $x' package.json > "$tmp" && mv "$tmp" package.json
 
-                    if [ "$branch" != "master" ]; then
+                    if [ $branch != "master" ]; then
                       # This is not the master branch, publish with the branch name as a tag
                       npm publish --provenance --access public --tag "$branch"
                     fi
