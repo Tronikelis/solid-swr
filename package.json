@@ -1,7 +1,7 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "0.15.0",
+    "version": "0.16.0",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -28,7 +28,7 @@
     "author": "Tronikelis",
     "repository": {
         "type": "git",
-        "url": "https://github.com/Tronikelis/solid-swr.git"
+        "url": "https://github.com/Tronikelis/solid-swr"
     },
     "license": "MIT",
     "scripts": {
@@ -48,6 +48,7 @@
         "@babel/preset-env": "7.22.20",
         "@jest/globals": "29.7.0",
         "@solidjs/testing-library": "0.8.4",
+        "@testing-library/jest-dom": "6.1.3",
         "babel-preset-solid": "1.7.12",
         "eslint": "8.49.0",
         "eslint-config-tronikelis-solid": "2.0.0",
