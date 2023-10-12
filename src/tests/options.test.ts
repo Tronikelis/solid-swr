@@ -88,3 +88,34 @@ it("keepPreviousData works", async () => {
 
     expect(fetcher).toBeCalledTimes(4);
 });
+
+it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets", async arg => {
+    const onError = jest.fn();
+    const onSuccess = jest.fn();
+
+    const fetcher = async () => {
+        await waitForMs();
+        if (arg === "onError") {
+            throw { foo: "bar" };
+        }
+
+        return { foo: "bar" };
+    };
+
+    const [key] = createKey();
+
+    const { result } = renderHook(useSWR, [key, { fetcher, onError, onSuccess }]);
+
+    await waitForMs();
+
+    for (let i = 0; i < 4; i++) {
+        await result._effect();
+    }
+
+    if (arg === "onError") {
+        expect(onError).toBeCalledTimes(1);
+    }
+    if (arg === "onSuccess") {
+        expect(onSuccess).toBeCalledTimes(1);
+    }
+});
