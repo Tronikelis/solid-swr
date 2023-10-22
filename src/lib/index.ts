@@ -241,6 +241,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     useExponential(() => !!error(), effect, 5);
 
+    createEffect(() => {
+        if (!data() && !error()) return;
+        setIsLoading(false);
+    });
+
     return {
         data,
         error,
