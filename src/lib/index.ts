@@ -68,17 +68,19 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+        setIsLoading(false);
+
         if (options.isImmutable && data() !== undefined) return;
 
-        setIsLoading(false);
         setError(undefined);
         setData(() => ev.detail.data);
     });
     useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+        setIsLoading(false);
+
         if (options.isImmutable && error() !== undefined) return;
 
-        setIsLoading(false);
         setError(() => ev.detail.data);
     });
 
