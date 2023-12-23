@@ -1,4 +1,4 @@
-import { expect, it, jest } from "@jest/globals";
+import { describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
 
 import useSWR from "../lib";
@@ -136,4 +136,130 @@ it("retries exponentially", async () => {
     await waitForMs(2e3);
     expect(result.error()).toBeTruthy();
     expect(fetcher).toBeCalledTimes(2);
+});
+
+describe("return", () => {
+    describe("hasFetched", () => {
+        it("simple example", async () => {
+            const fetcher = jest.fn(async (key: string) => {
+                await waitForMs();
+                return key;
+            });
+
+            const { result } = renderHook(useSWR, [createKey()[0], { fetcher }]);
+            expect(result.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(result.hasFetched()).toBe(true);
+        });
+
+        it("single level dependency", async () => {
+            const fetcher = jest.fn(async (key: string) => {
+                await waitForMs();
+                return key;
+            });
+
+            const { result: rA } = renderHook(useSWR, [createKey()[0], { fetcher }]);
+            const { result: rB } = renderHook(() =>
+                useSWR(() => (rA.data() ? rA.data() + "foo" : undefined), {
+                    fetcher,
+                })
+            );
+
+            expect(rA.hasFetched()).toBe(false);
+            expect(rB.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(rA.hasFetched()).toBe(true);
+            expect(rB.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(rA.hasFetched()).toBe(true);
+            expect(rB.hasFetched()).toBe(true);
+        });
+
+        it("double level dependency", async () => {
+            const fetcher = jest.fn(async (key: string) => {
+                await waitForMs();
+                return key;
+            });
+
+            const { result: rA } = renderHook(useSWR, [createKey()[0], { fetcher }]);
+            const { result: rB } = renderHook(() =>
+                useSWR(() => (rA.data() ? rA.data() + "foo" : undefined), {
+                    fetcher,
+                })
+            );
+            const { result: rC } = renderHook(() =>
+                useSWR(() => (rB.data() ? rB.data() + "bar" : undefined), {
+                    fetcher,
+                })
+            );
+
+            expect(rA.hasFetched()).toBe(false);
+            expect(rB.hasFetched()).toBe(false);
+            expect(rC.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(rA.hasFetched()).toBe(true);
+            expect(rB.hasFetched()).toBe(false);
+            expect(rC.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(rA.hasFetched()).toBe(true);
+            expect(rB.hasFetched()).toBe(true);
+            expect(rC.hasFetched()).toBe(false);
+
+            await waitForMs();
+            expect(rA.hasFetched()).toBe(true);
+            expect(rB.hasFetched()).toBe(true);
+            expect(rC.hasFetched()).toBe(true);
+        });
+
+        it("sets true when synced from other hook instant", async () => {
+            const fetcher = jest.fn(async (key: string) => {
+                await waitForMs();
+                return key;
+            });
+
+            const [key] = createKey();
+
+            renderHook(useSWR, [key, { fetcher }]);
+            await waitForMs();
+
+            const { result } = renderHook(useSWR, [key, { fetcher }]);
+            expect(result.hasFetched()).toBe(true);
+        });
+
+        it("sets true when synced from other hook with event", async () => {
+            const fetcherFast = jest.fn(async (key: string) => {
+                await waitForMs(100);
+                return key;
+            });
+            const fetcherSlow = jest.fn(async (key: string) => {
+                await waitForMs(200);
+                return key;
+            });
+
+            const [key] = createKey();
+
+            renderHook(useSWR, [key, { fetcher: fetcherFast }]);
+            const { result } = renderHook(useSWR, [key, { fetcher: fetcherSlow }]);
+            await waitForMs(100);
+
+            expect(result.hasFetched()).toBe(true);
+        });
+
+        it("sets true on error", async () => {
+            const fetcher = jest.fn(async () => {
+                await waitForMs();
+                throw new Error();
+            });
+
+            const { result } = renderHook(useSWR, [createKey()[0], { fetcher }]);
+            await waitForMs();
+
+            expect(result.hasFetched()).toBe(true);
+        });
+    });
 });
