@@ -65,6 +65,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const [error, setError] = createSignal<Err | undefined>(undefined, { equals });
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data());
+    // eslint-disable-next-line solid/reactivity
+    const [hasFetched, setHasFetched] = createSignal(!!data());
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
@@ -163,6 +165,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
 
         setIsLoading(false);
+        setHasFetched(true);
     }
 
     async function revalidateLocal() {
@@ -233,11 +236,15 @@ export default function useSWR<Res = unknown, Err = unknown>(
     createEffect(() => {
         const d = data();
         if (d === undefined) return;
+
+        setHasFetched(true);
         options.onSuccess(d);
     });
     createEffect(() => {
         const e = error();
         if (e === undefined) return;
+
+        setHasFetched(true);
         options.onError(e);
     });
 
@@ -247,6 +254,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         data,
         error,
         isLoading,
+        hasFetched,
         mutate,
 
         /**

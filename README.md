@@ -89,11 +89,13 @@ function Profile() {
 ```
 
 ```ts
-function useSWR<Res = unknown, Error = unknown>(key: Accessor<Key>, _options?: Options<Res>): {
+function useSWR<Res = unknown, Err = unknown>(key: Accessor<Key>, _options?: Options<Res, Err>): {
     data: Accessor<Res | undefined>;
-    error: Accessor<Error | undefined>;
+    error: Accessor<Err | undefined>;
     isLoading: Accessor<boolean>;
+    hasFetched: Accessor<...>;
     mutate: (payload: Res | ... 1 more ... | undefined, _mutationOptions?: MutationOptions) => Promise<...>;
+    _effect: () => Promise<...>;
 }
 ```
 
@@ -105,15 +107,7 @@ The hook returns an object containing 3 signals and 1 function:
 -   `error`: a signal that contains your error generic or undefined
 -   `isLoading`: a signal that returns a boolean
 -   `mutate`: a function bound to the hook that is used for manual changes and can be used for optimistic updates
-
-```ts
-{
-    data: Accessor<Res | undefined>;
-    error: Accessor<Error | undefined>;
-    isLoading: Accessor<boolean>;
-    mutate: (payload: Res | ... 1 more ... | undefined, _mutationOptions?: MutationOptions) => Promise<...>;
-}
-```
+-   `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
 
 # Options
 
