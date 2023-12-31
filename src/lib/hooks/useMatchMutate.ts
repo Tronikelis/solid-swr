@@ -39,7 +39,7 @@ export default function useMatchMutate<Res = unknown>() {
 
             if (fresh === undefined) {
                 revalidate(key, undefined);
-                return;
+                continue;
             }
 
             options.cache.set(key, { busy: false, data: fresh });
@@ -51,7 +51,7 @@ export default function useMatchMutate<Res = unknown>() {
             });
 
             // eslint-disable-next-line solid/reactivity
-            if (!mutationOptions.revalidate) return;
+            if (!mutationOptions.revalidate) continue;
 
             // optionally revalidates the key
             revalidate(key, fresh);

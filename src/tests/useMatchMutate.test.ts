@@ -95,3 +95,27 @@ it("revalidates when payload is undefined", async () => {
     expect(result1.data()).toBe(key().repeat(2));
     expect(result2.data()).toBe(key().repeat(2));
 });
+
+it("revalidates hooks with different keys", async () => {
+    const [key1] = createKey();
+    const key2 = () => key1() + "foo";
+
+    const fetcher = jest.fn(async (x: string) => {
+        await waitForMs();
+        return x;
+    });
+
+    const { result: result1 } = renderHook(useSWR, [key1, { fetcher }]);
+    const { result: result2 } = renderHook(useSWR, [key2, { fetcher }]);
+
+    await waitForMs();
+    expect(fetcher).toBeCalledTimes(2);
+
+    const { result: mutate } = renderHook(useMatchMutate);
+    mutate(k => k.startsWith(key1()), undefined);
+
+    expect(result1.isLoading()).toBe(true);
+    expect(result2.isLoading()).toBe(true);
+
+    expect(fetcher).toBeCalledTimes(4);
+});
