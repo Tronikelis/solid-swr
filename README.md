@@ -16,29 +16,30 @@
 
 # Table of contents
 
-- [Table of contents](#table-of-contents)
-- [Introduction](#introduction)
-  - [Features](#features)
-  - [Quick Start](#quick-start)
-- [Returned values](#returned-values)
-- [Options](#options)
-  - [API](#api)
-- [Options with context](#options-with-context)
-  - [API](#api-1)
-- [Mutation](#mutation)
-  - [Bound mutation](#bound-mutation)
-  - [Global mutation](#global-mutation)
-  - [Options](#options-1)
-  - [API](#api-2)
-- [SSR](#ssr)
-- [useSWRInfinite](#useswrinfinite)
-  - [⚠️ Important note](#️-important-note)
-- [useSWRMutation](#useswrmutation)
-  - [API](#api-3)
-- [Aborting requests](#aborting-requests)
-  - [Note](#note)
-- [useSWRSuspense](#useswrsuspense)
-  - [Note](#note-1)
+-   [Table of contents](#table-of-contents)
+-   [Introduction](#introduction)
+    -   [Features](#features)
+    -   [Quick Start](#quick-start)
+-   [Returned values](#returned-values)
+-   [Options](#options)
+    -   [API](#api)
+-   [Options with context](#options-with-context)
+    -   [API](#api-1)
+-   [Mutation](#mutation)
+    -   [Bound mutation](#bound-mutation)
+    -   [Global mutation](#global-mutation)
+    -   [Options](#options-1)
+    -   [API](#api-2)
+-   [SSR](#ssr)
+-   [useSWRInfinite](#useswrinfinite)
+    -   [⚠️ Important note](#️-important-note)
+-   [useSWRMutation](#useswrmutation)
+    -   [API](#api-3)
+-   [Aborting requests](#aborting-requests)
+    -   [Note](#note)
+-   [useSWRSuspense](#useswrsuspense)
+    -   [Note](#note-1)
+-   [Structuring your hooks](#structuring-your-hooks)
 
 # Introduction
 
@@ -453,3 +454,82 @@ from solid that triggers suspense
 
 It only triggers suspense if the key is truthy, if it is dependent on something else and returns undefined,
 suspense won't be triggered and it will act the same way as `useSWR`
+
+# Structuring your hooks
+
+This is how I structure my swr hooks after a ton of refactoring and different edge case considerations
+
+```ts
+// /client/hooks/swr/types/utils.d.ts
+export type SwrArg<T> = Accessor<T | undefined>;
+
+// /client/hooks/swr/utils/createSwrKey.ts
+export default function createSwrKey<T>(base: string, arg: Accessor<T | undefined>) {
+    const key = createMemo(() => {
+        const a = arg();
+        if (!a) return;
+        return urlbat(base, a);
+    });
+
+    return key;
+}
+
+// /client/hooks/swr/user/useUser.ts
+const base = "/user";
+
+type Arg = {
+    // anything
+};
+
+export function useUser(arg: SwrArg<Arg> = () => ({}), options?: Options<Data, unknown>) {
+    const key = createSwrKey(base, arg);
+
+    const swr = useSWR<Data>(key, options);
+    const actions = useActions(key);
+
+    return [swr, actions] as const;
+}
+
+function useActions(key: Accessor<string | undefined>) {
+    const login = useSWRMutation(
+        x => x === key(),
+        async (arg: LoginBody) => {
+            // only if you need to append to base
+            const k = key();
+            if (!k) return;
+
+            await axios.post(urlbat(k, "login"), arg);
+        }
+    );
+
+    return { login };
+}
+```
+
+And the example usage
+
+```tsx
+function UserInfo() {
+    const [{ data: user }, { login }] = useUser();
+
+    const onLogin = async () => {
+        try {
+            await login.trigger({
+                /** something */
+            });
+
+            // do optimistic updates, or just revalidate
+            login.populateCache();
+        } catch {
+            // show toaster, idk ur choice
+        }
+    };
+
+    return (
+        <div>
+            <div>{user()?.name}</div>
+            <button>Login</button>
+        </div>
+    );
+}
+```
