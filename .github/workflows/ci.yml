@@ -5,48 +5,31 @@ on:
     workflow_call:
 
 jobs:
-    lint:
+    ci:
         runs-on: ubuntu-latest
         steps:
             - name: Cloning repo
               uses: actions/checkout@v3
-            - name: Cache node_modules
-              uses: actions/cache@v3
+
+            - name: Install pnpm
+              uses: pnpm/action-setup@v2
               with:
-                  path: ~/.npm
-                  key: ${{ runner.os }}-lint-${{ hashFiles('**/package-lock.json') }}
+                  version: 8
+
             - name: Setup Node.js environment
               uses: actions/setup-node@v3
               with:
-                  node-version: 18
+                  node-version: 20
+                  cache: pnpm
 
-            - name: Install node_modules
-              run: npm ci
+            - name: Install deps
+              run: pnpm i --frozen-lockfile
 
             - name: ESLint
-              run: npm run lint
+              run: pnpm lint
 
             - name: tsc
-              run: npm run tsc
+              run: pnpm tsc
 
-    test:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Cloning repo
-              uses: actions/checkout@v3
-            - name: Cache node_modules
-              uses: actions/cache@v3
-              with:
-                  path: ~/.npm
-                  key: ${{ runner.os }}-test-${{ hashFiles('**/package-lock.json') }}
-
-            - name: Setup Node.js environment
-              uses: actions/setup-node@v3
-              with:
-                  node-version: 18
-
-            - name: Install node_modules
-              run: npm ci
-
-            - name: Jest
-              run: npm run test
+            - name: test
+              run: pnpm test
