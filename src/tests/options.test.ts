@@ -1,5 +1,6 @@
 import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
 
 import useSWR from "../lib";
@@ -90,8 +91,7 @@ it("keepPreviousData works", async () => {
 });
 
 it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets", async arg => {
-    const onError = jest.fn();
-    const onSuccess = jest.fn();
+    const callback = jest.fn();
 
     const fetcher = async () => {
         await waitForMs();
@@ -104,7 +104,10 @@ it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets",
 
     const [key] = createKey();
 
-    const { result } = renderHook(useSWR, [key, { fetcher, onError, onSuccess }]);
+    const { result } = renderHook(useSWR, [
+        key,
+        { fetcher, onError: callback, onSuccess: callback },
+    ]);
 
     await waitForMs();
 
@@ -112,10 +115,37 @@ it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets",
         await result._effect();
     }
 
-    if (arg === "onError") {
-        expect(onError).toBeCalledTimes(1);
-    }
-    if (arg === "onSuccess") {
-        expect(onSuccess).toBeCalledTimes(1);
-    }
+    expect(callback).toBeCalledTimes(1);
+    expect(callback).toBeCalledWith({ foo: "bar" });
 });
+
+it.each(["onError", "onSuccess"] as const)(
+    "%s does not track the signals inside",
+    async arg => {
+        const [get, set] = createSignal("foo");
+
+        // eslint-disable-next-line solid/reactivity
+        const getMocked = jest.fn(() => get());
+
+        const [key] = createKey();
+
+        const fetcher = async () => {
+            await waitForMs();
+            if (arg === "onError") {
+                throw { foo: "bar" };
+            }
+
+            return { foo: "bar" };
+        };
+
+        renderHook(useSWR, [key, { fetcher, onError: getMocked, onSuccess: getMocked }]);
+
+        await waitForMs();
+
+        expect(getMocked).toBeCalledTimes(1);
+        set("foobar");
+        expect(getMocked).toBeCalledTimes(1);
+
+        expect(getMocked).toBeCalledWith({ foo: "bar" });
+    }
+);

@@ -1,5 +1,5 @@
 import { dequal as equals } from "dequal";
-import { Accessor, createEffect, createSignal, useContext } from "solid-js";
+import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
 import useExponential from "./hooks/internal/useExponential";
@@ -48,6 +48,12 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
+
+    const onSuccess: (typeof options)["onSuccess"] = (...params) =>
+        untrack(() => options.onSuccess(...params));
+
+    const onError: (typeof options)["onError"] = (...params) =>
+        untrack(() => options.onError(...params));
 
     function peekCache(k: string | undefined): CacheItem<Res> | undefined {
         if (k === undefined) return undefined;
@@ -238,14 +244,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (d === undefined) return;
 
         setHasFetched(true);
-        options.onSuccess(d);
+        onSuccess(d);
     });
     createEffect(() => {
         const e = error();
         if (e === undefined) return;
 
         setHasFetched(true);
-        options.onError(e);
+        onError(e);
     });
 
     useExponential(() => !!error(), effect, 5);
