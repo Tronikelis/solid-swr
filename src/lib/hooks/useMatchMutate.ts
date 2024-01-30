@@ -18,12 +18,12 @@ export type Payload<Res> =
 export default function useMatchMutate<Res = unknown>() {
     const options = useOptions();
 
-    function revalidate(key: string, data: Res | undefined) {
+    const revalidate = (key: string, data: Res | undefined) => {
         dispatchCustomEvent<Res | undefined>(triggerEffectEvent, {
             key,
             data,
         });
-    }
+    };
 
     const mutate = uFn(
         (

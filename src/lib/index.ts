@@ -50,7 +50,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
-    function peekCache(k: string | undefined): CacheItem<Res> | undefined {
+    const peekCache = (k: string | undefined): CacheItem<Res> | undefined => {
         if (k === undefined) return undefined;
 
         const fromCache = options.cache.get(k);
@@ -60,7 +60,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (fromFallback) return { busy: false, data: fromFallback };
 
         return undefined;
-    }
+    };
 
     const [data, setData] = createSignal<Res | undefined>(peekCache(key())?.data, { equals });
     const [error, setError] = createSignal<Err | undefined>(undefined, { equals });
@@ -92,7 +92,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         await effect();
     });
 
-    async function effect() {
+    const effect = async () => {
         const k = key();
 
         if (!options.isEnabled || k === undefined) {
@@ -167,9 +167,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         setIsLoading(false);
         setHasFetched(true);
-    }
+    };
 
-    async function revalidateLocal() {
+    const revalidateLocal = async () => {
         const k = key();
         if (k === undefined) return;
 
@@ -183,7 +183,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
 
         setError(() => err);
-    }
+    };
 
     /**
      * If revalidation is enabled or payload is `undefined` this function resolves

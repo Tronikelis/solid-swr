@@ -14,7 +14,7 @@ export default function useExponential(
         count = 0;
         let timeout: undefined | ReturnType<typeof setTimeout>;
 
-        function callTimeout() {
+        const callTimeout = () => {
             if (count > max) return;
 
             timeout = setTimeout(() => {
@@ -24,7 +24,7 @@ export default function useExponential(
             }, current * 1e3);
 
             current *= 2;
-        }
+        };
 
         callTimeout();
 
