@@ -41,29 +41,50 @@ export default function useOptions<Res, Err>(
         options
     );
 
-    const untrackMerged = (): typeof merged => {
+    type Untracked = Pick<typeof merged, "cache" | "fetcher" | "onSuccess" | "onError">;
+
+    const untrackedCache = () => {
         const oldCache = merged.cache;
 
-        const cache = {
-            get: uFn(oldCache.get.bind(oldCache)),
-            set: uFn(oldCache.set.bind(oldCache)),
-            keys: uFn(oldCache.keys.bind(oldCache)),
-        };
-
         return {
-            ...merged,
-            onSuccess: uFn(merged.onSuccess.bind(merged.onSuccess)),
-            onError: uFn(merged.onError.bind(merged.onError)),
-            cache,
+            cache: {
+                get: uFn(oldCache.get.bind(oldCache)),
+                set: uFn(oldCache.set.bind(oldCache)),
+                keys: uFn(oldCache.keys.bind(oldCache)),
+            },
         };
     };
 
-    // eslint-disable-next-line solid/reactivity
-    const [untrackedOptions, setUntrackedOptions] = createStore(untrackMerged());
-
-    createEffect(() => {
-        setUntrackedOptions(untrackMerged());
+    const untrackedOnSuccess = () => ({
+        onSuccess: uFn(merged.onSuccess.bind(merged.onSuccess)),
+    });
+    const untrackedOnError = () => ({
+        onError: uFn(merged.onError.bind(merged.onError)),
+    });
+    const untrackedFetcher = () => ({
+        fetcher: uFn(merged.fetcher.bind(merged.fetcher)),
     });
 
-    return untrackedOptions;
+    const [untracked, setUntracked] = createStore<Untracked>({
+        // eslint-disable-next-line solid/reactivity
+        ...untrackedCache(),
+        // eslint-disable-next-line solid/reactivity
+        ...untrackedOnSuccess(),
+        // eslint-disable-next-line solid/reactivity
+        ...untrackedOnError(),
+        // eslint-disable-next-line solid/reactivity
+        ...untrackedFetcher(),
+    });
+
+    [untrackedCache, untrackedOnSuccess, untrackedOnError, untrackedFetcher].forEach(
+        accessor => {
+            createEffect(() => {
+                setUntracked(accessor());
+            });
+        }
+    );
+
+    const mergedUntracked = mergeProps(merged, untracked);
+
+    return mergedUntracked;
 }

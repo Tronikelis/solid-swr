@@ -8,6 +8,7 @@ import useMutationOptions from "./hooks/internal/useMutationOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
 import useOptions from "./hooks/useOptions";
 import tryCatch from "./utils/tryCatch";
+import uFn from "./utils/uFn";
 import {
     dispatchCustomEvent,
     publishDataEvent,
@@ -190,29 +191,32 @@ export default function useSWR<Res = unknown, Err = unknown>(
      *
      * This function is bound to the hook, not to the key!
      */
-    async function mutate(
-        payload: Res | ((curr: Res | undefined) => Res) | undefined,
-        _mutationOptions: MutationOptions = {}
-    ) {
-        const mutationOptions = useMutationOptions(_mutationOptions);
+    const mutate = uFn(
+        async (
+            payload: Res | ((curr: Res | undefined) => Res) | undefined,
+            _mutationOptions: MutationOptions = {}
+            // eslint-disable-next-line solid/reactivity
+        ) => {
+            const mutationOptions = useMutationOptions(_mutationOptions);
 
-        if (payload === undefined) {
-            await revalidateLocal();
-            return;
+            if (payload === undefined) {
+                await revalidateLocal();
+                return;
+            }
+
+            const k = key();
+            if (k === undefined) return;
+
+            const fresh = payload instanceof Function ? payload(data()) : payload;
+
+            setData(() => fresh);
+
+            // eslint-disable-next-line solid/reactivity
+            if (mutationOptions.revalidate === true) {
+                await revalidateLocal();
+            }
         }
-
-        const k = key();
-        if (k === undefined) return;
-
-        const fresh = payload instanceof Function ? payload(data()) : payload;
-
-        setData(() => fresh);
-
-        // eslint-disable-next-line solid/reactivity
-        if (mutationOptions.revalidate === true) {
-            await revalidateLocal();
-        }
-    }
+    );
 
     createEffect(() => {
         if (options.isImmutable) return;
