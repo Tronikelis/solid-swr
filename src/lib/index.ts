@@ -49,12 +49,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
-    const onSuccess: (typeof options)["onSuccess"] = (...params) =>
-        untrack(() => options.onSuccess(...params));
-
-    const onError: (typeof options)["onError"] = (...params) =>
-        untrack(() => options.onError(...params));
-
     function peekCache(k: string | undefined): CacheItem<Res> | undefined {
         if (k === undefined) return undefined;
 
@@ -244,14 +238,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (d === undefined) return;
 
         setHasFetched(true);
-        onSuccess(d);
+        untrack(() => options.onSuccess(d));
     });
     createEffect(() => {
         const e = error();
         if (e === undefined) return;
 
         setHasFetched(true);
-        onError(e);
+        untrack(() => options.onError(e));
     });
 
     useExponential(() => !!error(), effect, 5);

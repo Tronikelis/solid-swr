@@ -155,7 +155,7 @@ it("merges nested options", () => {
         const config = useOptions();
         expect(config.keepPreviousData).toBe(true);
         expect(config.refreshInterval).toBe(0);
-        expect(config.cache).toBe("foo");
+        expect(config.isEnabled).toBe(false);
 
         i++;
 
@@ -166,7 +166,7 @@ it("merges nested options", () => {
         const config = useOptions();
         expect(config.keepPreviousData).toBe(true);
         expect(config.refreshInterval).toBe(1);
-        expect(config.cache).toBe("foo");
+        expect(config.isEnabled).toBe(false);
 
         i++;
 
@@ -178,7 +178,7 @@ it("merges nested options", () => {
             value={{
                 keepPreviousData: false,
                 refreshInterval: 0,
-                cache: "foo" as unknown as CacheImplements,
+                isEnabled: false,
             }}
         >
             <SWROptionsProvider value={{ keepPreviousData: true }}>
