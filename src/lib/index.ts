@@ -169,22 +169,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
         setHasFetched(true);
     };
 
-    const revalidateLocal = async () => {
-        const k = key();
-        if (k === undefined) return;
-
-        setIsLoading(true);
-        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
-        setIsLoading(false);
-
-        if (!err) {
-            setData(() => response);
-            return;
-        }
-
-        setError(() => err);
-    };
-
     /**
      * If revalidation is enabled or payload is `undefined` this function resolves
      * when revalidation has finished.
@@ -197,10 +181,26 @@ export default function useSWR<Res = unknown, Err = unknown>(
             _mutationOptions: MutationOptions = {}
             // eslint-disable-next-line solid/reactivity
         ) => {
+            const revalidate = async () => {
+                const k = key();
+                if (k === undefined) return;
+
+                setIsLoading(true);
+                const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
+                setIsLoading(false);
+
+                if (!err) {
+                    setData(() => response);
+                    return;
+                }
+
+                setError(() => err);
+            };
+
             const mutationOptions = useMutationOptions(_mutationOptions);
 
             if (payload === undefined) {
-                await revalidateLocal();
+                await revalidate();
                 return;
             }
 
@@ -213,7 +213,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
             // eslint-disable-next-line solid/reactivity
             if (mutationOptions.revalidate === true) {
-                await revalidateLocal();
+                await revalidate();
             }
         }
     );
