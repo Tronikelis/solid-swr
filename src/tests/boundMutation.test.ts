@@ -24,6 +24,7 @@ it("sets new value instantly and respects revalidation option", async () => {
     expect(result.data()).toBe("foo");
     expect(fetcher).toBeCalledTimes(2);
 
+    // wait for revalidation to complete
     await waitForMs();
 
     result.mutate("bar", { revalidate: false });
