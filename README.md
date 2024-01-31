@@ -177,6 +177,8 @@ Refer to the [options api](#api)
 
 This refers to using the `mutate` function returned by individual hooks
 
+It actually uses the global mutation hook under the hood
+
 Basic usage goes like this:
 
 ```tsx

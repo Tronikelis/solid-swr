@@ -171,12 +171,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
         setHasFetched(true);
     };
 
-    /**
-     * If revalidation is enabled or payload is `undefined` this function resolves
-     * when revalidation has finished.
-     *
-     * This function is bound to the hook, not to the key!
-     */
     const mutate = uFn(
         (
             payload: Res | ((curr: Res | undefined) => Res) | undefined,
