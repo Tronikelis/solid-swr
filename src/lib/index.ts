@@ -188,19 +188,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
             const mutationOptions = useMutationOptions(_mutationOptions);
             const matchMutate = useMatchMutate<Res>();
-            const filterLocal = (key: string) => key === k;
-
-            if (payload === undefined) {
-                matchMutate(filterLocal, undefined, mutationOptions);
-                return;
-            }
 
             const fresh = payload instanceof Function ? payload(data()) : payload;
 
-            // eslint-disable-next-line solid/reactivity
-            if (mutationOptions.revalidate === true) {
-                matchMutate(filterLocal, fresh, mutationOptions);
-            }
+            matchMutate(key => key === k, fresh, mutationOptions);
         }
     );
 
