@@ -8,6 +8,7 @@ import useMutationOptions from "./hooks/internal/useMutationOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
 import useOptions from "./hooks/useOptions";
 import tryCatch from "./utils/tryCatch";
+import uFn from "./utils/uFn";
 import {
     dispatchCustomEvent,
     publishDataEvent,
@@ -49,13 +50,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
-    const onSuccess: (typeof options)["onSuccess"] = (...params) =>
-        untrack(() => options.onSuccess(...params));
-
-    const onError: (typeof options)["onError"] = (...params) =>
-        untrack(() => options.onError(...params));
-
-    function peekCache(k: string | undefined): CacheItem<Res> | undefined {
+    const peekCache = (k: string | undefined): CacheItem<Res> | undefined => {
         if (k === undefined) return undefined;
 
         const fromCache = options.cache.get(k);
@@ -65,7 +60,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (fromFallback) return { busy: false, data: fromFallback };
 
         return undefined;
-    }
+    };
 
     const [data, setData] = createSignal<Res | undefined>(peekCache(key())?.data, { equals });
     const [error, setError] = createSignal<Err | undefined>(undefined, { equals });
@@ -97,7 +92,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         await effect();
     });
 
-    async function effect() {
+    const effect = async () => {
         const k = key();
 
         if (!options.isEnabled || k === undefined) {
@@ -172,23 +167,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         setIsLoading(false);
         setHasFetched(true);
-    }
-
-    async function revalidateLocal() {
-        const k = key();
-        if (k === undefined) return;
-
-        setIsLoading(true);
-        const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
-        setIsLoading(false);
-
-        if (!err) {
-            setData(() => response);
-            return;
-        }
-
-        setError(() => err);
-    }
+    };
 
     /**
      * If revalidation is enabled or payload is `undefined` this function resolves
@@ -196,29 +175,48 @@ export default function useSWR<Res = unknown, Err = unknown>(
      *
      * This function is bound to the hook, not to the key!
      */
-    async function mutate(
-        payload: Res | ((curr: Res | undefined) => Res) | undefined,
-        _mutationOptions: MutationOptions = {}
-    ) {
-        const mutationOptions = useMutationOptions(_mutationOptions);
+    const mutate = uFn(
+        async (
+            payload: Res | ((curr: Res | undefined) => Res) | undefined,
+            _mutationOptions: MutationOptions = {}
+            // eslint-disable-next-line solid/reactivity
+        ) => {
+            const revalidate = async () => {
+                const k = key();
+                if (k === undefined) return;
 
-        if (payload === undefined) {
-            await revalidateLocal();
-            return;
+                setIsLoading(true);
+                const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
+                setIsLoading(false);
+
+                if (!err) {
+                    setData(() => response);
+                    return;
+                }
+
+                setError(() => err);
+            };
+
+            const mutationOptions = useMutationOptions(_mutationOptions);
+
+            if (payload === undefined) {
+                await revalidate();
+                return;
+            }
+
+            const k = key();
+            if (k === undefined) return;
+
+            const fresh = payload instanceof Function ? payload(data()) : payload;
+
+            setData(() => fresh);
+
+            // eslint-disable-next-line solid/reactivity
+            if (mutationOptions.revalidate === true) {
+                await revalidate();
+            }
         }
-
-        const k = key();
-        if (k === undefined) return;
-
-        const fresh = payload instanceof Function ? payload(data()) : payload;
-
-        setData(() => fresh);
-
-        // eslint-disable-next-line solid/reactivity
-        if (mutationOptions.revalidate === true) {
-            await revalidateLocal();
-        }
-    }
+    );
 
     createEffect(() => {
         if (options.isImmutable) return;
@@ -244,14 +242,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (d === undefined) return;
 
         setHasFetched(true);
-        onSuccess(d);
+        untrack(() => options.onSuccess(d));
     });
     createEffect(() => {
         const e = error();
         if (e === undefined) return;
 
         setHasFetched(true);
-        onError(e);
+        untrack(() => options.onError(e));
     });
 
     useExponential(() => !!error(), effect, 5);

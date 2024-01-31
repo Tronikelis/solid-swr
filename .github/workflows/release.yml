@@ -44,7 +44,7 @@ jobs:
                   else
                     branch="${{ github.ref_name }}"
                     tmp=$(mktemp)
-                    short_sha=$(echo "${{ github.sha }}" | cut -c 1-7)
+                    short_sha=$(echo "${{ github.sha }}" | cut -c 1-32)
 
                     # skip tag push events
                     if [[ $branch == *v* && $branch == *.* ]]; then
