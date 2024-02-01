@@ -6,6 +6,7 @@ import useExponential from "./hooks/internal/useExponential";
 import useInterval from "./hooks/internal/useInterval";
 import useMutationOptions from "./hooks/internal/useMutationOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
+import useMatchMutate from "./hooks/useMatchMutate";
 import useOptions from "./hooks/useOptions";
 import tryCatch from "./utils/tryCatch";
 import uFn from "./utils/uFn";
@@ -32,7 +33,8 @@ export { SWROptionsProvider } from "./context/options";
 export { SWRFallback };
 
 // hooks
-export { default as useMatchMutate } from "./hooks/useMatchMutate";
+export { useMatchMutate };
+
 export { default as useOptions } from "./hooks/useOptions";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 export { default as useSWRMutation } from "./hooks/useSWRMutation";
@@ -169,52 +171,21 @@ export default function useSWR<Res = unknown, Err = unknown>(
         setHasFetched(true);
     };
 
-    /**
-     * If revalidation is enabled or payload is `undefined` this function resolves
-     * when revalidation has finished.
-     *
-     * This function is bound to the hook, not to the key!
-     */
     const mutate = uFn(
-        async (
+        (
             payload: Res | ((curr: Res | undefined) => Res) | undefined,
             _mutationOptions: MutationOptions = {}
             // eslint-disable-next-line solid/reactivity
         ) => {
-            const revalidate = async () => {
-                const k = key();
-                if (k === undefined) return;
-
-                setIsLoading(true);
-                const [err, response] = await tryCatch<Err, Res>(() => options.fetcher(k, {}));
-                setIsLoading(false);
-
-                if (!err) {
-                    setData(() => response);
-                    return;
-                }
-
-                setError(() => err);
-            };
-
-            const mutationOptions = useMutationOptions(_mutationOptions);
-
-            if (payload === undefined) {
-                await revalidate();
-                return;
-            }
-
             const k = key();
             if (k === undefined) return;
 
+            const mutationOptions = useMutationOptions(_mutationOptions);
+            const matchMutate = useMatchMutate<Res>();
+
             const fresh = payload instanceof Function ? payload(data()) : payload;
 
-            setData(() => fresh);
-
-            // eslint-disable-next-line solid/reactivity
-            if (mutationOptions.revalidate === true) {
-                await revalidate();
-            }
+            matchMutate(key => key === k, fresh, mutationOptions);
         }
     );
 

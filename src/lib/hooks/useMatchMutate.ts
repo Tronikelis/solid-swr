@@ -28,7 +28,7 @@ export default function useMatchMutate<Res = unknown>() {
     const mutate = uFn(
         (
             filter: FilterKeyFn,
-            payload: Payload<Res>,
+            payload: Payload<Res> = undefined,
             _mutationOptions: MutationOptions = {}
         ) => {
             const mutationOptions = useMutationOptions(_mutationOptions);
