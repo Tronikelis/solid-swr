@@ -19,7 +19,7 @@ export type CacheImplements<Res = any> = {
 export type Key = string | undefined;
 
 export type FetcherArg = {
-    signal?: AbortSignal;
+    signal: AbortSignal;
 };
 
 export type Fetcher<T> = (key: ExistentKey, { signal }: FetcherArg) => Promise<T>;
