@@ -16,30 +16,30 @@
 
 # Table of contents
 
--   [Table of contents](#table-of-contents)
--   [Introduction](#introduction)
-    -   [Features](#features)
-    -   [Quick Start](#quick-start)
--   [Returned values](#returned-values)
--   [Options](#options)
-    -   [API](#api)
--   [Options with context](#options-with-context)
-    -   [API](#api-1)
--   [Mutation](#mutation)
-    -   [Bound mutation](#bound-mutation)
-    -   [Global mutation](#global-mutation)
-    -   [Options](#options-1)
-    -   [API](#api-2)
--   [SSR](#ssr)
--   [useSWRInfinite](#useswrinfinite)
-    -   [⚠️ Important note](#️-important-note)
--   [useSWRMutation](#useswrmutation)
-    -   [API](#api-3)
--   [Aborting requests](#aborting-requests)
-    -   [Note](#note)
--   [useSWRSuspense](#useswrsuspense)
-    -   [Note](#note-1)
--   [Structuring your hooks](#structuring-your-hooks)
+- [Table of contents](#table-of-contents)
+- [Introduction](#introduction)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+- [Returned values](#returned-values)
+- [Options](#options)
+  - [API](#api)
+- [Options with context](#options-with-context)
+  - [API](#api-1)
+- [Mutation](#mutation)
+  - [Bound mutation](#bound-mutation)
+  - [Global mutation](#global-mutation)
+  - [Options](#options-1)
+  - [API](#api-2)
+- [SSR](#ssr)
+- [useSWRInfinite](#useswrinfinite)
+  - [⚠️ Important note](#️-important-note)
+- [useSWRMutation](#useswrmutation)
+  - [API](#api-3)
+- [Aborting requests](#aborting-requests)
+  - [Note](#note)
+- [useSWRSuspense](#useswrsuspense)
+  - [Note](#note-1)
+- [Structuring your hooks](#structuring-your-hooks)
 
 # Introduction
 
@@ -194,9 +194,7 @@ function Profile() {
                 onClick={async () => {
                     const newName = data.name.toUpperCase();
 
-                    // await waits when revalidation of the mutate is enabled
-                    // more on that later
-                    await mutate(
+                    mutate(
                         { ...data, name: newName },
                         {
                             // this is false by default
@@ -256,8 +254,6 @@ mutate(x => true, payload, {
 Currently only 1 option is available:
 
 -   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
-
-The `mutate` util is an _async_ function, but it only actually acts as an async function if **revalidation** is enabled or the `payload` is `undefined`
 
 ## API
 
