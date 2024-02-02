@@ -150,7 +150,7 @@ Provide your own default [settings](#options) for hooks
 ```tsx
 import { SWROptionsProvider } from "solid-swr";
 
-const yourOwnFetcher = async (x: string, { signal }: { signal?: AbortSignal }) => {};
+const yourOwnFetcher = async (x: string, { signal }: { signal: AbortSignal }) => {};
 
 function Root() {
     return (
@@ -432,7 +432,7 @@ The default fetcher utilizes this mechanic
 The signal is passed to the fetcher as the second parameter in an object:
 
 ```ts
-const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
+const fetcher = async (key: string, { signal }: { signal: AbortSignal }) => {
     return await fetch("...", { signal });
 };
 ```
