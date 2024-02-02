@@ -22,7 +22,7 @@ export type FetcherArg = {
     signal: AbortSignal;
 };
 
-export type Fetcher<T> = (key: ExistentKey, { signal }: FetcherArg) => Promise<T>;
+export type Fetcher<T> = (key: ExistentKey, arg: FetcherArg) => Promise<T>;
 
 export type Options<Res, Err> = {
     /**
