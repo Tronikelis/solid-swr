@@ -16,30 +16,30 @@
 
 # Table of contents
 
-- [Table of contents](#table-of-contents)
-- [Introduction](#introduction)
-  - [Features](#features)
-  - [Quick Start](#quick-start)
-- [Returned values](#returned-values)
-- [Options](#options)
-  - [API](#api)
-- [Options with context](#options-with-context)
-  - [API](#api-1)
-- [Mutation](#mutation)
-  - [Bound mutation](#bound-mutation)
-  - [Global mutation](#global-mutation)
-  - [Options](#options-1)
-  - [API](#api-2)
-- [SSR](#ssr)
-- [useSWRInfinite](#useswrinfinite)
-  - [⚠️ Important note](#️-important-note)
-- [useSWRMutation](#useswrmutation)
-  - [API](#api-3)
-- [Aborting requests](#aborting-requests)
-  - [Note](#note)
-- [useSWRSuspense](#useswrsuspense)
-  - [Note](#note-1)
-- [Structuring your hooks](#structuring-your-hooks)
+-   [Table of contents](#table-of-contents)
+-   [Introduction](#introduction)
+    -   [Features](#features)
+    -   [Quick Start](#quick-start)
+-   [Returned values](#returned-values)
+-   [Options](#options)
+    -   [API](#api)
+-   [Options with context](#options-with-context)
+    -   [API](#api-1)
+-   [Mutation](#mutation)
+    -   [Bound mutation](#bound-mutation)
+    -   [Global mutation](#global-mutation)
+    -   [Options](#options-1)
+    -   [API](#api-2)
+-   [SSR](#ssr)
+-   [useSWRInfinite](#useswrinfinite)
+    -   [⚠️ Important note](#️-important-note)
+-   [useSWRMutation](#useswrmutation)
+    -   [API](#api-3)
+-   [Aborting requests](#aborting-requests)
+    -   [Note](#note)
+-   [useSWRSuspense](#useswrsuspense)
+    -   [Note](#note-1)
+-   [Structuring your hooks](#structuring-your-hooks)
 
 # Introduction
 
@@ -439,9 +439,7 @@ const fetcher = async (key: string, { signal }: { signal?: AbortSignal }) => {
 
 ## Note
 
-The signal is only passed in the core effect of `swr`, not in mutations
-
-So bound mutate and `useSWRMutation` don't get a signal, thus don't get aborted
+The signal is only passed in the core effect of `swr`
 
 # useSWRSuspense
 
