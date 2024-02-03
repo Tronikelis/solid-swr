@@ -1,10 +1,10 @@
-import { expect, it } from "@jest/globals";
 import { render } from "@solidjs/testing-library";
 import { ErrorBoundary, Suspense } from "solid-js";
+import { expect, it } from "vitest";
 
 import { useSWRSuspense } from "~/index";
 
-import "@testing-library/jest-dom/jest-globals";
+import "@testing-library/jest-dom/vitest";
 
 import createKey from "./utils/createKey";
 import waitForMs from "./utils/waitForMs";

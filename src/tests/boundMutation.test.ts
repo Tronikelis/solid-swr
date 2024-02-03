@@ -1,5 +1,5 @@
-import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { expect, it, vi } from "vitest";
 
 import useSWR from "../lib";
 
@@ -7,7 +7,7 @@ import createKey from "./utils/createKey";
 import waitForMs from "./utils/waitForMs";
 
 it("sets new value instantly and respects revalidation option", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });

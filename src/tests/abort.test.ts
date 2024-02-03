@@ -1,5 +1,5 @@
-import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { expect, it, vi } from "vitest";
 
 import useSWR, { Fetcher } from "../lib";
 
@@ -11,7 +11,7 @@ it("aborts the previous request when changing keys", async () => {
 
     let abortSignal: AbortSignal | undefined;
 
-    const fetcher = jest.fn(async (x: string, { signal }: { signal: AbortSignal }) => {
+    const fetcher = vi.fn(async (x: string, { signal }: { signal: AbortSignal }) => {
         if (x === "foo") {
             abortSignal = signal;
         }

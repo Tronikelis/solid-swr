@@ -1,5 +1,5 @@
-import { describe, expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { describe, expect, it, vi } from "vitest";
 
 import useSWR from "../lib";
 
@@ -51,7 +51,7 @@ it("passes thrown error into the error signal", async () => {
 });
 
 it("returns stale result from cache instantly and refetches", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -75,7 +75,7 @@ it("returns stale result from cache instantly and refetches", async () => {
 });
 
 it("deduplicates requests and syncs responses", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -120,7 +120,7 @@ it("deduplicates requests and syncs responses", async () => {
 });
 
 it("retries exponentially", async () => {
-    const fetcher = jest.fn(async (key: string) => {
+    const fetcher = vi.fn(async (key: string) => {
         await waitForMs();
         throw new Error(key);
     });
@@ -141,7 +141,7 @@ it("retries exponentially", async () => {
 describe("return", () => {
     describe("hasFetched", () => {
         it("simple example", async () => {
-            const fetcher = jest.fn(async (key: string) => {
+            const fetcher = vi.fn(async (key: string) => {
                 await waitForMs();
                 return key;
             });
@@ -154,7 +154,7 @@ describe("return", () => {
         });
 
         it("single level dependency", async () => {
-            const fetcher = jest.fn(async (key: string) => {
+            const fetcher = vi.fn(async (key: string) => {
                 await waitForMs();
                 return key;
             });
@@ -179,7 +179,7 @@ describe("return", () => {
         });
 
         it("double level dependency", async () => {
-            const fetcher = jest.fn(async (key: string) => {
+            const fetcher = vi.fn(async (key: string) => {
                 await waitForMs();
                 return key;
             });
@@ -217,7 +217,7 @@ describe("return", () => {
         });
 
         it("sets true when synced from other hook instant", async () => {
-            const fetcher = jest.fn(async (key: string) => {
+            const fetcher = vi.fn(async (key: string) => {
                 await waitForMs();
                 return key;
             });
@@ -232,11 +232,11 @@ describe("return", () => {
         });
 
         it("sets true when synced from other hook with event", async () => {
-            const fetcherFast = jest.fn(async (key: string) => {
+            const fetcherFast = vi.fn(async (key: string) => {
                 await waitForMs(100);
                 return key;
             });
-            const fetcherSlow = jest.fn(async (key: string) => {
+            const fetcherSlow = vi.fn(async (key: string) => {
                 await waitForMs(200);
                 return key;
             });
@@ -251,7 +251,7 @@ describe("return", () => {
         });
 
         it("sets true on error", async () => {
-            const fetcher = jest.fn(async () => {
+            const fetcher = vi.fn(async () => {
                 await waitForMs();
                 throw new Error();
             });
