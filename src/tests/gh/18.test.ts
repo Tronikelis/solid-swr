@@ -1,5 +1,5 @@
-import { expect, it } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { expect, it } from "vitest";
 
 import useSWR from "../../lib";
 import createKey from "../utils/createKey";

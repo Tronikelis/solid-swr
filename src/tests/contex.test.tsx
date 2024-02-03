@@ -1,7 +1,7 @@
-import { expect, it, jest } from "@jest/globals";
 import { render } from "@solidjs/testing-library";
 import { createEffect, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
+import { expect, it, vi } from "vitest";
 
 import useSWR, {
     CacheImplements,
@@ -17,7 +17,7 @@ import waitForMs from "./utils/waitForMs";
 it("gets the settings from the SWRConfig", async () => {
     const [key] = createKey();
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -44,7 +44,7 @@ it("gets the settings from the SWRConfig", async () => {
 it("merges the settings correctly", async () => {
     const [key] = createKey();
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -84,12 +84,12 @@ it("merges the settings correctly", async () => {
 it("prioritizes the hook settings most", async () => {
     const [key] = createKey();
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
 
-    const badFetcher = jest.fn(async (x: string) => {
+    const badFetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });

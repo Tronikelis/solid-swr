@@ -1,7 +1,7 @@
-import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
 import { createSignal } from "solid-js";
 import { createStore } from "solid-js/store";
+import { expect, it, vi } from "vitest";
 
 import useSWR from "../lib";
 
@@ -15,7 +15,7 @@ import waitForMs from "./utils/waitForMs";
 const msWait = 50;
 
 it("polls the fetcher based on an interval", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -34,7 +34,7 @@ it("polls the fetcher based on an interval", async () => {
 });
 
 it("isEnabled works", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs(msWait);
         return x;
     });
@@ -61,7 +61,7 @@ it("isEnabled works", async () => {
 });
 
 it("keepPreviousData works", async () => {
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs(msWait);
         return x;
     });
@@ -91,7 +91,7 @@ it("keepPreviousData works", async () => {
 });
 
 it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets", async arg => {
-    const callback = jest.fn();
+    const callback = vi.fn();
 
     const fetcher = async () => {
         await waitForMs();
@@ -125,7 +125,7 @@ it.each(["onError", "onSuccess"] as const)(
         const [get, set] = createSignal("foo");
 
         // eslint-disable-next-line solid/reactivity
-        const getMocked = jest.fn(() => get());
+        const getMocked = vi.fn(() => get());
 
         const [key] = createKey();
 

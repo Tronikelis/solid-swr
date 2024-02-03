@@ -1,5 +1,5 @@
-import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { expect, it, vi } from "vitest";
 
 import { useSWRInfinite } from "../lib";
 
@@ -9,7 +9,7 @@ import waitForMs from "./utils/waitForMs";
 it("returns an array of responses and responds to index changes", async () => {
     let count = -1;
 
-    const fetcher = jest.fn(async () => {
+    const fetcher = vi.fn(async () => {
         count++;
         await waitForMs();
         return count.toString();
@@ -40,7 +40,7 @@ it("returns an array of responses and responds to index changes", async () => {
 it("when loading isn't finished, gives up on older index effect (I will remove this later somehow)", async () => {
     let count = -1;
 
-    const fetcher = jest.fn(async () => {
+    const fetcher = vi.fn(async () => {
         count++;
         await waitForMs();
         return count.toString();

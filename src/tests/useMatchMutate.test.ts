@@ -1,5 +1,5 @@
-import { expect, it, jest } from "@jest/globals";
 import { renderHook } from "@solidjs/testing-library";
+import { expect, it, vi } from "vitest";
 
 import useSWR, { useMatchMutate } from "../lib";
 
@@ -9,7 +9,7 @@ import waitForMs from "./utils/waitForMs";
 it("simply mutates the correct hook without revalidation", () => {
     const mutatedValue = `${Math.random()}`;
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -35,7 +35,7 @@ it("simply mutates the correct hook without revalidation", () => {
 it("mutates the hooks and deduplicates revalidation and syncs responses", async () => {
     const mutatedValue = `${Math.random()}`;
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
@@ -70,7 +70,7 @@ it("mutates the hooks and deduplicates revalidation and syncs responses", async 
 it("revalidates when payload is undefined", async () => {
     let switchReturn = false;
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return switchReturn ? x.repeat(2) : x;
     });
@@ -100,7 +100,7 @@ it("revalidates hooks with different keys", async () => {
     const [key1] = createKey();
     const key2 = () => key1() + "foo";
 
-    const fetcher = jest.fn(async (x: string) => {
+    const fetcher = vi.fn(async (x: string) => {
         await waitForMs();
         return x;
     });
