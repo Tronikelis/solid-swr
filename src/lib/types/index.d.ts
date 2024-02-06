@@ -61,6 +61,18 @@ export type Options<Res, Err> = {
      */
     cache?: CacheImplements<Res>;
 
+    /**
+     * Automatically revalidate when window has gotten focus
+     * @default true
+     */
+    revalidateOnFocus?: boolean;
+
+    /**
+     * Automatically revalidate when connection came back
+     * @default true
+     */
+    revalidateOnOnline?: boolean;
+
     onSuccess?: (data: Res) => void;
 
     onError?: (err: Err) => void;
