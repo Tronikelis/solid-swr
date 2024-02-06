@@ -173,7 +173,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     const mutate = uFn(
         (
-            payload: Res | ((curr: Res | undefined) => Res) | undefined,
+            payload?: Res | ((curr: Res | undefined) => Res),
             _mutationOptions: MutationOptions = {}
             // eslint-disable-next-line solid/reactivity
         ) => {
