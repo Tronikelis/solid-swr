@@ -173,7 +173,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     const mutate = uFn(
         (
-            payload: Res | ((curr: Res | undefined) => Res) | undefined,
+            payload?: Res | ((curr: Res | undefined) => Res),
             _mutationOptions: MutationOptions = {}
             // eslint-disable-next-line solid/reactivity
         ) => {
@@ -189,14 +189,19 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     );
 
+    // automatic revalidation
     createEffect(() => {
         if (options.isImmutable) return;
 
-        // revalidate on offline/online
-        useWinEvent("online" as keyof WindowEventMap, effect);
+        if (options.revalidateOnOnline) {
+            // revalidate on offline/online
+            useWinEvent("online" as keyof WindowEventMap, effect);
+        }
 
-        // revalidate on window focus
-        useWinEvent("focus" as keyof WindowEventMap, effect);
+        if (options.revalidateOnFocus) {
+            // revalidate on window focus
+            useWinEvent("focus" as keyof WindowEventMap, effect);
+        }
     });
 
     // refresh interval

@@ -36,6 +36,9 @@ export default function useOptions<Res, Err>(
             refreshInterval: 0,
             onSuccess: noop,
             onError: noop,
+
+            revalidateOnFocus: true,
+            revalidateOnOnline: true,
         } satisfies Required<Options<Res, Err>>,
         context,
         options
