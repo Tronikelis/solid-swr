@@ -10,49 +10,47 @@
 
 <br />
 
-# Table of contents
-
-- [Table of contents](#table-of-contents)
-- [Introduction](#introduction)
-  - [Features](#features)
-  - [Quick Start](#quick-start)
-- [Returned values](#returned-values)
-- [Options](#options)
-  - [API](#api)
-- [Options with context](#options-with-context)
-  - [API](#api-1)
-- [Mutation](#mutation)
-  - [Bound mutation](#bound-mutation)
-  - [Global mutation](#global-mutation)
-  - [Options](#options-1)
-  - [API](#api-2)
-- [SSR](#ssr)
-- [useSWRInfinite](#useswrinfinite)
-  - [⚠️ Important note](#️-important-note)
-- [useSWRMutation](#useswrmutation)
-  - [API](#api-3)
-- [Aborting requests](#aborting-requests)
-  - [Note](#note)
-- [Structuring your hooks](#structuring-your-hooks)
-
 # Introduction
 
 Quote from [vercel's SWR](https://swr.vercel.app/) for react:
 
 > The name “SWR” is derived from stale-while-revalidate, a HTTP cache invalidation strategy popularized by HTTP RFC 5861. SWR is a strategy to first return the data from cache (stale), then send the fetch request (revalidate), and finally come with the up-to-date data.
-> 
+>
 > With SWR, components will get a stream of data updates constantly and automatically. And the UI will be always fast and reactive.
 
+# Features
 
+-   💙 Built for **solid**
+-   ⚡ Blazingly **fast** with **reconciled** solid stores
+-   ♻️ **Reusable** and **lightweight** data fetching
+-   📦 Built-in **cache** and request **deduplication**
+-   🔄 **Local mutation** (optimistic UI)
+-   😉 And much more!
 
-## Features
+# Table of contents
 
-- 💙 Built for **solid**
--  ⚡ Blazingly **fast** with **reconciled** solid stores
-- ♻️ **Reusable** data fetching
-- 📦 Built-in **cache** and request **deduplication**
-- 🔄 **Local mutation** (optimistic UI)
-- 😉 And much more!
+-   [Introduction](#introduction)
+-   [Features](#features)
+-   [Table of contents](#table-of-contents)
+    -   [Quick Start](#quick-start)
+-   [Returned values](#returned-values)
+-   [Options](#options)
+    -   [API](#api)
+-   [Options with context](#options-with-context)
+    -   [API](#api-1)
+-   [Mutation](#mutation)
+    -   [Bound mutation](#bound-mutation)
+    -   [Global mutation](#global-mutation)
+    -   [Options](#options-1)
+    -   [API](#api-2)
+-   [SSR](#ssr)
+-   [useSWRInfinite](#useswrinfinite)
+    -   [⚠️ Important note](#️-important-note)
+-   [useSWRMutation](#useswrmutation)
+    -   [API](#api-3)
+-   [Aborting requests](#aborting-requests)
+    -   [Note](#note)
+-   [Structuring your hooks](#structuring-your-hooks)
 
 ## Quick Start
 
@@ -82,24 +80,23 @@ function Profile() {
 
 ```ts
 function useSWR<Res = unknown, Err = unknown>(key: Accessor<Key>, _options?: Options<Res, Err>): {
-    data: Accessor<Res | undefined>;
-    error: Accessor<Err | undefined>;
+    data: StoreIfy<Res | undefined>;
+    error: StoreIfy<Err | undefined>;
     isLoading: Accessor<boolean>;
-    hasFetched: Accessor<...>;
-    mutate: (payload: Res | ... 1 more ... | undefined, _mutationOptions?: MutationOptions) => Promise<...>;
-    _effect: () => Promise<...>;
+    hasFetched: Accessor<boolean>;
+    mutate: (payload?: Res | ((curr: Res | undefined) => Res) | undefined, _mutationOptions?: MutationOptions) => void;mise<void>;
 }
 ```
 
 # Returned values
 
-The hook returns an object containing 3 signals and 1 function:
+The hook returns an object that you can destructure
 
-- `data`: a signal that contains your response generic or undefined
-- `error`: a signal that contains your error generic or undefined
-- `isLoading`: a signal that returns a boolean
-- `mutate`: a function bound to the hook that is used for manual changes and can be used for optimistic updates
-- `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
+-   `data`: a store that contains your response generic or undefined
+-   `error`: a store that contains your error generic or undefined
+-   `isLoading`: a signal that returns a boolean
+-   `mutate`: a function bound to the hook's key that is used for manual changes and can be used for optimistic updates
+-   `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
 
 # Options
 
@@ -126,17 +123,17 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                  | Explain                                                                            | Default                                                                                 |
-|:-------------------- |:----------------------------------------------------------------------------------:| ---------------------------------------------------------------------------------------:|
-| `fetcher`            | The function responsible for throwing errors and returning data                    | The native fetch which parses only json and throws the response json on >=400 responses |
-| `keepPreviousData`   | If cache is empty and the key changes, should we keep the old data                 | `false`                                                                                 |
-| `isEnabled`          | Is the hook enabled                                                                | `true`                                                                                  |
-| `cache`              | A data source for storing fetcher results                                          | A simple in-memory LRU                                                                  |
-| `onSuccess`          | A callback that gets the data when the signal gets updated with truthy data        | `noop`                                                                                  |
-| `onError`            | A callback that gets the error when the signal gets updated with a truthy error    | `noop`                                                                                  |
-| `isImmutable`        | If enabled, the hook will "freeze" after the data is set (this disabled mutations) | `false`                                                                                 |
-| `revalidateOnFocus`  | Automatically revalidate when window has gotten focus                              | `true`                                                                                  |
-| `revalidateOnOnline` | Automatically revalidate when connection came back                                 | `true`                                                                                  |
+| Key                  |                                        Explain                                         |                                                                                 Default |
+| :------------------- | :------------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
+| `fetcher`            |            The function responsible for throwing errors and returning data             | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData`   |           If cache is empty and the key changes, should we keep the old data           |                                                                                 `false` |
+| `isEnabled`          |                                  Is the hook enabled                                   |                                                                                  `true` |
+| `cache`              |                       A data source for storing fetcher results                        |                                                                  A simple in-memory LRU |
+| `onSuccess`          |          A callback that gets the data when it gets updated with truthy data           |                                                                                  `noop` |
+| `onError`            |        A callback that gets the error when it gets updated with a truthy error         |                                                                                  `noop` |
+| `isImmutable`        | If enabled, the hook will "freeze" after the data is set **(this disables mutations)** |                                                                                 `false` |
+| `revalidateOnFocus`  |                 Automatically revalidate when window has gotten focus                  |                                                                                  `true` |
+| `revalidateOnOnline` |                   Automatically revalidate when connection came back                   |                                                                                  `true` |
 
 # Options with context
 
@@ -184,13 +181,15 @@ function Profile() {
 
     return (
         <div>
-            <h1>My name is {data().name}.</h1>
+            <h1>My name is {data.v?.name}.</h1>
             <button
                 onClick={async () => {
-                    const newName = data.name.toUpperCase();
+                    const newName = data.v?.name.toUpperCase();
 
                     mutate(
-                        { ...data, name: newName },
+                        // you can use a function here as well
+                        // it gets latest data
+                        { ...data.v?, name: newName },
                         {
                             // this is false by default
                             revalidate: false,
@@ -248,12 +247,12 @@ mutate(x => true, payload, {
 
 Currently only 1 option is available:
 
-- `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
+-   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
 
 ## API
 
-| Key          | Explain                                                                                                     | Default |
-|:------------ |:-----------------------------------------------------------------------------------------------------------:| -------:|
+| Key          |                                                   Explain                                                   | Default |
+| :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
 | `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
 
 # SSR
@@ -281,7 +280,7 @@ function Root(props: { fallback: any }) {
 
 function App() {
     const { data } = useSWR(() => key);
-    console.log(data()); // "foo"
+    console.log(data.v); // already set here
     return <></>;
 }
 ```
@@ -294,8 +293,8 @@ This is a wrapper around the normal `useSWR`, so it automatically gets all of it
 
 The differences between it and `useSWR` are:
 
-- bound mutation is removed (mutate with global mutation)
-- data is now a store, not a signal, with an array of responses
+-   bound mutation is removed (mutate with global mutation)
+-   data is a store with an array of responses
 
 Basic usage goes like this
 
@@ -310,7 +309,7 @@ function App() {
 
     return (
         <div>
-            <For each={data}>{(_, item) => <div>{item}</div>}</For>
+            <For each={data.v}>{(_, item) => <div>{item}</div>}</For>
         </div>
     );
 }
@@ -333,7 +332,7 @@ function App() {
     });
 
     createEffect(() => {
-        console.log([...data]);
+        console.log([...data.v]);
 
         // []
 
@@ -376,13 +375,13 @@ function App() {
 
             // or do optimistic updates ?
             // current is useSWR data
-            mutation.populateCache((key, current) => {
+            // clone is cloned data, safe to mutate
+            mutation.populateCache((key, clone) => {
                 if (current === undefined) {
                     // ...
                     return;
                 }
 
-                const clone = { ...current };
                 clone.foo = response.foo;
                 return clone;
             });
@@ -394,9 +393,9 @@ function App() {
 
     return (
         <div>
-            {swr.data()}
+            {swr.data.v}
             {mutation.isTriggering()}
-            {mutation.error()}
+            {mutation.error.v}
         </div>
     );
 }
@@ -508,7 +507,7 @@ function UserInfo() {
 
     return (
         <div>
-            <div>{user()?.name}</div>
+            <div>{user.v?.name}</div>
             <button>Login</button>
         </div>
     );
