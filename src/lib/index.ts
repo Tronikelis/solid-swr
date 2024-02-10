@@ -40,7 +40,6 @@ export { useMatchMutate };
 export { default as useOptions } from "./hooks/useOptions";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 export { default as useSWRMutation } from "./hooks/useSWRMutation";
-export { default as useSWRSuspense } from "./hooks/useSWRSuspense";
 
 export default function useSWR<Res = unknown, Err = unknown>(
     key: Accessor<Key>,
@@ -238,11 +237,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
     useExponential(() => !!error(), effect, 5);
 
     return {
-        data,
-        error,
-
-        dataStore,
-        errorStore,
+        data: dataStore,
+        error: errorStore,
 
         isLoading,
         hasFetched,

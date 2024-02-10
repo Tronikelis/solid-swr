@@ -2,9 +2,7 @@ import { klona } from "klona";
 import { Accessor, createEffect } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
-type StoreIfy<T> = {
-    v: T;
-};
+import { StoreIfy } from "~/types";
 
 export default function useSyncedStore<T>(accessor: Accessor<T>) {
     const [store, setStore] = createStore<StoreIfy<T>>({

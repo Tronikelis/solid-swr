@@ -17,17 +17,17 @@ it("sets new value instantly and respects revalidation option", async () => {
     const { result } = renderHook(useSWR, [key, { fetcher }]);
 
     await waitForMs();
-    expect(result.data()).toBe(key());
+    expect(result.data.v).toBe(key());
     expect(fetcher).toBeCalledTimes(1);
 
     result.mutate("foo", { revalidate: true });
-    expect(result.data()).toBe("foo");
+    expect(result.data.v).toBe("foo");
     expect(fetcher).toBeCalledTimes(2);
 
     // wait for revalidation to complete
     await waitForMs();
 
     result.mutate("bar", { revalidate: false });
-    expect(result.data()).toBe("bar");
+    expect(result.data.v).toBe("bar");
     expect(fetcher).toBeCalledTimes(2);
 });

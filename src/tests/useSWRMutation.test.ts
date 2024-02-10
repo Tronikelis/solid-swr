@@ -31,12 +31,12 @@ it("behaves like expected when using it simply", async () => {
     expect(mut.isTriggering()).toBe(false);
     expect(mut.error()).toBe(undefined);
 
-    expect(result.data()).toBe(key());
+    expect(result.data.v).toBe(key());
 
     const mutationResult = await mut.trigger("foo");
     mut.populateCache(mutationResult);
 
-    expect(result.data()).toBe(mutationResult);
+    expect(result.data.v).toBe(mutationResult);
     expect(mutationResult).toBe("foo");
 });
 

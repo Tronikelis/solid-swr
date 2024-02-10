@@ -37,8 +37,6 @@
     -   [API](#api-3)
 -   [Aborting requests](#aborting-requests)
     -   [Note](#note)
--   [useSWRSuspense](#useswrsuspense)
-    -   [Note](#note-1)
 -   [Structuring your hooks](#structuring-your-hooks)
 
 # Introduction
@@ -444,16 +442,6 @@ const fetcher = async (key: string, { signal }: { signal: AbortSignal }) => {
 ## Note
 
 The signal is only passed in the core effect of `swr`
-
-# useSWRSuspense
-
-This hook is a wrapper around the usual `useSWR`, but it monkey-patches the `createResource` api
-from solid that triggers suspense
-
-## Note
-
-It only triggers suspense if the key is truthy, if it is dependent on something else and returns undefined,
-suspense won't be triggered and it will act the same way as `useSWR`
 
 # Structuring your hooks
 

@@ -136,7 +136,7 @@ it("SSRFallback fallbacks for ssr purposes", () => {
 
     function App() {
         const { data } = useSWR(key);
-        expect(data()).toBe(key());
+        expect(data.v).toBe(key());
 
         return <></>;
     }

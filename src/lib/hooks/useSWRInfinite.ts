@@ -1,7 +1,7 @@
 import { createEffect, createSignal, mergeProps, on } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
-import { Options } from "~/types";
+import { Options, StoreIfy } from "~/types";
 
 import useSWR from "..";
 
@@ -12,10 +12,10 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
     _options: Options<Res, Err> = {}
 ) {
     const [index, setIndex] = createSignal(0);
-
-    const [data, setData] = createStore<(Res | undefined)[]>([]);
     const [isLoading, setIsLoading] = createSignal(true);
-    const [error, setError] = createSignal<Err | undefined>(undefined);
+
+    const [data, setData] = createStore<StoreIfy<(Res | undefined)[]>>({ v: [] });
+    const [error, setError] = createStore<StoreIfy<Err | undefined>>({ v: undefined });
 
     createEffect(
         // now this works pretty well
@@ -35,11 +35,7 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
             setIsLoading(true);
 
             const onSuccess = (data: Res) => {
-                setData(prev => {
-                    const clone = [...prev];
-                    clone[index] = data;
-                    return clone;
-                });
+                setData("v", index, reconcile(data));
             };
 
             const options: Options<Res, Err> = mergeProps(_options, {
@@ -47,12 +43,12 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
             });
 
             // not inlining this into useSWR to remove reactivity of the key
-            const key = getKey(index, data.at(-1));
+            const key = getKey(index, data.v.at(-1));
             const swr = useSWR<Res, Err>(() => key, options);
 
             createEffect(() => {
                 setIsLoading(swr.isLoading());
-                setError(() => swr.error());
+                setError("v", reconcile(swr.error.v));
             });
         })
     );

@@ -27,8 +27,8 @@ it("simply mutates the correct hook without revalidation", () => {
         revalidate: false,
     });
 
-    expect(result1.data()).toBe(mutatedValue);
-    expect(result2.data()).not.toBe(mutatedValue);
+    expect(result1.data.v).toBe(mutatedValue);
+    expect(result2.data.v).not.toBe(mutatedValue);
     expect(fetcher).toBeCalledTimes(2);
 });
 
@@ -48,8 +48,8 @@ it("mutates the hooks and deduplicates revalidation and syncs responses", async 
     await waitForMs();
     expect(fetcher).toBeCalledTimes(1);
 
-    expect(result1.data()).toBe(key());
-    expect(result2.data()).toBe(key());
+    expect(result1.data.v).toBe(key());
+    expect(result2.data.v).toBe(key());
 
     const { result: mutate } = renderHook(useMatchMutate);
 
@@ -57,14 +57,14 @@ it("mutates the hooks and deduplicates revalidation and syncs responses", async 
         revalidate: true,
     });
 
-    expect(result1.data()).toBe(mutatedValue);
-    expect(result2.data()).toBe(mutatedValue);
+    expect(result1.data.v).toBe(mutatedValue);
+    expect(result2.data.v).toBe(mutatedValue);
 
     await waitForMs();
     expect(fetcher).toBeCalledTimes(2);
 
-    expect(result1.data()).toBe(key());
-    expect(result2.data()).toBe(key());
+    expect(result1.data.v).toBe(key());
+    expect(result2.data.v).toBe(key());
 });
 
 it("revalidates when payload is undefined", async () => {
@@ -82,8 +82,8 @@ it("revalidates when payload is undefined", async () => {
 
     await waitForMs();
     expect(fetcher).toBeCalledTimes(1);
-    expect(result1.data()).toBe(key());
-    expect(result2.data()).toBe(key());
+    expect(result1.data.v).toBe(key());
+    expect(result2.data.v).toBe(key());
 
     switchReturn = true;
 
@@ -92,8 +92,8 @@ it("revalidates when payload is undefined", async () => {
 
     await waitForMs();
     expect(fetcher).toBeCalledTimes(2);
-    expect(result1.data()).toBe(key().repeat(2));
-    expect(result2.data()).toBe(key().repeat(2));
+    expect(result1.data.v).toBe(key().repeat(2));
+    expect(result2.data.v).toBe(key().repeat(2));
 });
 
 it("revalidates hooks with different keys", async () => {

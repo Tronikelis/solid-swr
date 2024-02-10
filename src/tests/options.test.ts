@@ -71,20 +71,20 @@ it("keepPreviousData works", async () => {
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: false }]);
 
         await waitForMs(msWait);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
-        expect(result.data()).toBe(undefined);
+        expect(result.data.v).toBe(undefined);
     }
     {
         const [key, setKey] = createKey();
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: true }]);
 
         await waitForMs(msWait);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
     }
 
     expect(fetcher).toBeCalledTimes(4);
