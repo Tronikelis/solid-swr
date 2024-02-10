@@ -8,6 +8,9 @@ dependencies:
   dequal:
     specifier: ^2.0.3
     version: 2.0.3
+  klona:
+    specifier: ^2.0.6
+    version: 2.0.6
   solid-js:
     specifier: '>=1 <=2'
     version: 1.8.12
@@ -2839,6 +2842,11 @@ packages:
     dependencies:
       json-buffer: 3.0.1
     dev: true
+
+  /klona@2.0.6:
+    resolution: {integrity: sha512-dhG34DXATL5hSxJbIexCft8FChFXtmskoZYnoPWjXQuebWYCNkVeV3KkGegCK9CP1oswI/vQibS2GY7Em/sJJA==}
+    engines: {node: '>= 8'}
+    dev: false
 
   /known-css-properties@0.24.0:
     resolution: {integrity: sha512-RTSoaUAfLvpR357vWzAz/50Q/BmHfmE6ETSWfutT0AJiw10e6CmcdYRQJlLRd95B53D0Y2aD1jSxD3V3ySF+PA==}

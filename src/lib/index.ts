@@ -1,4 +1,5 @@
 import { dequal as equals } from "dequal";
+import { klona } from "klona";
 import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
 
 import { SWRFallback } from "./context/fallback";
@@ -187,7 +188,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
             const mutationOptions = useMutationOptions(_mutationOptions);
             const matchMutate = useMatchMutate<Res>();
 
-            const fresh = payload instanceof Function ? payload(data()) : payload;
+            // cloning here, because data() returns a reference, so it's not safe to assume it won't be mutated
+            // when passing into payload()
+            const fresh = payload instanceof Function ? payload(klona(data())) : payload;
 
             matchMutate(key => key === k, fresh, mutationOptions);
         }
