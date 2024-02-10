@@ -238,10 +238,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         data,
         error,
 
-        store: {
-            data: dataStore,
-            error: errorStore,
-        },
+        dataStore,
+        errorStore,
 
         isLoading,
         hasFetched,
