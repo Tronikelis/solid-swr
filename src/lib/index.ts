@@ -5,6 +5,7 @@ import { SWRFallback } from "./context/fallback";
 import useExponential from "./hooks/internal/useExponential";
 import useInterval from "./hooks/internal/useInterval";
 import useMutationOptions from "./hooks/internal/useMutationOptions";
+import useSyncedStore from "./hooks/internal/useSyncedStore";
 import useWinEvent from "./hooks/internal/useWinEvent";
 import useMatchMutate from "./hooks/useMatchMutate";
 import useOptions from "./hooks/useOptions";
@@ -70,6 +71,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const [isLoading, setIsLoading] = createSignal(!data());
     // eslint-disable-next-line solid/reactivity
     const [hasFetched, setHasFetched] = createSignal(!!data());
+
+    const dataStore = useSyncedStore(data);
+    const errorStore = useSyncedStore(error);
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
@@ -233,6 +237,12 @@ export default function useSWR<Res = unknown, Err = unknown>(
     return {
         data,
         error,
+
+        store: {
+            data: dataStore,
+            error: errorStore,
+        },
+
         isLoading,
         hasFetched,
         mutate,
