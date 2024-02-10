@@ -1,5 +1,5 @@
 import { renderHook } from "@solidjs/testing-library";
-import { createSignal } from "solid-js";
+import { createSignal, createUniqueId } from "solid-js";
 import { createStore } from "solid-js/store";
 import { expect, it, vi } from "vitest";
 
@@ -71,20 +71,20 @@ it("keepPreviousData works", async () => {
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: false }]);
 
         await waitForMs(msWait);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
-        expect(result.data()).toBe(undefined);
+        expect(result.data.v).toBe(undefined);
     }
     {
         const [key, setKey] = createKey();
         const { result } = renderHook(useSWR, [key, { fetcher, keepPreviousData: true }]);
 
         await waitForMs(msWait);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
 
         setKey(`${Math.random()}`);
-        expect(result.data()).not.toBe(undefined);
+        expect(result.data.v).not.toBe(undefined);
     }
 
     expect(fetcher).toBeCalledTimes(4);
@@ -102,21 +102,22 @@ it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets",
         return { foo: "bar" };
     };
 
-    const [key] = createKey();
+    const [key, setKey] = createKey();
 
-    const { result } = renderHook(useSWR, [
+    renderHook(useSWR, [
         key,
-        { fetcher, onError: callback, onSuccess: callback },
+        { fetcher, onError: callback, onSuccess: callback, keepPreviousData: true },
     ]);
 
     await waitForMs();
 
-    for (let i = 0; i < 4; i++) {
-        await result._effect();
-    }
-
     expect(callback).toBeCalledTimes(1);
     expect(callback).toBeCalledWith({ foo: "bar" });
+
+    setKey(createUniqueId());
+
+    await waitForMs();
+    expect(callback).toBeCalledTimes(1);
 });
 
 it.each(["onError", "onSuccess"] as const)(
@@ -125,7 +126,7 @@ it.each(["onError", "onSuccess"] as const)(
         const [get, set] = createSignal("foo");
 
         // eslint-disable-next-line solid/reactivity
-        const getMocked = vi.fn(() => get());
+        const callback = vi.fn(() => get());
 
         const [key] = createKey();
 
@@ -138,14 +139,59 @@ it.each(["onError", "onSuccess"] as const)(
             return { foo: "bar" };
         };
 
-        renderHook(useSWR, [key, { fetcher, onError: getMocked, onSuccess: getMocked }]);
+        renderHook(useSWR, [key, { fetcher, onError: callback, onSuccess: callback }]);
 
         await waitForMs();
 
-        expect(getMocked).toBeCalledTimes(1);
-        set("foobar");
-        expect(getMocked).toBeCalledTimes(1);
+        expect(callback).toBeCalledTimes(1);
+        set(createUniqueId());
+        expect(callback).toBeCalledTimes(1);
 
-        expect(getMocked).toBeCalledWith({ foo: "bar" });
+        expect(callback).toBeCalledWith({ foo: "bar" });
+    }
+);
+
+it.each(["onError", "onSuccess"] as const)(
+    "%s fires when nested data inside changed",
+    async arg => {
+        const callback = vi.fn();
+
+        const [key, setKey] = createKey();
+
+        let i = 0;
+
+        const fetcher = async () => {
+            await waitForMs();
+
+            const x = {
+                a: {
+                    b: "c",
+                },
+            };
+
+            if (i > 0) {
+                x.a.b = "foo";
+            }
+
+            i++;
+
+            if (arg === "onError") throw x;
+            return x;
+        };
+
+        renderHook(useSWR, [
+            key,
+            { fetcher, onError: callback, onSuccess: callback, keepPreviousData: true },
+        ]);
+        await waitForMs();
+
+        expect(callback).toBeCalledTimes(1);
+        expect(callback).toBeCalledWith({ a: { b: "c" } });
+
+        setKey(createUniqueId());
+        await waitForMs();
+
+        expect(callback).toBeCalledTimes(2);
+        expect(callback).toBeCalledWith({ a: { b: "foo" } });
     }
 );

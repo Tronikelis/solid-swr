@@ -86,3 +86,7 @@ export type MutationOptions = {
      */
     revalidate?: boolean;
 };
+
+export type StoreIfy<T> = {
+    v: T;
+};

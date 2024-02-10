@@ -1,5 +1,6 @@
-import { dequal as equals } from "dequal";
+import { klona } from "klona";
 import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
+import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
 import useExponential from "./hooks/internal/useExponential";
@@ -24,6 +25,7 @@ import {
     Key,
     MutationOptions,
     Options,
+    StoreIfy,
 } from "./types";
 
 export type { CacheImplements, CacheItem, Fetcher, Key, MutationOptions, Options };
@@ -38,7 +40,6 @@ export { useMatchMutate };
 export { default as useOptions } from "./hooks/useOptions";
 export { default as useSWRInfinite } from "./hooks/useSWRInfinite";
 export { default as useSWRMutation } from "./hooks/useSWRMutation";
-export { default as useSWRSuspense } from "./hooks/useSWRSuspense";
 
 export default function useSWR<Res = unknown, Err = unknown>(
     key: Accessor<Key>,
@@ -64,29 +65,38 @@ export default function useSWR<Res = unknown, Err = unknown>(
         return undefined;
     };
 
-    const [data, setData] = createSignal<Res | undefined>(peekCache(key())?.data, { equals });
-    const [error, setError] = createSignal<Err | undefined>(undefined, { equals });
+    const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
+        v: klona(peekCache(key())?.data),
+    });
+
+    const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
+        v: undefined,
+    });
+
+    const setData = (data: Res | undefined) => setDataRaw("v", reconcile(data));
+    const setError = (error: Err | undefined) => setErrorRaw("v", reconcile(error));
+
     // eslint-disable-next-line solid/reactivity
-    const [isLoading, setIsLoading] = createSignal(!data());
+    const [isLoading, setIsLoading] = createSignal(!data.v);
     // eslint-disable-next-line solid/reactivity
-    const [hasFetched, setHasFetched] = createSignal(!!data());
+    const [hasFetched, setHasFetched] = createSignal(!!data.v);
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
         setIsLoading(false);
 
-        if (options.isImmutable && data() !== undefined) return;
+        if (options.isImmutable && data.v !== undefined) return;
 
         setError(undefined);
-        setData(() => ev.detail.data);
+        setData(ev.detail.data);
     });
     useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
         setIsLoading(false);
 
-        if (options.isImmutable && error() !== undefined) return;
+        if (options.isImmutable && error.v !== undefined) return;
 
-        setError(() => ev.detail.data);
+        setError(ev.detail.data);
     });
 
     useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
@@ -113,7 +123,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // mark as busy
             options.cache.set(k, { busy: true, data: cache.data as Res });
 
-            setData(() => cache.data as Res);
+            setData(cache.data as Res);
         } else {
             // mark as busy
             options.cache.set(k, { busy: true });
@@ -150,7 +160,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false, data: response });
 
-            setData(() => response);
+            setData(response);
             setError(undefined);
             dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
                 data: response!,
@@ -160,7 +170,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false });
 
-            setError(() => err);
+            setError(err);
             dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
                 data: err,
                 key: k,
@@ -183,7 +193,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
             const mutationOptions = useMutationOptions(_mutationOptions);
             const matchMutate = useMatchMutate<Res>();
 
-            const fresh = payload instanceof Function ? payload(data()) : payload;
+            // cloning here, because data.v returns a reference, so it's not safe to assume it won't be mutated
+            // when passing into payload()
+            const fresh = payload instanceof Function ? payload(klona(data.v)) : payload;
 
             matchMutate(key => key === k, fresh, mutationOptions);
         }
@@ -214,35 +226,28 @@ export default function useSWR<Res = unknown, Err = unknown>(
     createEffect(effect);
 
     createEffect(() => {
-        const d = data();
+        const d = klona(data.v);
         if (d === undefined) return;
 
         setHasFetched(true);
         untrack(() => options.onSuccess(d));
     });
     createEffect(() => {
-        const e = error();
+        const e = klona(error.v);
         if (e === undefined) return;
 
         setHasFetched(true);
         untrack(() => options.onError(e));
     });
 
-    useExponential(() => !!error(), effect, 5);
+    useExponential(() => !!error.v, effect, 5);
 
     return {
         data,
         error,
+
         isLoading,
         hasFetched,
         mutate,
-
-        /**
-         * this is an internal function that interacts with the cache
-         * and is only exported because it is used in the `useSWRSuspense` hook
-         *
-         * **you should probably never use this**
-         */
-        _effect: effect,
     };
 }

@@ -1,7 +1,7 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -42,7 +42,7 @@
         "solid-js": ">=1 <=2"
     },
     "dependencies": {
-        "dequal": "^2.0.3"
+        "klona": "^2.0.6"
     },
     "devDependencies": {
         "@solidjs/testing-library": "0.8.5",

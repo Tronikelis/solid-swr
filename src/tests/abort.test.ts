@@ -23,7 +23,7 @@ it("aborts the previous request when changing keys", async () => {
     const { result } = renderHook(useSWR, [key, { fetcher: fetcher as Fetcher<string> }]);
     await waitForMs(200);
 
-    expect(result.data()).toBe(key());
+    expect(result.data.v).toBe(key());
 
     setKey("foo");
     await waitForMs(100);
@@ -31,11 +31,11 @@ it("aborts the previous request when changing keys", async () => {
     setKey("bar");
 
     expect(abortSignal?.aborted).toBe(true);
-    expect(result.error()).toBe(undefined);
+    expect(result.error.v).toBe(undefined);
 
     await waitForMs(200);
 
-    expect(result.data()).toBe("bar");
+    expect(result.data.v).toBe("bar");
     expect(result.isLoading()).toBe(false);
-    expect(result.error()).toBe(undefined);
+    expect(result.error.v).toBe(undefined);
 });
