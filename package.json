@@ -42,7 +42,6 @@
         "solid-js": ">=1 <=2"
     },
     "dependencies": {
-        "dequal": "^2.0.3",
         "klona": "^2.0.6"
     },
     "devDependencies": {

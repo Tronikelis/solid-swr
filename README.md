@@ -2,64 +2,57 @@
 
 <h3 align="center">The beloved swr package ported to solid</h3>
 
-<br />
-
 <div align="center">
-
-<img src="https://img.shields.io/github/stars/Tronikelis/solid-swr?style=flat-square" />
-<img src="https://img.shields.io/bundlephobia/minzip/solid-swr?style=flat-square" />
-<img src="https://img.shields.io/npm/v/solid-swr?style=flat-square" />
-
+    <img src="https://img.shields.io/github/stars/Tronikelis/solid-swr?style=flat-square" />
+    <img src="https://img.shields.io/bundlephobia/minzip/solid-swr?style=flat-square" />
+    <img src="https://img.shields.io/npm/v/solid-swr?style=flat-square" />
 </div>
 
 <br />
 
 # Table of contents
 
--   [Table of contents](#table-of-contents)
--   [Introduction](#introduction)
-    -   [Features](#features)
-    -   [Quick Start](#quick-start)
--   [Returned values](#returned-values)
--   [Options](#options)
-    -   [API](#api)
--   [Options with context](#options-with-context)
-    -   [API](#api-1)
--   [Mutation](#mutation)
-    -   [Bound mutation](#bound-mutation)
-    -   [Global mutation](#global-mutation)
-    -   [Options](#options-1)
-    -   [API](#api-2)
--   [SSR](#ssr)
--   [useSWRInfinite](#useswrinfinite)
-    -   [⚠️ Important note](#️-important-note)
--   [useSWRMutation](#useswrmutation)
-    -   [API](#api-3)
--   [Aborting requests](#aborting-requests)
-    -   [Note](#note)
--   [Structuring your hooks](#structuring-your-hooks)
+- [Table of contents](#table-of-contents)
+- [Introduction](#introduction)
+  - [Features](#features)
+  - [Quick Start](#quick-start)
+- [Returned values](#returned-values)
+- [Options](#options)
+  - [API](#api)
+- [Options with context](#options-with-context)
+  - [API](#api-1)
+- [Mutation](#mutation)
+  - [Bound mutation](#bound-mutation)
+  - [Global mutation](#global-mutation)
+  - [Options](#options-1)
+  - [API](#api-2)
+- [SSR](#ssr)
+- [useSWRInfinite](#useswrinfinite)
+  - [⚠️ Important note](#️-important-note)
+- [useSWRMutation](#useswrmutation)
+  - [API](#api-3)
+- [Aborting requests](#aborting-requests)
+  - [Note](#note)
+- [Structuring your hooks](#structuring-your-hooks)
 
 # Introduction
 
 Quote from [vercel's SWR](https://swr.vercel.app/) for react:
 
 > The name “SWR” is derived from stale-while-revalidate, a HTTP cache invalidation strategy popularized by HTTP RFC 5861. SWR is a strategy to first return the data from cache (stale), then send the fetch request (revalidate), and finally come with the up-to-date data.
->
+> 
 > With SWR, components will get a stream of data updates constantly and automatically. And the UI will be always fast and reactive.
+
+
 
 ## Features
 
--   Built for **solid**
--   **Fast**, **lightweight** and **reusable** data fetching
--   Built-in **cache** and request **deduplication**
--   **Real-time** experience
--   **TypeScript** ready
--   **Polling** on interval
--   Revalidation on **focus**
--   Revalidation on **network recovery**
--   **Local mutation** (Optimistic UI)
--   Exponential error retries
--   Suspense support with [useSWRSuspense](#useswrsuspense)
+- 💙 Built for **solid**
+-  ⚡ Blazingly **fast** with **reconciled** solid stores
+- ♻️ **Reusable** data fetching
+- 📦 Built-in **cache** and request **deduplication**
+- 🔄 **Local mutation** (optimistic UI)
+- 😉 And much more!
 
 ## Quick Start
 
@@ -80,8 +73,8 @@ function Profile() {
     return (
         <div>
             {isLoading() && <div class="spinner" />}
-            {data()?.name}
-            {error() && <p>Oh no: {error()}</p>}
+            {data.v?.name}
+            {error.v && <p>Oh no: {error.v}</p>}
         </div>
     );
 }
@@ -102,11 +95,11 @@ function useSWR<Res = unknown, Err = unknown>(key: Accessor<Key>, _options?: Opt
 
 The hook returns an object containing 3 signals and 1 function:
 
--   `data`: a signal that contains your response generic or undefined
--   `error`: a signal that contains your error generic or undefined
--   `isLoading`: a signal that returns a boolean
--   `mutate`: a function bound to the hook that is used for manual changes and can be used for optimistic updates
--   `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
+- `data`: a signal that contains your response generic or undefined
+- `error`: a signal that contains your error generic or undefined
+- `isLoading`: a signal that returns a boolean
+- `mutate`: a function bound to the hook that is used for manual changes and can be used for optimistic updates
+- `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
 
 # Options
 
@@ -133,17 +126,17 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                  |                                      Explain                                       |                                                                                 Default |
-| :------------------- | :--------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
-| `fetcher`            |          The function responsible for throwing errors and returning data           | The native fetch which parses only json and throws the response json on >=400 responses |
-| `keepPreviousData`   |         If cache is empty and the key changes, should we keep the old data         |                                                                                 `false` |
-| `isEnabled`          |                                Is the hook enabled                                 |                                                                                  `true` |
-| `cache`              |                     A data source for storing fetcher results                      |                                                                  A simple in-memory LRU |
-| `onSuccess`          |    A callback that gets the data when the signal gets updated with truthy data     |                                                                                  `noop` |
-| `onError`            |  A callback that gets the error when the signal gets updated with a truthy error   |                                                                                  `noop` |
-| `isImmutable`        | If enabled, the hook will "freeze" after the data is set (this disabled mutations) |                                                                                 `false` |
-| `revalidateOnFocus`  |               Automatically revalidate when window has gotten focus                |                                                                                  `true` |
-| `revalidateOnOnline` |                 Automatically revalidate when connection came back                 |                                                                                  `true` |
+| Key                  | Explain                                                                            | Default                                                                                 |
+|:-------------------- |:----------------------------------------------------------------------------------:| ---------------------------------------------------------------------------------------:|
+| `fetcher`            | The function responsible for throwing errors and returning data                    | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData`   | If cache is empty and the key changes, should we keep the old data                 | `false`                                                                                 |
+| `isEnabled`          | Is the hook enabled                                                                | `true`                                                                                  |
+| `cache`              | A data source for storing fetcher results                                          | A simple in-memory LRU                                                                  |
+| `onSuccess`          | A callback that gets the data when the signal gets updated with truthy data        | `noop`                                                                                  |
+| `onError`            | A callback that gets the error when the signal gets updated with a truthy error    | `noop`                                                                                  |
+| `isImmutable`        | If enabled, the hook will "freeze" after the data is set (this disabled mutations) | `false`                                                                                 |
+| `revalidateOnFocus`  | Automatically revalidate when window has gotten focus                              | `true`                                                                                  |
+| `revalidateOnOnline` | Automatically revalidate when connection came back                                 | `true`                                                                                  |
 
 # Options with context
 
@@ -255,12 +248,12 @@ mutate(x => true, payload, {
 
 Currently only 1 option is available:
 
--   `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
+- `revalidate`: Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch
 
 ## API
 
-| Key          |                                                   Explain                                                   | Default |
-| :----------- | :---------------------------------------------------------------------------------------------------------: | ------: |
+| Key          | Explain                                                                                                     | Default |
+|:------------ |:-----------------------------------------------------------------------------------------------------------:| -------:|
 | `revalidate` | Should the hook refetch the data after the mutation? If the payload is undefined it will **always** refetch | `false` |
 
 # SSR
@@ -301,8 +294,8 @@ This is a wrapper around the normal `useSWR`, so it automatically gets all of it
 
 The differences between it and `useSWR` are:
 
--   bound mutation is removed (mutate with global mutation)
--   data is now a store, not a signal, with an array of responses
+- bound mutation is removed (mutate with global mutation)
+- data is now a store, not a signal, with an array of responses
 
 Basic usage goes like this
 

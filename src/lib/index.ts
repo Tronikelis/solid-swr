@@ -249,13 +249,5 @@ export default function useSWR<Res = unknown, Err = unknown>(
         isLoading,
         hasFetched,
         mutate,
-
-        /**
-         * this is an internal function that interacts with the cache
-         * and is only exported because it is used in the `useSWRSuspense` hook
-         *
-         * **you should probably never use this**
-         */
-        _effect: effect,
     };
 }
