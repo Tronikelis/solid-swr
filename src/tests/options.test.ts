@@ -149,3 +149,47 @@ it.each(["onError", "onSuccess"] as const)(
         expect(getMocked).toBeCalledWith({ foo: "bar" });
     }
 );
+
+it.each(["onError", "onSuccess"] as const)(
+    "%s fires when nested data inside changed",
+    async arg => {
+        const mockFn = vi.fn();
+
+        const [key] = createKey();
+
+        let i = 0;
+
+        const fetcher = async () => {
+            await waitForMs();
+
+            const x = {
+                a: {
+                    b: "c",
+                },
+            };
+
+            if (i > 0) {
+                x.a.b = "foo";
+            }
+
+            i++;
+
+            if (arg === "onError") throw x;
+            return x;
+        };
+
+        const { result } = renderHook(useSWR, [
+            key,
+            { fetcher, onError: mockFn, onSuccess: mockFn },
+        ]);
+        await waitForMs();
+
+        expect(mockFn).toBeCalledTimes(1);
+        expect(mockFn).toBeCalledWith({ a: { b: "c" } });
+
+        await result._effect();
+
+        expect(mockFn).toBeCalledTimes(2);
+        expect(mockFn).toBeCalledWith({ a: { b: "foo" } });
+    }
+);
