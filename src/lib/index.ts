@@ -203,7 +203,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     // automatic revalidation
     createEffect(() => {
-        if (options.isImmutable) return;
+        if (options.isImmutable || !options.isEnabled) return;
 
         if (options.revalidateOnOnline) {
             // revalidate on offline/online
