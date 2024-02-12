@@ -375,15 +375,14 @@ function App() {
 
             // or do optimistic updates ?
             // current is useSWR data
-            // clone is cloned data, safe to mutate
-            mutation.populateCache((key, clone) => {
+            mutation.populateCache((key, referenceToPrev) => {
                 if (current === undefined) {
                     // ...
                     return;
                 }
 
-                clone.foo = response.foo;
-                return clone;
+                // do something with reference to cache item, you should clone it to be safe
+                return aNewItem;
             });
         } catch (err) {
             // handle error
