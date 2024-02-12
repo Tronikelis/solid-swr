@@ -1,4 +1,3 @@
-import { klona } from "klona";
 import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
@@ -66,7 +65,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     };
 
     const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
-        v: klona(peekCache(key())?.data),
+        v: peekCache(key())?.data,
     });
 
     const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
@@ -193,9 +192,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             const mutationOptions = useMutationOptions(_mutationOptions);
             const matchMutate = useMatchMutate<Res>();
 
-            // cloning here, because data.v returns a reference, so it's not safe to assume it won't be mutated
-            // when passing into payload()
-            const fresh = payload instanceof Function ? payload(klona(data.v)) : payload;
+            const fresh = payload instanceof Function ? payload(data.v) : payload;
 
             matchMutate(key => key === k, fresh, mutationOptions);
         }
@@ -226,14 +223,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
     createEffect(effect);
 
     createEffect(() => {
-        const d = klona(data.v);
+        const d = data.v;
         if (d === undefined) return;
 
         setHasFetched(true);
         untrack(() => options.onSuccess(d));
     });
     createEffect(() => {
-        const e = klona(error.v);
+        const e = error.v;
         if (e === undefined) return;
 
         setHasFetched(true);

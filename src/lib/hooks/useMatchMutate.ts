@@ -1,5 +1,3 @@
-import { klona } from "klona";
-
 import { dispatchCustomEvent, publishDataEvent, triggerEffectEvent } from "~/events";
 import { MutationOptions } from "~/types";
 import uFn from "~/utils/uFn";
@@ -39,8 +37,7 @@ export default function useMatchMutate<Res = unknown>() {
 
             for (const key of keys) {
                 const res = options.cache.get(key)?.data as Res | undefined;
-                // "res" is a reference, cloning it because it shouldn't be mutated
-                const fresh = payload instanceof Function ? payload(key, klona(res)) : payload;
+                const fresh = payload instanceof Function ? payload(key, res) : payload;
 
                 if (fresh === undefined) {
                     revalidate(key, undefined);
