@@ -1,3 +1,4 @@
+import { trackStore } from "@solid-primitives/deep";
 import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
@@ -223,14 +224,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
     createEffect(effect);
 
     createEffect(() => {
-        const d = data.v;
+        const d = trackStore(data).v;
         if (d === undefined) return;
 
         setHasFetched(true);
         untrack(() => options.onSuccess(d));
     });
     createEffect(() => {
-        const e = error.v;
+        const e = trackStore(error).v;
         if (e === undefined) return;
 
         setHasFetched(true);
