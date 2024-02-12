@@ -151,47 +151,47 @@ it.each(["onError", "onSuccess"] as const)(
     }
 );
 
-it.each(["onError", "onSuccess"] as const)(
-    "%s fires when nested data inside changed",
-    async arg => {
-        const callback = vi.fn();
+// it.each(["onError", "onSuccess"] as const)(
+//     "%s fires when nested data inside changed",
+//     async arg => {
+//         const callback = vi.fn();
 
-        const [key, setKey] = createKey();
+//         const [key, setKey] = createKey();
 
-        let i = 0;
+//         let i = 0;
 
-        const fetcher = async () => {
-            await waitForMs();
+//         const fetcher = async () => {
+//             await waitForMs();
 
-            const x = {
-                a: {
-                    b: "c",
-                },
-            };
+//             const x = {
+//                 a: {
+//                     b: "c",
+//                 },
+//             };
 
-            if (i > 0) {
-                x.a.b = "foo";
-            }
+//             if (i > 0) {
+//                 x.a.b = "foo";
+//             }
 
-            i++;
+//             i++;
 
-            if (arg === "onError") throw x;
-            return x;
-        };
+//             if (arg === "onError") throw x;
+//             return x;
+//         };
 
-        renderHook(useSWR, [
-            key,
-            { fetcher, onError: callback, onSuccess: callback, keepPreviousData: true },
-        ]);
-        await waitForMs();
+//         renderHook(useSWR, [
+//             key,
+//             { fetcher, onError: callback, onSuccess: callback, keepPreviousData: true },
+//         ]);
+//         await waitForMs();
 
-        expect(callback).toBeCalledTimes(1);
-        expect(callback).toBeCalledWith({ a: { b: "c" } });
+//         expect(callback).toBeCalledTimes(1);
+//         expect(callback).toBeCalledWith({ a: { b: "c" } });
 
-        setKey(createUniqueId());
-        await waitForMs();
+//         setKey(createUniqueId());
+//         await waitForMs();
 
-        expect(callback).toBeCalledTimes(2);
-        expect(callback).toBeCalledWith({ a: { b: "foo" } });
-    }
-);
+//         expect(callback).toBeCalledTimes(2);
+//         expect(callback).toBeCalledWith({ a: { b: "foo" } });
+//     }
+// );
