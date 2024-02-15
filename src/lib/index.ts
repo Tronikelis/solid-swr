@@ -202,7 +202,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     const fetcher = (abortController: AbortController = new AbortController()) =>
         untrack(() => {
             const k = key();
-            if (!k) return;
+            if (k === undefined) return;
             return options.fetcher(k, { signal: abortController.signal });
         });
 
