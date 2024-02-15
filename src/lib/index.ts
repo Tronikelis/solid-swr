@@ -199,11 +199,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     );
 
-    const fetcher = (signal: AbortSignal = new AbortSignal()) =>
+    const fetcher = (signal?: AbortSignal) =>
         untrack(() => {
             const k = key();
             if (!k) return;
-            return options.fetcher(k, { signal });
+            return options.fetcher(k, { signal: signal || new AbortSignal() });
         });
 
     // automatic revalidation
