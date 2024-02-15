@@ -38,6 +38,7 @@ export type Options<Res, Err> = {
 
     /**
      * If enabled, the hook will "freeze" after the data is set
+     * @deprecated use `revalidateOnFocus: false` and `revalidateOnOnline: false` combo
      * @default false
      */
     isImmutable?: boolean;
