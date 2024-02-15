@@ -199,6 +199,13 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     );
 
+    const fetcher = (abortController: AbortController = new AbortController()) =>
+        untrack(() => {
+            const k = key();
+            if (k === undefined) return;
+            return options.fetcher(k, { signal: abortController.signal });
+        });
+
     // automatic revalidation
     createEffect(() => {
         if (options.isImmutable || !options.isEnabled) return;
@@ -246,6 +253,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         isLoading,
         hasFetched,
+
         mutate,
+        /**
+         * a detached fetcher -> call the finalized fetcher yourself, it gets the key passed into the hook
+         */
+        fetcher,
     };
 }

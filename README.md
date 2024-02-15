@@ -83,8 +83,9 @@ function useSWR<Res = unknown, Err = unknown>(key: Accessor<Key>, _options?: Opt
     data: StoreIfy<Res | undefined>;
     error: StoreIfy<Err | undefined>;
     isLoading: Accessor<boolean>;
-    hasFetched: Accessor<boolean>;
-    mutate: (payload?: Res | ((curr: Res | undefined) => Res) | undefined, _mutationOptions?: MutationOptions) => void;mise<void>;
+    hasFetched: Accessor<...>;
+    mutate: (payload?: Res | ... 1 more ... | undefined, _mutationOptions?: MutationOptions) => void;
+    fetcher: (abortController?: AbortController) => Promise<...> | undefined;
 }
 ```
 
@@ -96,7 +97,8 @@ The hook returns an object that you can destructure
 -   `error`: a store that contains your error generic or undefined
 -   `isLoading`: a signal that returns a boolean
 -   `mutate`: a function bound to the hook's key that is used for manual changes and can be used for optimistic updates
--   `hasFetched` a signal that's true when the hook received some info, helps with showing dependent hook loading states
+-   `hasFetched`: a signal that's true when the hook received some info, helps with showing dependent hook loading states
+-   `fetcher`: a detached fetcher -> call the finalized fetcher yourself, it gets the key passed into the hook
 
 # Options
 
