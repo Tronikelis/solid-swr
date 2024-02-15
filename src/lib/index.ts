@@ -199,6 +199,13 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     );
 
+    const fetcher = (signal: AbortSignal = new AbortSignal()) =>
+        untrack(() => {
+            const k = key();
+            if (!k) return;
+            return options.fetcher(k, { signal });
+        });
+
     // automatic revalidation
     createEffect(() => {
         if (options.isImmutable || !options.isEnabled) return;
@@ -246,6 +253,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         isLoading,
         hasFetched,
+
         mutate,
+        fetcher,
     };
 }
