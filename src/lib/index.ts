@@ -255,6 +255,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
         hasFetched,
 
         mutate,
+        /**
+         * a detached fetcher -> call the finalized fetcher yourself, it gets the key passed into the hook
+         */
         fetcher,
     };
 }
