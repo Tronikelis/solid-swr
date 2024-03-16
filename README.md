@@ -45,7 +45,6 @@ Quote from [vercel's SWR](https://swr.vercel.app/) for react:
     -   [API](#api-2)
 -   [SSR](#ssr)
 -   [useSWRInfinite](#useswrinfinite)
-    -   [⚠️ Important note](#️-important-note)
 -   [useSWRMutation](#useswrmutation)
     -   [API](#api-3)
 -   [Aborting requests](#aborting-requests)
@@ -316,37 +315,6 @@ function App() {
     );
 }
 ```
-
-## ⚠️ Important note
-
-This behavior will most likely be removed in a future update when I figure out a simple way to do so
-
-If you set another index while `useSWRInfinite` is still fetching an older index it will cleanup all effects of the older swr instance (onSuccess and all that) and start the new index fetching, so basically, loses data
-
-Example
-
-```tsx
-function App() {
-    const { setIndex, data } = useSWRInfinite(/** omitted */);
-
-    onMount(() => {
-        setIndex(x => x + 1);
-    });
-
-    createEffect(() => {
-        console.log([...data.v]);
-
-        // []
-
-        // [
-        //     undefined (data that came from the 0 index was aborted),
-        //     {... (data that came from the first index)}
-        // ]
-    });
-}
-```
-
-To mitigate this don't set a new index when `isLoading() === true`
 
 # useSWRMutation
 
