@@ -106,24 +106,20 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+
         setIsLoading(false);
-
-        if (options.isImmutable && data.v !== undefined) return;
-
         setError(undefined);
         setData(ev.detail.data);
     });
     useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+
         setIsLoading(false);
-
-        if (options.isImmutable && error.v !== undefined) return;
-
         setError(ev.detail.data);
     });
 
     useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled || options.isImmutable) return;
+        if (ev.detail.key !== key() || !options.isEnabled) return;
         await effect();
     });
 
@@ -231,7 +227,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     // automatic revalidation
     createEffect(() => {
-        if (options.isImmutable || !options.isEnabled) return;
+        if (!options.isEnabled) return;
 
         if (options.revalidateOnOnline) {
             // revalidate on offline/online

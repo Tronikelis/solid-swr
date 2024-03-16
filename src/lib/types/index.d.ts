@@ -37,13 +37,6 @@ export type Options<Res, Err> = {
     keepPreviousData?: boolean;
 
     /**
-     * If enabled, the hook will "freeze" after the data is set
-     * @deprecated use `revalidateOnFocus: false` and `revalidateOnOnline: false` combo
-     * @default false
-     */
-    isImmutable?: boolean;
-
-    /**
      * Toggle whether the hook should be enabled (you can do the same by passing in () => undefined as key),
      * useful for scenarios where you create key based on derived async data
      * @default true
