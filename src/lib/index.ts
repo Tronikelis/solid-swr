@@ -1,4 +1,4 @@
-import { trackStore } from "@solid-primitives/deep";
+import { dequal } from "dequal";
 import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
@@ -73,8 +73,31 @@ export default function useSWR<Res = unknown, Err = unknown>(
         v: undefined,
     });
 
-    const setData = (data: Res | undefined) => setDataRaw("v", reconcile(data));
-    const setError = (error: Err | undefined) => setErrorRaw("v", reconcile(error));
+    const setData = (latest: Res | undefined) => {
+        if (untrack(() => dequal(data.v, latest))) {
+            return;
+        }
+
+        setDataRaw("v", reconcile(latest));
+
+        if (latest) {
+            setHasFetched(true);
+            untrack(() => options.onSuccess(latest));
+        }
+    };
+
+    const setError = (latest: Err | undefined) => {
+        if (untrack(() => dequal(error.v, latest))) {
+            return;
+        }
+
+        setErrorRaw("v", reconcile(latest));
+
+        if (latest) {
+            setHasFetched(true);
+            untrack(() => options.onError(latest));
+        }
+    };
 
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data.v);
@@ -83,24 +106,20 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+
         setIsLoading(false);
-
-        if (options.isImmutable && data.v !== undefined) return;
-
         setError(undefined);
         setData(ev.detail.data);
     });
     useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
+
         setIsLoading(false);
-
-        if (options.isImmutable && error.v !== undefined) return;
-
         setError(ev.detail.data);
     });
 
     useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled || options.isImmutable) return;
+        if (ev.detail.key !== key() || !options.isEnabled) return;
         await effect();
     });
 
@@ -208,7 +227,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     // automatic revalidation
     createEffect(() => {
-        if (options.isImmutable || !options.isEnabled) return;
+        if (!options.isEnabled) return;
 
         if (options.revalidateOnOnline) {
             // revalidate on offline/online
@@ -229,21 +248,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     // core functionality
     createEffect(effect);
-
-    createEffect(() => {
-        const d = trackStore(data).v;
-        if (d === undefined) return;
-
-        setHasFetched(true);
-        untrack(() => options.onSuccess(d));
-    });
-    createEffect(() => {
-        const e = trackStore(error).v;
-        if (e === undefined) return;
-
-        setHasFetched(true);
-        untrack(() => options.onError(e));
-    });
 
     useExponential(() => !!error.v, effect, 5);
 

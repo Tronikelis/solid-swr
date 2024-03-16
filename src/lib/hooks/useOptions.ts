@@ -32,7 +32,6 @@ export default function useOptions<Res, Err>(
 
             keepPreviousData: false,
             isEnabled: true,
-            isImmutable: false,
             refreshInterval: 0,
             onSuccess: noop,
             onError: noop,

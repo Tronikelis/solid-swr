@@ -45,7 +45,6 @@ Quote from [vercel's SWR](https://swr.vercel.app/) for react:
     -   [API](#api-2)
 -   [SSR](#ssr)
 -   [useSWRInfinite](#useswrinfinite)
-    -   [⚠️ Important note](#️-important-note)
 -   [useSWRMutation](#useswrmutation)
     -   [API](#api-3)
 -   [Aborting requests](#aborting-requests)
@@ -109,7 +108,6 @@ useSWR(() => "_", {
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
-    isImmutable: false,
     refreshInterval: 0,
     cache: new LRU<string, CacheItem>(5e3),
     onSuccess: noop,
@@ -125,17 +123,16 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                  |                                        Explain                                         |                                                                                 Default |
-| :------------------- | :------------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
-| `fetcher`            |            The function responsible for throwing errors and returning data             | The native fetch which parses only json and throws the response json on >=400 responses |
-| `keepPreviousData`   |           If cache is empty and the key changes, should we keep the old data           |                                                                                 `false` |
-| `isEnabled`          |                                  Is the hook enabled                                   |                                                                                  `true` |
-| `cache`              |                       A data source for storing fetcher results                        |                                                                  A simple in-memory LRU |
-| `onSuccess`          |          A callback that gets the data when it gets updated with truthy data           |                                                                                  `noop` |
-| `onError`            |        A callback that gets the error when it gets updated with a truthy error         |                                                                                  `noop` |
-| `isImmutable`        | If enabled, the hook will "freeze" after the data is set **(this disables mutations)** |                                                                                 `false` |
-| `revalidateOnFocus`  |                 Automatically revalidate when window has gotten focus                  |                                                                                  `true` |
-| `revalidateOnOnline` |                   Automatically revalidate when connection came back                   |                                                                                  `true` |
+| Key                  |                                 Explain                                 |                                                                                 Default |
+| :------------------- | :---------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
+| `fetcher`            |     The function responsible for throwing errors and returning data     | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData`   |   If cache is empty and the key changes, should we keep the old data    |                                                                                 `false` |
+| `isEnabled`          |                           Is the hook enabled                           |                                                                                  `true` |
+| `cache`              |                A data source for storing fetcher results                |                                                                  A simple in-memory LRU |
+| `onSuccess`          |   A callback that gets the data when it gets updated with truthy data   |                                                                                  `noop` |
+| `onError`            | A callback that gets the error when it gets updated with a truthy error |                                                                                  `noop` |
+| `revalidateOnFocus`  |          Automatically revalidate when window has gotten focus          |                                                                                  `true` |
+| `revalidateOnOnline` |           Automatically revalidate when connection came back            |                                                                                  `true` |
 
 # Options with context
 
@@ -316,37 +313,6 @@ function App() {
     );
 }
 ```
-
-## ⚠️ Important note
-
-This behavior will most likely be removed in a future update when I figure out a simple way to do so
-
-If you set another index while `useSWRInfinite` is still fetching an older index it will cleanup all effects of the older swr instance (onSuccess and all that) and start the new index fetching, so basically, loses data
-
-Example
-
-```tsx
-function App() {
-    const { setIndex, data } = useSWRInfinite(/** omitted */);
-
-    onMount(() => {
-        setIndex(x => x + 1);
-    });
-
-    createEffect(() => {
-        console.log([...data.v]);
-
-        // []
-
-        // [
-        //     undefined (data that came from the 0 index was aborted),
-        //     {... (data that came from the first index)}
-        // ]
-    });
-}
-```
-
-To mitigate this don't set a new index when `isLoading() === true`
 
 # useSWRMutation
 

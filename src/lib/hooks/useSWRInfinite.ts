@@ -1,4 +1,4 @@
-import { createEffect, createSignal, mergeProps, on } from "solid-js";
+import { createEffect, createSignal, getOwner, mergeProps, on, runWithOwner } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import { Options, StoreIfy } from "~/types";
@@ -17,38 +17,31 @@ export default function useSWRInfinite<Res = unknown, Err = unknown>(
     const [data, setData] = createStore<StoreIfy<(Res | undefined)[]>>({ v: [] });
     const [error, setError] = createStore<StoreIfy<Err | undefined>>({ v: undefined });
 
+    const owner = getOwner();
+
     createEffect(
-        // now this works pretty well
-        // but it loses data
-        // if you set another index while swr is still fetching an older index
-        // it will cleanup all effects of the older swr instance (onSuccess and all that)
-        // and start the new index fetching, so basically, loses data
         on(index, index => {
-            if (isLoading() && index !== 0) {
-                console.warn(
-                    "You have set another index while one was still loading, " +
-                        "so the older index got cleaned up and the data won't be updated. " +
-                        "More info at the docs (this behavior will probably be eliminated when I figure out how to do it simply :P"
-                );
-            }
+            // eslint-disable-next-line solid/reactivity
+            runWithOwner(owner, () => {
+                setIsLoading(true);
 
-            setIsLoading(true);
+                const onSuccess = (data: Res) => {
+                    setData("v", index, reconcile(data));
+                };
 
-            const onSuccess = (data: Res) => {
-                setData("v", index, reconcile(data));
-            };
+                const options: Options<Res, Err> = mergeProps(_options, {
+                    onSuccess,
+                });
 
-            const options: Options<Res, Err> = mergeProps(_options, {
-                onSuccess,
-            });
+                // not inlining this into useSWR to remove reactivity of the key
+                const key = getKey(index, data.v.at(-1));
 
-            // not inlining this into useSWR to remove reactivity of the key
-            const key = getKey(index, data.v.at(-1));
-            const swr = useSWR<Res, Err>(() => key, options);
+                const swr = useSWR<Res, Err>(() => key, options);
 
-            createEffect(() => {
-                setIsLoading(swr.isLoading());
-                setError("v", reconcile(swr.error.v));
+                createEffect(() => {
+                    setIsLoading(swr.isLoading());
+                    setError("v", reconcile(swr.error.v));
+                });
             });
         })
     );
