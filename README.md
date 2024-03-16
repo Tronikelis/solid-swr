@@ -108,7 +108,6 @@ useSWR(() => "_", {
     fetcher: defaultFetcher,
     keepPreviousData: false,
     isEnabled: true,
-    isImmutable: false,
     refreshInterval: 0,
     cache: new LRU<string, CacheItem>(5e3),
     onSuccess: noop,
@@ -124,17 +123,16 @@ The options are merged with context, [read more](#context)
 
 ## API
 
-| Key                  |                                        Explain                                         |                                                                                 Default |
-| :------------------- | :------------------------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
-| `fetcher`            |            The function responsible for throwing errors and returning data             | The native fetch which parses only json and throws the response json on >=400 responses |
-| `keepPreviousData`   |           If cache is empty and the key changes, should we keep the old data           |                                                                                 `false` |
-| `isEnabled`          |                                  Is the hook enabled                                   |                                                                                  `true` |
-| `cache`              |                       A data source for storing fetcher results                        |                                                                  A simple in-memory LRU |
-| `onSuccess`          |          A callback that gets the data when it gets updated with truthy data           |                                                                                  `noop` |
-| `onError`            |        A callback that gets the error when it gets updated with a truthy error         |                                                                                  `noop` |
-| `isImmutable`        | If enabled, the hook will "freeze" after the data is set **(this disables mutations)** |                                                                                 `false` |
-| `revalidateOnFocus`  |                 Automatically revalidate when window has gotten focus                  |                                                                                  `true` |
-| `revalidateOnOnline` |                   Automatically revalidate when connection came back                   |                                                                                  `true` |
+| Key                  |                                 Explain                                 |                                                                                 Default |
+| :------------------- | :---------------------------------------------------------------------: | --------------------------------------------------------------------------------------: |
+| `fetcher`            |     The function responsible for throwing errors and returning data     | The native fetch which parses only json and throws the response json on >=400 responses |
+| `keepPreviousData`   |   If cache is empty and the key changes, should we keep the old data    |                                                                                 `false` |
+| `isEnabled`          |                           Is the hook enabled                           |                                                                                  `true` |
+| `cache`              |                A data source for storing fetcher results                |                                                                  A simple in-memory LRU |
+| `onSuccess`          |   A callback that gets the data when it gets updated with truthy data   |                                                                                  `noop` |
+| `onError`            | A callback that gets the error when it gets updated with a truthy error |                                                                                  `noop` |
+| `revalidateOnFocus`  |          Automatically revalidate when window has gotten focus          |                                                                                  `true` |
+| `revalidateOnOnline` |           Automatically revalidate when connection came back            |                                                                                  `true` |
 
 # Options with context
 
