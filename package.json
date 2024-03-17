@@ -1,7 +1,7 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -39,7 +39,7 @@
         "tsc": "tsc --noEmit"
     },
     "peerDependencies": {
-        "solid-js": ">=1 <=2"
+        "solid-js": "1.x.x"
     },
     "dependencies": {
         "dequal": "^2.0.3"
