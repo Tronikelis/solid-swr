@@ -138,6 +138,40 @@ it("retries exponentially", async () => {
     expect(fetcher).toBeCalledTimes(2);
 });
 
+it("syncs isLoading states", async () => {
+    const fetcher = vi.fn(async (key: string) => {
+        await waitForMs();
+        return key;
+    });
+
+    const [key, setKey] = createKey();
+    const initialKey = key();
+
+    const { result: result1 } = renderHook(useSWR, [key, { fetcher }]);
+    const { result: result2 } = renderHook(useSWR, [key, { fetcher }]);
+
+    await waitForMs();
+
+    expect(result1.isLoading()).toBe(false);
+    expect(result2.isLoading()).toBe(false);
+
+    setKey(initialKey);
+
+    expect(result1.isLoading()).toBe(false);
+    expect(result2.isLoading()).toBe(false);
+
+    setKey(key() + "foo");
+
+    await waitForMs();
+
+    setKey(initialKey);
+
+    await waitForMs();
+
+    expect(result1.isLoading()).toBe(false);
+    expect(result2.isLoading()).toBe(false);
+});
+
 describe("return", () => {
     describe("hasFetched", () => {
         it("simple example", async () => {

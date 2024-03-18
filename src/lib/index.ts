@@ -15,6 +15,7 @@ import {
     dispatchCustomEvent,
     publishDataEvent,
     publishErrorEvent,
+    setIsLoadingEvent,
     triggerEffectEvent,
 } from "./events";
 import {
@@ -109,6 +110,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
         await effect();
     });
+    useWinEvent(setIsLoadingEvent, (ev: CustomEvent<CustomEventPayload<boolean>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+        setIsLoading(ev.detail.data);
+    });
 
     const effect = async () => {
         const k = key();
@@ -189,6 +194,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         setIsLoading(false);
         setHasFetched(true);
+
+        dispatchCustomEvent<boolean>(setIsLoadingEvent, {
+            data: false,
+            key: k,
+        });
     };
 
     const mutate = uFn(
