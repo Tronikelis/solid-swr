@@ -85,10 +85,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         batch(() => {
-            setHasFetched(true);
             setIsLoading(false);
             setError(undefined);
             setData(ev.detail.data);
+            setHasFetched(true);
         });
 
         options.onSuccess(ev.detail.data);
@@ -99,6 +99,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         batch(() => {
             setIsLoading(false);
             setError(ev.detail.data);
+            setHasFetched(true);
         });
 
         options.onError(ev.detail.data);
