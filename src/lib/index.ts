@@ -1,5 +1,5 @@
 import { dequal } from "dequal";
-import { Accessor, createEffect, createSignal, untrack, useContext } from "solid-js";
+import { Accessor, batch, createEffect, createSignal, untrack, useContext } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
@@ -73,31 +73,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         v: undefined,
     });
 
-    const setData = (latest: Res | undefined) => {
-        if (untrack(() => dequal(data.v, latest))) {
-            return;
-        }
-
-        setDataRaw("v", reconcile(latest));
-
-        if (latest) {
-            setHasFetched(true);
-            untrack(() => options.onSuccess(latest));
-        }
-    };
-
-    const setError = (latest: Err | undefined) => {
-        if (untrack(() => dequal(error.v, latest))) {
-            return;
-        }
-
-        setErrorRaw("v", reconcile(latest));
-
-        if (latest) {
-            setHasFetched(true);
-            untrack(() => options.onError(latest));
-        }
-    };
+    const setData = (latest: Res | undefined) => setDataRaw("v", reconcile(latest));
+    const setError = (latest: Err | undefined) => setErrorRaw("v", reconcile(latest));
 
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data.v);
@@ -107,15 +84,24 @@ export default function useSWR<Res = unknown, Err = unknown>(
     useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
-        setIsLoading(false);
-        setError(undefined);
-        setData(ev.detail.data);
+        batch(() => {
+            setHasFetched(true);
+            setIsLoading(false);
+            setError(undefined);
+            setData(ev.detail.data);
+        });
+
+        options.onSuccess(ev.detail.data);
     });
     useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
-        setIsLoading(false);
-        setError(ev.detail.data);
+        batch(() => {
+            setIsLoading(false);
+            setError(ev.detail.data);
+        });
+
+        options.onError(ev.detail.data);
     });
 
     useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
@@ -179,21 +165,25 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false, data: response });
 
-            setData(response);
-            setError(undefined);
-            dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
-                data: response!,
-                key: k,
-            });
+            if (!untrack(() => dequal(response, data.v))) {
+                setData(response);
+                setError(undefined);
+                dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
+                    data: response!,
+                    key: k,
+                });
+            }
         } else {
             // not busy anymore
             options.cache.set(k, { busy: false });
 
-            setError(err);
-            dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
-                data: err,
-                key: k,
-            });
+            if (!untrack(() => dequal(err, error.v))) {
+                setError(err);
+                dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
+                    data: err,
+                    key: k,
+                });
+            }
         }
 
         setIsLoading(false);
