@@ -166,11 +166,13 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.cache.set(k, { busy: false, data: response });
 
             if (!untrack(() => dequal(response, data.v))) {
-                setData(response);
-                setError(undefined);
-                dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
-                    data: response!,
-                    key: k,
+                batch(() => {
+                    setData(response);
+                    setError(undefined);
+                    dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
+                        data: response!,
+                        key: k,
+                    });
                 });
             }
         } else {
@@ -178,10 +180,12 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.cache.set(k, { busy: false });
 
             if (!untrack(() => dequal(err, error.v))) {
-                setError(err);
-                dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
-                    data: err,
-                    key: k,
+                batch(() => {
+                    setError(err);
+                    dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
+                        data: err,
+                        key: k,
+                    });
                 });
             }
         }
