@@ -256,10 +256,15 @@ describe("return", () => {
                 throw new Error();
             });
 
-            const { result } = renderHook(useSWR, [createKey()[0], { fetcher }]);
+            const [key] = createKey();
+
+            const { result: result1 } = renderHook(useSWR, [key, { fetcher }]);
+            const { result: result2 } = renderHook(useSWR, [key, { fetcher }]);
+
             await waitForMs();
 
-            expect(result.hasFetched()).toBe(true);
+            expect(result1.hasFetched()).toBe(true);
+            expect(result2.hasFetched()).toBe(true);
         });
     });
 });
