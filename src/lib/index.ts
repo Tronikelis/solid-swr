@@ -1,5 +1,13 @@
 import { dequal } from "dequal";
-import { Accessor, batch, createEffect, createSignal, untrack, useContext } from "solid-js";
+import {
+    Accessor,
+    batch,
+    createEffect,
+    createSignal,
+    onCleanup,
+    untrack,
+    useContext,
+} from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
@@ -49,8 +57,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
      */
     _options: Options<Res, Err> = {}
 ) {
-    let globalController = new AbortController();
-
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
@@ -146,8 +152,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         const controller = new AbortController();
 
-        globalController.abort();
-        globalController = controller;
+        onCleanup(() => {
+            controller.abort();
+        });
 
         const [err, response] = await tryCatch<Err, Res>(() =>
             options.fetcher(k, { signal: controller.signal })
