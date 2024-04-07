@@ -82,11 +82,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
     const setData = (latest: Res | undefined) => {
         if (untrack(() => dequal(data.v, latest))) return;
-        setDataRaw("v", reconcile(latest));
+        setDataRaw(reconcile({ v: latest }));
     };
     const setError = (latest: Err | undefined) => {
         if (untrack(() => dequal(error.v, latest))) return;
-        setErrorRaw("v", reconcile(latest));
+        setErrorRaw(reconcile({ v: latest }));
     };
 
     // eslint-disable-next-line solid/reactivity
