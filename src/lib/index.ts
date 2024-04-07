@@ -98,9 +98,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         batch(() => {
+            setData(ev.detail.data);
             setIsLoading(false);
             setError(undefined);
-            setData(ev.detail.data);
             setHasFetched(true);
         });
 
@@ -110,8 +110,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         batch(() => {
-            setIsLoading(false);
             setError(ev.detail.data);
+            setIsLoading(false);
             setHasFetched(true);
         });
 

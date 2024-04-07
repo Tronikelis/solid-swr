@@ -39,7 +39,7 @@ it("returns an array of responses and responds to index changes", async () => {
     expect(result.data.v[1]).toBe("1");
 });
 
-it("when loading isn't finished, gives up on older index effect (I will remove this later somehow)", async () => {
+it("when loading isn't finished, does not gives up on older index effect", async () => {
     let count = 0;
 
     const fetcher = vi.fn(async () => {

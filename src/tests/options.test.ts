@@ -90,7 +90,7 @@ it("keepPreviousData works", async () => {
     expect(fetcher).toBeCalledTimes(4);
 });
 
-it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets", async arg => {
+it.each(["onError", "onSuccess"] as const)("%s fires on key change", async arg => {
     const callback = vi.fn();
 
     const fetcher = async () => {
@@ -117,7 +117,8 @@ it.each(["onError", "onSuccess"] as const)("%s does not fire on duplicate sets",
     setKey(createUniqueId());
 
     await waitForMs();
-    expect(callback).toBeCalledTimes(1);
+    expect(callback).toBeCalledTimes(2);
+    expect(callback).toBeCalledWith({ foo: "bar" });
 });
 
 it.each(["onError", "onSuccess"] as const)(
