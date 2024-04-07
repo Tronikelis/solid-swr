@@ -154,7 +154,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
             setData(cache.data as Res);
         } else {
-            // mark as busy and delete data
             options.cache.set(k, { busy: true });
 
             if (!options.keepPreviousData) {
