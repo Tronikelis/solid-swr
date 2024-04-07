@@ -1,5 +1,13 @@
 import { dequal } from "dequal";
-import { Accessor, batch, createEffect, createSignal, untrack, useContext } from "solid-js";
+import {
+    Accessor,
+    batch,
+    createEffect,
+    createSignal,
+    onCleanup,
+    untrack,
+    useContext,
+} from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
@@ -49,8 +57,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
      */
     _options: Options<Res, Err> = {}
 ) {
-    let globalController = new AbortController();
-
     const options = useOptions<Res, Err>(_options);
     const fallback = useContext(SWRFallback);
 
@@ -74,8 +80,14 @@ export default function useSWR<Res = unknown, Err = unknown>(
         v: undefined,
     });
 
-    const setData = (latest: Res | undefined) => setDataRaw("v", reconcile(latest));
-    const setError = (latest: Err | undefined) => setErrorRaw("v", reconcile(latest));
+    const setData = (latest: Res | undefined) => {
+        if (untrack(() => dequal(data.v, latest))) return;
+        setDataRaw("v", reconcile(latest));
+    };
+    const setError = (latest: Err | undefined) => {
+        if (untrack(() => dequal(error.v, latest))) return;
+        setErrorRaw("v", reconcile(latest));
+    };
 
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data.v);
@@ -86,9 +98,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         batch(() => {
+            setData(ev.detail.data);
             setIsLoading(false);
             setError(undefined);
-            setData(ev.detail.data);
             setHasFetched(true);
         });
 
@@ -98,8 +110,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         if (ev.detail.key !== key() || !options.isEnabled) return;
 
         batch(() => {
-            setIsLoading(false);
             setError(ev.detail.data);
+            setIsLoading(false);
             setHasFetched(true);
         });
 
@@ -129,14 +141,19 @@ export default function useSWR<Res = unknown, Err = unknown>(
             return;
         }
 
+        const markBusy = () => {
+            options.cache.set(k, { busy: true, data: peekCache(k)?.data });
+        };
+        const markFree = () => {
+            options.cache.set(k, { busy: false, data: peekCache(k)?.data });
+        };
+
         const cache = peekCache(k);
         if (cache !== undefined && cache.data) {
-            // mark as busy
-            options.cache.set(k, { busy: true, data: cache.data as Res });
+            markBusy();
 
             setData(cache.data as Res);
         } else {
-            // mark as busy
             options.cache.set(k, { busy: true });
 
             if (!options.keepPreviousData) {
@@ -146,8 +163,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         const controller = new AbortController();
 
-        globalController.abort();
-        globalController = controller;
+        onCleanup(() => {
+            controller.abort();
+            markFree();
+        });
 
         const [err, response] = await tryCatch<Err, Res>(() =>
             options.fetcher(k, { signal: controller.signal })
@@ -158,8 +177,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             err instanceof DOMException &&
             err.name === "AbortError"
         ) {
-            // this request was aborted, so return early and release the cache without changing it
-            options.cache.set(k, { busy: false, data: peekCache(k)?.data });
+            markFree();
             return;
         }
 
@@ -171,25 +189,21 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false, data: response });
 
-            if (!untrack(() => dequal(response, data.v))) {
-                setData(response);
-                setError(undefined);
-                dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
-                    data: response!,
-                    key: k,
-                });
-            }
+            setData(response);
+            setError(undefined);
+            dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
+                data: response!,
+                key: k,
+            });
         } else {
             // not busy anymore
             options.cache.set(k, { busy: false });
 
-            if (!untrack(() => dequal(err, error.v))) {
-                setError(err);
-                dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
-                    data: err,
-                    key: k,
-                });
-            }
+            setError(err);
+            dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
+                data: err,
+                key: k,
+            });
         }
 
         setIsLoading(false);
