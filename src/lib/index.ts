@@ -73,7 +73,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     };
 
     const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
-        v: peekCache(key())?.data,
+        v: structuredClone(peekCache(key())?.data),
     });
 
     const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
@@ -135,14 +135,20 @@ export default function useSWR<Res = unknown, Err = unknown>(
             return;
         }
 
+        const markBusy = () => {
+            options.cache.set(k, { busy: true, data: peekCache(k)?.data });
+        };
+        const markFree = () => {
+            options.cache.set(k, { busy: false, data: peekCache(k)?.data });
+        };
+
         const cache = peekCache(k);
         if (cache !== undefined && cache.data) {
-            // mark as busy
-            options.cache.set(k, { busy: true, data: cache.data as Res });
+            markBusy();
 
             setData(cache.data as Res);
         } else {
-            // mark as busy
+            // mark as busy and delete data
             options.cache.set(k, { busy: true });
 
             if (!options.keepPreviousData) {
@@ -154,6 +160,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
 
         onCleanup(() => {
             controller.abort();
+            markFree();
         });
 
         const [err, response] = await tryCatch<Err, Res>(() =>
@@ -165,8 +172,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             err instanceof DOMException &&
             err.name === "AbortError"
         ) {
-            // this request was aborted, so return early and release the cache without changing it
-            options.cache.set(k, { busy: false, data: peekCache(k)?.data });
+            markFree();
             return;
         }
 
