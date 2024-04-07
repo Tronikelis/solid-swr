@@ -73,15 +73,21 @@ export default function useSWR<Res = unknown, Err = unknown>(
     };
 
     const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
-        v: structuredClone(peekCache(key())?.data),
+        v: peekCache(key())?.data,
     });
 
     const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
         v: undefined,
     });
 
-    const setData = (latest: Res | undefined) => setDataRaw("v", reconcile(latest));
-    const setError = (latest: Err | undefined) => setErrorRaw("v", reconcile(latest));
+    const setData = (latest: Res | undefined) => {
+        if (untrack(() => dequal(data.v, latest))) return;
+        setDataRaw("v", reconcile(latest));
+    };
+    const setError = (latest: Err | undefined) => {
+        if (untrack(() => dequal(error.v, latest))) return;
+        setErrorRaw("v", reconcile(latest));
+    };
 
     // eslint-disable-next-line solid/reactivity
     const [isLoading, setIsLoading] = createSignal(!data.v);
@@ -184,25 +190,21 @@ export default function useSWR<Res = unknown, Err = unknown>(
             // not busy anymore
             options.cache.set(k, { busy: false, data: response });
 
-            if (!untrack(() => dequal(response, data.v))) {
-                setData(response);
-                setError(undefined);
-                dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
-                    data: response!,
-                    key: k,
-                });
-            }
+            setData(response);
+            setError(undefined);
+            dispatchCustomEvent<NonNullable<Res>>(publishDataEvent, {
+                data: response!,
+                key: k,
+            });
         } else {
             // not busy anymore
             options.cache.set(k, { busy: false });
 
-            if (!untrack(() => dequal(err, error.v))) {
-                setError(err);
-                dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
-                    data: err,
-                    key: k,
-                });
-            }
+            setError(err);
+            dispatchCustomEvent<NonNullable<Err>>(publishErrorEvent, {
+                data: err,
+                key: k,
+            });
         }
 
         setIsLoading(false);
