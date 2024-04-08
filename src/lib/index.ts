@@ -94,30 +94,6 @@ export default function useSWR<Res = unknown, Err = unknown>(
     // eslint-disable-next-line solid/reactivity
     const [hasFetched, setHasFetched] = createSignal(!!data.v);
 
-    useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled) return;
-
-        batch(() => {
-            setData(ev.detail.data);
-            setIsLoading(false);
-            setError(undefined);
-            setHasFetched(true);
-        });
-
-        options.onSuccess(ev.detail.data);
-    });
-    useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled) return;
-
-        batch(() => {
-            setError(ev.detail.data);
-            setIsLoading(false);
-            setHasFetched(true);
-        });
-
-        options.onError(ev.detail.data);
-    });
-
     // eslint-disable-next-line solid/reactivity
     const effect = uFn(async () => {
         const k = key();
@@ -205,6 +181,30 @@ export default function useSWR<Res = unknown, Err = unknown>(
             data: false,
             key: k,
         });
+    });
+
+    useWinEvent(publishDataEvent, (ev: CustomEvent<CustomEventPayload<Res>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+
+        batch(() => {
+            setData(ev.detail.data);
+            setIsLoading(false);
+            setError(undefined);
+            setHasFetched(true);
+        });
+
+        options.onSuccess(ev.detail.data);
+    });
+    useWinEvent(publishErrorEvent, (ev: CustomEvent<CustomEventPayload<Err>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+
+        batch(() => {
+            setError(ev.detail.data);
+            setIsLoading(false);
+            setHasFetched(true);
+        });
+
+        options.onError(ev.detail.data);
     });
 
     useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
