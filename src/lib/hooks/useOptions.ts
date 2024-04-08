@@ -1,11 +1,9 @@
-import { createEffect, mergeProps, useContext } from "solid-js";
-import { createStore } from "solid-js/store";
+import { mergeProps, useContext } from "solid-js";
 
 import LRU from "~/classes/lru";
 import { OptionsContext } from "~/context/options";
 import { CacheImplements, CacheItem, Fetcher, Options } from "~/types";
 import noop from "~/utils/noop";
-import uFn from "~/utils/uFn";
 
 const defaultFetcher: Fetcher<unknown> = async (key, { signal }) => {
     const response = await fetch(key, { signal });
@@ -43,50 +41,5 @@ export default function useOptions<Res, Err>(
         options
     );
 
-    type Untracked = Pick<typeof merged, "cache" | "fetcher" | "onSuccess" | "onError">;
-
-    const untrackedCache = () => {
-        const oldCache = merged.cache;
-
-        return {
-            cache: {
-                get: uFn(oldCache.get.bind(oldCache)),
-                set: uFn(oldCache.set.bind(oldCache)),
-                keys: uFn(oldCache.keys.bind(oldCache)),
-            },
-        };
-    };
-
-    const untrackedOnSuccess = () => ({
-        onSuccess: uFn(merged.onSuccess.bind(merged.onSuccess)),
-    });
-    const untrackedOnError = () => ({
-        onError: uFn(merged.onError.bind(merged.onError)),
-    });
-    const untrackedFetcher = () => ({
-        fetcher: uFn(merged.fetcher.bind(merged.fetcher)),
-    });
-
-    const [untracked, setUntracked] = createStore<Untracked>({
-        // eslint-disable-next-line solid/reactivity
-        ...untrackedCache(),
-        // eslint-disable-next-line solid/reactivity
-        ...untrackedOnSuccess(),
-        // eslint-disable-next-line solid/reactivity
-        ...untrackedOnError(),
-        // eslint-disable-next-line solid/reactivity
-        ...untrackedFetcher(),
-    });
-
-    [untrackedCache, untrackedOnSuccess, untrackedOnError, untrackedFetcher].forEach(
-        accessor => {
-            createEffect(() => {
-                setUntracked(accessor());
-            });
-        }
-    );
-
-    const mergedUntracked = mergeProps(merged, untracked);
-
-    return mergedUntracked;
+    return merged;
 }

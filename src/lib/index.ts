@@ -4,8 +4,8 @@ import {
     batch,
     createEffect,
     createSignal,
+    on,
     onCleanup,
-    untrack,
     useContext,
 } from "solid-js";
 import { createStore, reconcile } from "solid-js/store";
@@ -81,11 +81,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
     });
 
     const setData = (latest: Res | undefined) => {
-        if (untrack(() => dequal(data.v, latest))) return;
+        if (dequal(data.v, latest)) return;
         setDataRaw(reconcile({ v: latest }));
     };
     const setError = (latest: Err | undefined) => {
-        if (untrack(() => dequal(error.v, latest))) return;
+        if (dequal(error.v, latest)) return;
         setErrorRaw(reconcile({ v: latest }));
     };
 
@@ -118,16 +118,8 @@ export default function useSWR<Res = unknown, Err = unknown>(
         options.onError(ev.detail.data);
     });
 
-    useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled) return;
-        await effect();
-    });
-    useWinEvent(setIsLoadingEvent, (ev: CustomEvent<CustomEventPayload<boolean>>) => {
-        if (ev.detail.key !== key() || !options.isEnabled) return;
-        setIsLoading(ev.detail.data);
-    });
-
-    const effect = async () => {
+    // eslint-disable-next-line solid/reactivity
+    const effect = uFn(async () => {
         const k = key();
 
         if (!options.isEnabled || k === undefined) {
@@ -213,7 +205,16 @@ export default function useSWR<Res = unknown, Err = unknown>(
             data: false,
             key: k,
         });
-    };
+    });
+
+    useWinEvent(triggerEffectEvent, async (ev: CustomEvent<CustomEventPayload<undefined>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+        await effect();
+    });
+    useWinEvent(setIsLoadingEvent, (ev: CustomEvent<CustomEventPayload<boolean>>) => {
+        if (ev.detail.key !== key() || !options.isEnabled) return;
+        setIsLoading(ev.detail.data);
+    });
 
     const mutate = uFn(
         (
@@ -233,12 +234,11 @@ export default function useSWR<Res = unknown, Err = unknown>(
         }
     );
 
-    const fetcher = (abortController: AbortController = new AbortController()) =>
-        untrack(() => {
-            const k = key();
-            if (k === undefined) return;
-            return options.fetcher(k, { signal: abortController.signal });
-        });
+    const fetcher = uFn((abortController: AbortController = new AbortController()) => {
+        const k = key();
+        if (k === undefined) return;
+        return options.fetcher(k, { signal: abortController.signal });
+    });
 
     // automatic revalidation
     createEffect(() => {
@@ -262,7 +262,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     });
 
     // core functionality
-    createEffect(effect);
+    createEffect(on([key, () => options.isEnabled], effect));
 
     useExponential(() => !!error.v, effect, 5);
 
