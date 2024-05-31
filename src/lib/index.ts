@@ -72,8 +72,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
         return undefined;
     };
 
+    const peekCacheCloned: typeof peekCache = k => structuredClone(peekCache(k));
+
     const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
-        v: peekCache(key())?.data,
+        v: peekCacheCloned(key())?.data,
     });
 
     const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
@@ -116,7 +118,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.cache.set(k, { busy: false, data: peekCache(k)?.data });
         };
 
-        const cache = peekCache(k);
+        const cache = peekCacheCloned(k);
         if (cache !== undefined && cache.data) {
             markBusy();
 

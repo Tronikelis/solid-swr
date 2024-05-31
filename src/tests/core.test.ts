@@ -1,4 +1,5 @@
 import { renderHook } from "@solidjs/testing-library";
+import { createSignal, createUniqueId } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 
 import useSWR from "../lib";
@@ -301,4 +302,22 @@ describe("return", () => {
             expect(result2.hasFetched()).toBe(true);
         });
     });
+});
+
+it("every hook has different store references", async () => {
+    const fetcher = vi.fn(async (k: string) => {
+        await waitForMs();
+        return { k };
+    });
+
+    const [key1] = createKey();
+    const key2 = () => key1();
+
+    const { result: result1 } = renderHook(useSWR, [key1, { fetcher }]);
+
+    await waitForMs();
+
+    const { result: result2 } = renderHook(useSWR, [key2, { fetcher }]);
+
+    expect(result1.data.v).not.toBe(result2.data.v);
 });
