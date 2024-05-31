@@ -1,5 +1,4 @@
 import { renderHook } from "@solidjs/testing-library";
-import { createSignal, createUniqueId } from "solid-js";
 import { describe, expect, it, vi } from "vitest";
 
 import useSWR from "../lib";
