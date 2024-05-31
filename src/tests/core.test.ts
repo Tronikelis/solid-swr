@@ -302,3 +302,21 @@ describe("return", () => {
         });
     });
 });
+
+it("every hook has different store references", async () => {
+    const fetcher = vi.fn(async (k: string) => {
+        await waitForMs();
+        return { k };
+    });
+
+    const [key1] = createKey();
+    const key2 = () => key1();
+
+    const { result: result1 } = renderHook(useSWR, [key1, { fetcher }]);
+
+    await waitForMs();
+
+    const { result: result2 } = renderHook(useSWR, [key2, { fetcher }]);
+
+    expect(result1.data.v).not.toBe(result2.data.v);
+});
