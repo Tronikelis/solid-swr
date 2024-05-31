@@ -90,9 +90,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
     });
 
     const setError = (latest: Err | undefined) => {
-        if (dequal(error.v, latest)) return;
-        latest = structuredClone(latest);
-        setErrorRaw(reconcile({ v: latest }));
+        setErrorRaw({ v: latest });
     };
 
     // eslint-disable-next-line solid/reactivity
