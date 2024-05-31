@@ -72,22 +72,26 @@ export default function useSWR<Res = unknown, Err = unknown>(
         return undefined;
     };
 
-    const peekCacheCloned: typeof peekCache = k => structuredClone(peekCache(k));
-
     const [data, setDataRaw] = createStore<StoreIfy<Res | undefined>>({
-        v: peekCacheCloned(key())?.data,
-    });
-
-    const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
         v: undefined,
     });
 
     const setData = (latest: Res | undefined) => {
         if (dequal(data.v, latest)) return;
+        latest = structuredClone(latest);
         setDataRaw(reconcile({ v: latest }));
     };
+
+    // eslint-disable-next-line solid/reactivity
+    setData(peekCache(key())?.data);
+
+    const [error, setErrorRaw] = createStore<StoreIfy<Err | undefined>>({
+        v: undefined,
+    });
+
     const setError = (latest: Err | undefined) => {
         if (dequal(error.v, latest)) return;
+        latest = structuredClone(latest);
         setErrorRaw(reconcile({ v: latest }));
     };
 
@@ -118,7 +122,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
             options.cache.set(k, { busy: false, data: peekCache(k)?.data });
         };
 
-        const cache = peekCacheCloned(k);
+        const cache = peekCache(k);
         if (cache !== undefined && cache.data) {
             markBusy();
 
