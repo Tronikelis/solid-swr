@@ -8,7 +8,7 @@ import {
     onCleanup,
     useContext,
 } from "solid-js";
-import { createStore, reconcile, unwrap } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
 import useExponential from "./hooks/internal/useExponential";
