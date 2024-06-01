@@ -8,14 +8,14 @@ import {
     onCleanup,
     useContext,
 } from "solid-js";
-import { createStore, reconcile, unwrap } from "solid-js/store";
+import { createStore, reconcile } from "solid-js/store";
 
 import { SWRFallback } from "./context/fallback";
 import useExponential from "./hooks/internal/useExponential";
 import useInterval from "./hooks/internal/useInterval";
 import useMutationOptions from "./hooks/internal/useMutationOptions";
 import useWinEvent from "./hooks/internal/useWinEvent";
-import useMatchMutate from "./hooks/useMatchMutate";
+import useMatchMutate, { Payload as MatchMutatePayload } from "./hooks/useMatchMutate";
 import useOptions from "./hooks/useOptions";
 import tryCatch from "./utils/tryCatch";
 import uFn from "./utils/uFn";
@@ -232,12 +232,10 @@ export default function useSWR<Res = unknown, Err = unknown>(
             const mutationOptions = useMutationOptions(_mutationOptions);
             const matchMutate = useMatchMutate<Res>();
 
-            const fresh =
-                payload instanceof Function
-                    ? payload(structuredClone(unwrap(data.v)))
-                    : payload;
+            const matchMutatePayload: MatchMutatePayload<Res> =
+                payload instanceof Function ? (_, res) => payload(res) : payload;
 
-            matchMutate(key => key === k, fresh, mutationOptions);
+            matchMutate(key => key === k, matchMutatePayload, mutationOptions);
         }
     );
 
