@@ -58,7 +58,9 @@ export default function useSWR<Res = unknown, Err = unknown>(
     _options: Options<Res, Err> = {}
 ) {
     const options = useOptions<Res, Err>(_options);
-    const fallback = useContext(SWRFallback);
+    const fallbackContext = useContext(SWRFallback);
+
+    const getFallback = (key: string) => options.fallback[key] ?? fallbackContext[key];
 
     const peekCache = (k: string | undefined): CacheItem<Res> | undefined => {
         if (k === undefined) return undefined;
@@ -66,7 +68,7 @@ export default function useSWR<Res = unknown, Err = unknown>(
         const fromCache = options.cache.get(k);
         if (fromCache) return fromCache;
 
-        const fromFallback = fallback[k] as Res | undefined;
+        const fromFallback = getFallback(k) as Res | undefined;
         if (fromFallback) return { busy: false, data: fromFallback };
 
         return undefined;

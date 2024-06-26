@@ -36,6 +36,8 @@ export default function useOptions<Res, Err>(
 
             revalidateOnFocus: true,
             revalidateOnOnline: true,
+
+            fallback: {},
         } satisfies Required<Options<Res, Err>>,
         context,
         options

@@ -1,5 +1,5 @@
 import { createContext } from "solid-js";
 
-type Fallback = Record<string, any>;
+import { Fallback } from "~/types";
 
 export const SWRFallback = createContext<Fallback>({});
