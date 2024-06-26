@@ -24,6 +24,8 @@ export type FetcherArg = {
 
 export type Fetcher<T> = (key: ExistentKey, arg: FetcherArg) => Promise<T>;
 
+export type Fallback = Record<string, any>;
+
 export type Options<Res, Err> = {
     /**
      * The function responsible for throwing errors and returning data
@@ -54,6 +56,11 @@ export type Options<Res, Err> = {
      * by default a simple in-memory LRU cache is used with 5K max items
      */
     cache?: CacheImplements<Res>;
+
+    /**
+     * A local SWRFallback option, pass initial data to a single hook
+     */
+    fallback?: Fallback;
 
     /**
      * Automatically revalidate when window has gotten focus

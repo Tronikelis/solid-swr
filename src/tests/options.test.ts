@@ -196,3 +196,17 @@ it.each(["onError", "onSuccess"] as const)(
         expect(callback).toBeCalledWith({ a: { b: "foo" } });
     }
 );
+
+it("fallback passed locally works", () => {
+    const fetcher = vi.fn(async (k: string) => {
+        await waitForMs();
+        return k;
+    });
+
+    const { result } = renderHook(useSWR, [
+        () => "foo",
+        { fetcher, fallback: { foo: "foo" } },
+    ]);
+
+    expect(result.data.v).toBe("foo");
+});

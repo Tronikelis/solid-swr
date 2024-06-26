@@ -112,6 +112,7 @@ useSWR(() => "_", {
     cache: new LRU<string, CacheItem>(5e3),
     onSuccess: noop,
     onError: noop,
+    fallback: {},
     revalidateOnFocus: true,
     revalidateOnOnline: true,
 });
@@ -133,6 +134,7 @@ The options are merged with context, [read more](#context)
 | `onError`            | A callback that gets the error when it gets updated with a truthy error |                                                                                  `noop` |
 | `revalidateOnFocus`  |          Automatically revalidate when window has gotten focus          |                                                                                  `true` |
 | `revalidateOnOnline` |           Automatically revalidate when connection came back            |                                                                                  `true` |
+| `fallback`           |    A simple object in which you can provide initial values for keys     |                                                                                    `{}` |
 
 # Options with context
 
@@ -258,6 +260,9 @@ Currently only 1 option is available:
 
 For SSR there is another context `SWRFallback` which as you can guess by the name let's you add fallback data for specific keys
 
+> [!NOTE]
+> As of 4.1.0 you can do the same with passing fallback to the Options context
+
 Example usage:
 
 ```tsx
@@ -283,6 +288,8 @@ function App() {
     return <></>;
 }
 ```
+
+This behavior can be scoped locally to a hook with the `fallback` option
 
 # useSWRInfinite
 
