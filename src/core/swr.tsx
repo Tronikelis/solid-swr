@@ -19,7 +19,6 @@ type FetcherOpts = {
 };
 
 type SwrOpts = {
-    isImmutable: boolean;
     store: Store;
     fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
 };
@@ -31,7 +30,6 @@ export const useSwrContext = () => {
 const Context = createContext<SwrOpts>({
     store: new Store(),
     fetcher: k => Promise.resolve(k),
-    isImmutable: false,
 });
 
 export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Element }) => {
@@ -86,10 +84,6 @@ export default function useSWR<D, E>(
                     controller.abort();
                 });
 
-                if (ctx.isImmutable && item.data != null) {
-                    return;
-                }
-
                 ctx.store.update(k, {
                     err: undefined,
                     isBusy: true,
@@ -120,6 +114,7 @@ export default function useSWR<D, E>(
         })
     );
 
+    // default values in here
     (() =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
