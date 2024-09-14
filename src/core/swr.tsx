@@ -114,28 +114,21 @@ export default function useSWR<D, E>(
         })
     );
 
-    // default values in here
-    (() =>
+    uFn(() => {
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
             const item = lookup();
             if (!item) return;
+            // set defaults here
             ctx.store.update(k, { isLoading: true });
-        }))();
+        });
+    })();
 
     createEffect(on(key, revalidate));
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    const v: StoreItem<D, E> = new Proxy<any>(
-        {},
-        {
-            get: (_, prop: keyof StoreItem<D, E>) => lookup()?.[prop],
-        }
-    );
 
     return {
         mutate,
         revalidate,
-        v,
+        v: lookup,
     };
 }

@@ -6,14 +6,10 @@ import useSWR, { SwrProvider } from "../../core/swr";
 function SmolFetcher(props: { key: Accessor<string | undefined> }) {
     const { v, mutate, revalidate } = useSWR(() => props.key());
 
-    createEffect(() => {
-        console.log("v.id", v?.data?.id);
-    });
-
     return (
         <pre>
-            isLoading: {v?.isLoading ? "true" : "false"}
-            {v?.data && v.data.id}
+            isLoading: {v()?.isLoading ? "true" : "false"}
+            {v()?.data && v()!.data.id}
             <div>click</div>
         </pre>
     );
@@ -36,7 +32,7 @@ function App() {
                 },
             }}
         >
-            <For each={new Array(100).fill(0)}>{() => <SmolFetcher key={key} />}</For>
+            <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>
         </SwrProvider>
     );
 }
