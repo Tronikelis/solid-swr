@@ -33,23 +33,29 @@ const defaultHooks: StoreHooks = {
 
 export default class Store {
     private hooks: StoreHooks;
-    private solidStore: [SolidStore, SetStoreFunction<SolidStore>];
+
+    private store: SolidStore;
+    private setStore: SetStoreFunction<SolidStore>;
 
     constructor(hooks: Partial<StoreHooks> = {}) {
         this.hooks = { ...defaultHooks, ...hooks };
-        this.solidStore = createStore();
+
+        const [store, setStore] = createStore({});
+        // eslint-disable-next-line solid/reactivity
+        this.store = store;
+        this.setStore = setStore;
     }
 
     private remove(key: string): void {
-        this.solidStore[1](key, undefined);
+        this.setStore(key, undefined);
     }
 
     keys(): string[] {
-        return untrack(() => Object.keys(this.solidStore[0]));
+        return untrack(() => Object.keys(this.store));
     }
 
     lookup<D, E>(key: string): StoreItem<D, E> | undefined {
-        let item = this.solidStore[0][key] as StoreItem<D, E>;
+        let item = this.store[key] as StoreItem<D, E>;
         item = this.hooks.onLookup(key, item) as StoreItem<D, E>;
 
         if (!item) {
@@ -67,7 +73,7 @@ export default class Store {
             return;
         }
 
-        this.solidStore[1](key, item);
+        this.setStore(key, item);
     }
 
     update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
@@ -80,9 +86,9 @@ export default class Store {
             delete wit.data;
 
             batch(() => {
-                this.solidStore[1](key, wit);
+                this.setStore(key, wit);
                 if (data) {
-                    this.solidStore[1](key, "data", reconcile(data));
+                    this.setStore(key, "data", reconcile(data));
                 }
             });
         }

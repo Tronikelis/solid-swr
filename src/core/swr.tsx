@@ -2,9 +2,9 @@ import {
     Accessor,
     createContext,
     createEffect,
-    createMemo,
     JSX,
     mergeProps,
+    on,
     onCleanup,
     useContext,
 } from "solid-js";
@@ -12,7 +12,7 @@ import { unwrap } from "solid-js/store";
 
 import uFn from "~/utils/uFn";
 
-import Store from "./store";
+import Store, { StoreItem } from "./store";
 
 type FetcherOpts = {
     signal: AbortSignal;
@@ -57,12 +57,28 @@ export default function useSWR<D, E>(
         return fn(k);
     };
 
+    const lookup = (): StoreItem<D, E> | undefined =>
+        // eslint-disable-next-line solid/reactivity
+        runWithKey(k => {
+            const item = ctx.store.lookup<D, E>(k);
+            if (item) return item;
+
+            ctx.store.insert<D, E>(k, {
+                err: undefined,
+                data: undefined,
+                isBusy: false,
+                isLoading: false,
+            });
+
+            return ctx.store.lookup<D, E>(k);
+        });
+
     // eslint-disable-next-line solid/reactivity
     const revalidate = uFn(
         async (): Promise<D | undefined> =>
             // eslint-disable-next-line solid/reactivity
             runWithKey(async k => {
-                const item = ctx.store.lookup(k);
+                const item = lookup();
                 if (!item || item.isBusy) return;
 
                 const controller = new AbortController();
@@ -75,6 +91,7 @@ export default function useSWR<D, E>(
                 }
 
                 ctx.store.update(k, {
+                    err: undefined,
                     isBusy: true,
                     isLoading: true,
                 });
@@ -86,7 +103,6 @@ export default function useSWR<D, E>(
                     data: res,
                     isBusy: false,
                     isLoading: false,
-                    err: undefined,
                 });
 
                 return res as D;
@@ -96,7 +112,7 @@ export default function useSWR<D, E>(
     const mutate = uFn((update: (prev: D | undefined) => D | undefined) =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            const current = unwrap(ctx.store.lookup<D, E>(k));
+            const current = unwrap(lookup());
             const latest = update(current?.data);
             if (!latest) return;
 
@@ -104,37 +120,27 @@ export default function useSWR<D, E>(
         })
     );
 
-    // eslint-disable-next-line solid/reactivity
-    runWithKey(k => {
-        const item = ctx.store.lookup<D, E>(k);
-        if (!item) {
-            ctx.store.insert<D, E>(k, {
-                err: undefined,
-                data: undefined,
-                isBusy: false,
-                isLoading: true,
-            });
-
-            // revalidate
-            void revalidate();
-        }
-    });
-
-    createEffect(() => revalidate());
-
-    const v = createMemo(() =>
+    (() =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            return ctx.store.lookup<D, E>(k);
-        })
+            const item = lookup();
+            if (!item) return;
+            ctx.store.update(k, { isLoading: true });
+        }))();
+
+    createEffect(on(key, revalidate));
+
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+    const v: StoreItem<D, E> = new Proxy<any>(
+        {},
+        {
+            get: (_, prop: keyof StoreItem<D, E>) => lookup()?.[prop],
+        }
     );
 
     return {
         mutate,
         revalidate,
-        // eslint-disable-next-line solid/reactivity
-        get v() {
-            return v();
-        },
+        v,
     };
 }
