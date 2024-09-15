@@ -15,7 +15,8 @@ export type StoreItem<D = unknown, E = unknown> = {
     err: E | undefined;
 
     isLoading: boolean;
-    isBusy: boolean;
+    /** touch this only if you know what you're doing, this controls deduplication */
+    _isBusy: boolean;
 };
 
 type SolidStore = {
@@ -34,8 +35,8 @@ export default class Store {
     private setStore: SetStoreFunction<SolidStore>;
 
     static defaultItem: StoreItem = {
+        _isBusy: false,
         isLoading: false,
-        isBusy: false,
         err: undefined,
         data: undefined,
     };

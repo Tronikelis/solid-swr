@@ -6,6 +6,7 @@ import {
     createSignal,
     JSX,
     mergeProps,
+    onCleanup,
     untrack,
     useContext,
 } from "solid-js";
@@ -57,6 +58,12 @@ export default function useSwrFull<D, E>(
     const [lazyKey, setLazyKey] = createSignal("");
 
     const core = useSwr<D, E>(key, opts);
+
+    createEffect(() => {
+        if (ctx.refreshInterval <= 0) return;
+        const interval = setInterval(core.revalidate, ctx.refreshInterval);
+        onCleanup(() => clearInterval(interval));
+    });
 
     createEffect(() => {
         if (!ctx.revalidateOnFocus) return;

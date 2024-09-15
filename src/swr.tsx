@@ -45,6 +45,11 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
     );
 };
 
+export function useSwrLookup<D, E>(key: Accessor<string | undefined>) {
+    const ctx = useSwrContext();
+    return () => ctx.store.lookupUpsert<D, E>(key());
+}
+
 export default function useSwr<D, E>(
     key: Accessor<string | undefined>,
     local?: Partial<SwrOpts<D, E>>
@@ -63,7 +68,7 @@ export default function useSwr<D, E>(
             // eslint-disable-next-line solid/reactivity
             runWithKey(async k => {
                 const item = ctx.store.lookupUpsert<D, E>(k);
-                if (item.isBusy) return;
+                if (item._isBusy) return;
 
                 const controller = new AbortController();
                 if (getOwner()) {
@@ -74,7 +79,7 @@ export default function useSwr<D, E>(
 
                 ctx.store.update(k, {
                     err: undefined,
-                    isBusy: true,
+                    _isBusy: true,
                     isLoading: true,
                 });
 
@@ -92,14 +97,14 @@ export default function useSwr<D, E>(
                 }
 
                 batch(() => {
-                    ctx.store.update(k, { isBusy: false, isLoading: false });
+                    ctx.store.update(k, { _isBusy: false, isLoading: false });
 
                     if (err) {
                         ctx.store.update(k, { err });
                     } else {
                         ctx.store.update(k, {
                             data: res,
-                            isBusy: false,
+                            _isBusy: false,
                             isLoading: false,
                         });
                     }
