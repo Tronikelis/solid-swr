@@ -11,17 +11,18 @@ import {
 } from "solid-js";
 import { unwrap } from "solid-js/store";
 
-import uFn from "~/utils/uFn";
-
 import Store, { StoreItem } from "./store";
+import { tryCatch, uFn } from "./utils";
 
-type FetcherOpts = {
+export type FetcherOpts = {
     signal: AbortSignal;
 };
 
-type SwrOpts = {
+export type SwrOpts<D = unknown, E = unknown> = {
     store: Store;
     fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
+    onSuccess: (res: D) => void;
+    onError: (err: E) => void;
 };
 
 export const useSwrContext = () => {
@@ -31,30 +32,22 @@ export const useSwrContext = () => {
 const Context = createContext<SwrOpts>({
     store: new Store(),
     fetcher: k => Promise.resolve(k),
+    onSuccess: () => {},
+    onError: () => {},
 });
 
 export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Element }) => {
-    const prev = useSwrContext();
-
     return (
         // eslint-disable-next-line solid/reactivity
-        <Context.Provider value={mergeProps(prev, props.value)}>
+        <Context.Provider value={mergeProps(useSwrContext(), props.value)}>
             {props.children}
         </Context.Provider>
     );
 };
 
-async function tryCatch<R, E>(fn: () => Promise<R>): Promise<[undefined, R] | [E]> {
-    try {
-        return [undefined, await fn()];
-    } catch (err: unknown) {
-        return [err as E];
-    }
-}
-
-export default function useSWR<D, E>(
+export default function useSwr<D, E>(
     key: Accessor<string | undefined>,
-    local?: Partial<SwrOpts>
+    local?: Partial<SwrOpts<D, E>>
 ) {
     const ctx = mergeProps(useSwrContext(), local);
 
@@ -64,28 +57,12 @@ export default function useSWR<D, E>(
         return fn(k);
     };
 
-    const lookup = (): StoreItem<D, E> | undefined =>
-        // eslint-disable-next-line solid/reactivity
-        runWithKey(k => {
-            const item = ctx.store.lookup<D, E>(k);
-            if (item) return item;
-
-            ctx.store.insert<D, E>(k, {
-                err: undefined,
-                data: undefined,
-                isBusy: false,
-                isLoading: false,
-            });
-
-            return ctx.store.lookup<D, E>(k);
-        });
-
     // eslint-disable-next-line solid/reactivity
     const revalidate = uFn(
         async (): Promise<D | undefined> =>
             // eslint-disable-next-line solid/reactivity
             runWithKey(async k => {
-                const item = lookup();
+                const item = ctx.store.lookup<D, E>(k);
                 if (!item || item.isBusy) return;
 
                 const controller = new AbortController();
@@ -133,7 +110,8 @@ export default function useSWR<D, E>(
     const mutate = uFn((update: (prev: D | undefined) => D | undefined) =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            const current = unwrap(lookup());
+            const item = ctx.store.lookupUpsert<D, E>(k);
+            const current = unwrap(item);
             const latest = update(current?.data);
             if (!latest) return;
 
@@ -144,7 +122,7 @@ export default function useSWR<D, E>(
     uFn(() => {
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            const item = lookup();
+            const item = ctx.store.lookupUpsert<D, E>(k);
             if (!item) return;
             // set defaults here
             ctx.store.update(k, { isLoading: true });
@@ -156,6 +134,6 @@ export default function useSWR<D, E>(
     return {
         mutate,
         revalidate,
-        v: lookup,
+        v: () => ctx.store.lookupUpsert(key()),
     };
 }

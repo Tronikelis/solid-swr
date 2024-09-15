@@ -1,10 +1,13 @@
-import { Accessor, For, createEffect, createSignal } from "solid-js";
+import { Accessor, createEffect, createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
-
-import useSWR, { SwrProvider } from "../../core/swr";
+import { createHooks } from "src/cache";
+import LRU from "src/lru";
+import Store from "src/store";
+import { SwrProvider } from "src/swr";
+import useSwrFull, { SwrFullProvider } from "src/swr-full";
 
 function SmolFetcher(props: { key: Accessor<string | undefined> }) {
-    const { v, mutate, revalidate } = useSWR(() => props.key());
+    const { v, mutate, revalidate } = useSwrFull(() => props.key());
 
     return (
         <pre>
@@ -27,12 +30,19 @@ function App() {
     return (
         <SwrProvider
             value={{
+                store: new Store(createHooks(new LRU())),
                 fetcher: async key => {
                     return await fetch(key).then(r => r.json());
                 },
             }}
         >
-            <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>
+            <SwrFullProvider
+                value={{
+                    keepPreviousData: false,
+                }}
+            >
+                <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>
+            </SwrFullProvider>
         </SwrProvider>
     );
 }
