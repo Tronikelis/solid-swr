@@ -31,7 +31,7 @@ function App() {
     return (
         <SwrProvider
             value={{
-                store: new Store(createCache(new LRU(7))),
+                store: new Store(createCache(new LRU(3))),
                 fetcher: async key => {
                     return await fetch(key).then(r => r.json());
                 },
@@ -39,7 +39,7 @@ function App() {
         >
             <SwrFullProvider
                 value={{
-                    keepPreviousData: false,
+                    keepPreviousData: true,
                 }}
             >
                 <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>

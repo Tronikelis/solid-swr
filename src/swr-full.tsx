@@ -74,18 +74,18 @@ export default function useSwrFull<D, E>(
     });
 
     const v = createMemo((): StoreItem<D, E> => {
-        let k: string | undefined;
-        if (ctx.keepPreviousData) {
-            k = lazyKey();
-        } else {
-            k = key();
-        }
+        const item = ctx.store.lookupUpsert<D, E>(key());
+        if (!ctx.keepPreviousData) return item;
 
-        const item = ctx.store.lookupUpsert<D, E>(k);
+        const lazy = ctx.store.lookupUpsert<D, E>(lazyKey());
 
         // untrack here to not track all item properties when v is accessed
-        // eslint-disable-next-line solid/reactivity
-        return untrack(() => mergeProps(item, { data: item.data ?? (ctx.fallback[k!] as D) }));
+        return untrack(() => {
+            const fallback = key() ? ctx.fallback[key()!] : undefined;
+            const data = item.data || lazy.data || fallback;
+            // eslint-disable-next-line solid/reactivity
+            return mergeProps(item, { data }) as StoreItem<D, E>;
+        });
     });
 
     return {
