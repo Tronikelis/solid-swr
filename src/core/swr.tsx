@@ -1,5 +1,6 @@
 import {
     Accessor,
+    batch,
     createContext,
     createEffect,
     JSX,
@@ -42,6 +43,14 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
         </Context.Provider>
     );
 };
+
+async function tryCatch<R, E>(fn: () => Promise<R>): Promise<[undefined, R] | [E]> {
+    try {
+        return [undefined, await fn()];
+    } catch (err: unknown) {
+        return [err as E];
+    }
+}
 
 export default function useSWR<D, E>(
     key: Accessor<string | undefined>,
@@ -90,13 +99,31 @@ export default function useSWR<D, E>(
                     isLoading: true,
                 });
 
-                // todo: err handling
-                const res = await ctx.fetcher(k, { signal: controller.signal });
+                const [err, res] = await tryCatch<D, E>(
+                    // eslint-disable-next-line solid/reactivity
+                    () => ctx.fetcher(k, { signal: controller.signal }) as Promise<D>
+                );
 
-                ctx.store.update(k, {
-                    data: res,
-                    isBusy: false,
-                    isLoading: false,
+                if (
+                    controller.signal.aborted &&
+                    err instanceof DOMException &&
+                    err.name === "AbortError"
+                ) {
+                    return;
+                }
+
+                batch(() => {
+                    ctx.store.update(k, { isBusy: false, isLoading: false });
+
+                    if (err) {
+                        ctx.store.update(k, { err });
+                    } else {
+                        ctx.store.update(k, {
+                            data: res,
+                            isBusy: false,
+                            isLoading: false,
+                        });
+                    }
                 });
 
                 return res as D;

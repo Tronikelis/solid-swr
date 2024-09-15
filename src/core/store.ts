@@ -3,14 +3,16 @@ import { createStore, reconcile, SetStoreFunction } from "solid-js/store";
 
 type StoreHooks = {
     /* references are passed */
-    onLookup: (key: string, item: StoreItem) => StoreItem | undefined;
+    onLookup: ((key: string, item: StoreItem) => StoreItem | undefined)[];
+
     /* references are passed */
-    onUpdate: (
+    onUpdate: ((
         key: string,
         item: StoreItem,
         wit: Partial<StoreItem>
-    ) => Partial<StoreItem> | undefined;
-    onInsert: (key: string, item: StoreItem) => StoreItem | undefined;
+    ) => Partial<StoreItem> | undefined)[];
+
+    onInsert: ((key: string, item: StoreItem) => StoreItem | undefined)[];
 };
 
 export type StoreItem<D = unknown, E = unknown> = {
@@ -26,9 +28,9 @@ type SolidStore = {
 };
 
 const defaultHooks: StoreHooks = {
-    onUpdate: (_, __, wit) => wit,
-    onLookup: (_, item) => item,
-    onInsert: (_, item) => item,
+    onUpdate: [],
+    onLookup: [],
+    onInsert: [],
 };
 
 export default class Store {
@@ -55,42 +57,54 @@ export default class Store {
     }
 
     lookup<D, E>(key: string): StoreItem<D, E> | undefined {
-        let item = this.store[key] as StoreItem<D, E>;
-        item = this.hooks.onLookup(key, item) as StoreItem<D, E>;
+        let item = this.store[key] as StoreItem<D, E> | undefined;
 
-        if (!item) {
-            this.remove(key);
-            return;
+        for (let i = 0; i < this.hooks.onLookup.length; i++) {
+            if (!item) {
+                this.remove(key);
+                return;
+            }
+
+            item = this.hooks.onLookup[i]!(key, item) as StoreItem<D, E> | undefined;
         }
 
         return item;
     }
 
     insert<D, E>(key: string, item: StoreItem<D, E>): void {
-        item = this.hooks.onInsert(key, item) as StoreItem<D, E>;
-        if (!item) {
-            this.remove(key);
-            return;
+        let maybeItem = item as StoreItem<D, E> | undefined;
+
+        for (let i = 0; i < this.hooks.onInsert.length; i++) {
+            if (!maybeItem) {
+                this.remove(key);
+                return;
+            }
+
+            maybeItem = this.hooks.onInsert[i]!(key, maybeItem) as StoreItem<D, E> | undefined;
         }
 
-        this.setStore(key, item);
+        this.setStore(key, maybeItem);
     }
 
     update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
         const item = this.lookup(key);
         if (!item) return;
 
-        const wit = this.hooks.onUpdate(key, item, partial);
-        if (wit) {
-            const data = wit.data;
-            delete wit.data;
+        let wit: Partial<StoreItem> | undefined = partial;
 
-            batch(() => {
-                this.setStore(key, wit);
-                if (data) {
-                    this.setStore(key, "data", reconcile(data));
-                }
-            });
+        for (let i = 0; i < this.hooks.onUpdate.length; i++) {
+            if (!item || !wit) return;
+            wit = this.hooks.onUpdate[i]!(key, item, wit);
         }
+
+        const data = wit!.data;
+        delete wit!.data;
+
+        batch(() => {
+            this.setStore(key, wit);
+            if (data) {
+                this.setStore(key, "data", reconcile(data));
+            }
+        });
     }
 }

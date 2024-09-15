@@ -9,7 +9,7 @@ function SmolFetcher(props: { key: Accessor<string | undefined> }) {
     return (
         <pre>
             isLoading: {v()?.isLoading ? "true" : "false"}
-            {v()?.data && v()!.data.id}
+            {v()?.data && JSON.stringify(v()!.data)}
             <div>click</div>
         </pre>
     );
