@@ -80,6 +80,11 @@ export default class Store {
         this.setStore(key, item);
     }
 
+    updateDataProduce<D>(key: string, producer: (data: D) => void): void {
+        untrack(() => this.lookupUpsert(key));
+        this.setStore(key, "data", produce(producer));
+    }
+
     update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
         const data = partial.data;
         delete partial.data;

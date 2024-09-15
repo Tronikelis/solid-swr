@@ -8,12 +8,10 @@ import {
     mergeProps,
     on,
     onCleanup,
-    untrack,
     useContext,
 } from "solid-js";
-import { unwrap } from "solid-js/store";
 
-import Store, { StoreItem } from "./store";
+import Store from "./store";
 import { tryCatch, uFn } from "./utils";
 
 export type FetcherOpts = {
@@ -111,15 +109,10 @@ export default function useSwr<D, E>(
             })
     );
 
-    const mutate = uFn((update: (prev: D | undefined) => D | undefined) =>
+    const mutate = uFn((producer: (data: D) => void): void =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            const item = ctx.store.lookupUpsert<D, E>(k);
-            const current = unwrap(item);
-            const latest = update(current?.data);
-            if (!latest) return;
-
-            ctx.store.update(k, { ...current, data: latest });
+            ctx.store.updateDataProduce<D>(k, producer);
         })
     );
 
@@ -136,8 +129,11 @@ export default function useSwr<D, E>(
     createEffect(on(key, revalidate));
 
     return {
+        /** update data with immer-like producer fn */
         mutate,
+        /** calls fetcher, updates store */
         revalidate,
+        /** index into store */
         v: () => ctx.store.lookupUpsert(key()),
     };
 }

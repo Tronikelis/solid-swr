@@ -9,12 +9,28 @@ import useSwrFull, { SwrFullProvider } from "src/swr-full";
 function SmolFetcher(props: { key: Accessor<string | undefined> }) {
     const { v, mutate, revalidate } = useSwrFull(() => props.key());
 
+    createEffect(() => {
+        console.log("err:", v().err);
+    });
+
+    createEffect(() => {
+        console.log("data:", v().data?.id);
+    });
+
     return (
         <pre>
             isLoading: {v()?.isLoading ? "true" : "false"}
             {"\n"}
             {v().data ? JSON.stringify(v().data) : "{}"}
-            <div onClick={revalidate}>click</div>
+            <div
+                onClick={() => {
+                    mutate(prev => {
+                        prev.id = 222;
+                    });
+                }}
+            >
+                click
+            </div>
         </pre>
     );
 }
@@ -24,9 +40,9 @@ function App() {
 
     const key = () => `https://jsonplaceholder.typicode.com/todos/${counter()}`;
 
-    setInterval(() => {
-        setCounter(x => (x + 1) % 10);
-    }, 1e3);
+    // setInterval(() => {
+    //     setCounter(x => (x + 1) % 10);
+    // }, 1e3);
 
     return (
         <SwrProvider
