@@ -3,10 +3,12 @@ import {
     batch,
     createContext,
     createEffect,
+    getOwner,
     JSX,
     mergeProps,
     on,
     onCleanup,
+    untrack,
     useContext,
 } from "solid-js";
 import { unwrap } from "solid-js/store";
@@ -62,13 +64,15 @@ export default function useSwr<D, E>(
         async (): Promise<D | undefined> =>
             // eslint-disable-next-line solid/reactivity
             runWithKey(async k => {
-                const item = ctx.store.lookup<D, E>(k);
-                if (!item || item.isBusy) return;
+                const item = ctx.store.lookupUpsert<D, E>(k);
+                if (item.isBusy) return;
 
                 const controller = new AbortController();
-                onCleanup(() => {
-                    controller.abort();
-                });
+                if (getOwner()) {
+                    onCleanup(() => {
+                        controller.abort();
+                    });
+                }
 
                 ctx.store.update(k, {
                     err: undefined,

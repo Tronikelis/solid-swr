@@ -1,12 +1,13 @@
 import { batch, untrack } from "solid-js";
-import { createStore, reconcile, SetStoreFunction } from "solid-js/store";
+import { createStore, produce, reconcile, SetStoreFunction } from "solid-js/store";
 
-export type StoreHooks = {
-    /** references are passed to concrete solid store property */
-    onLookup: (key: string, item: StoreItem) => StoreItem | undefined;
-    /** references are passed to concrete solid store property */
-    onUpdate: (key: string, wit: Partial<StoreItem>) => Partial<StoreItem> | undefined;
-    onInsert: (key: string, item: StoreItem) => StoreItem | undefined;
+import { noop } from "./utils";
+
+export type OnTrimFn = (key: string) => void;
+
+export type StoreCache = {
+    insert: (key: string, onTrim: OnTrimFn) => void;
+    lookup: (key: string, onTrim: OnTrimFn) => boolean;
 };
 
 export type StoreItem<D = unknown, E = unknown> = {
@@ -15,53 +16,38 @@ export type StoreItem<D = unknown, E = unknown> = {
 
     isLoading: boolean;
     isBusy: boolean;
-    mounted: number;
 };
 
 type SolidStore = {
     [key: string]: StoreItem | undefined;
 };
 
-const defaultHooks: StoreHooks = {
-    onUpdate: (_, item) => item,
-    onLookup: (_, item) => item,
-    onInsert: (_, item) => item,
+const defaultCache: StoreCache = {
+    insert: noop,
+    lookup: () => true,
 };
 
 export default class Store {
-    private hooks: StoreHooks;
+    private cache: StoreCache;
 
     private store: SolidStore;
     private setStore: SetStoreFunction<SolidStore>;
 
     static defaultItem: StoreItem = {
-        mounted: 0,
         isLoading: false,
         isBusy: false,
         err: undefined,
         data: undefined,
     };
 
-    constructor(hooks: Partial<StoreHooks> = {}) {
-        this.hooks = { ...defaultHooks, ...hooks };
+    constructor(cache?: StoreCache) {
+        this.cache = defaultCache;
+        if (cache) this.cache = cache;
 
         const [store, setStore] = createStore({});
         // eslint-disable-next-line solid/reactivity
         this.store = store;
         this.setStore = setStore;
-    }
-
-    // private remove(key: string): void {
-    //     this.setStore(key, undefined);
-    // }
-
-    private removeData(key: string): void {
-        if (untrack(() => !this.store[key])) return;
-
-        batch(() => {
-            this.setStore(key, "data", undefined);
-            this.setStore(key, "err", undefined);
-        });
     }
 
     keys(): string[] {
@@ -76,45 +62,36 @@ export default class Store {
         if (already) return already;
 
         this.insert(key, { ...def });
-        return def;
+
+        return this.lookup<D, E>(key) || def;
     }
 
-    lookup<D, E>(key: string): StoreItem<D, E> | undefined {
-        let item = this.store[key] as StoreItem<D, E>;
-        item = this.hooks.onLookup(key, item) as StoreItem<D, E>;
+    private lookup<D, E>(key: string): StoreItem<D, E> | undefined {
+        this.cache.lookup(key, this.destroy.bind(this));
+        return this.store[key] as StoreItem<D, E>;
+    }
 
-        if (!item) {
-            this.removeData(key);
-            return;
-        }
-
-        return item;
+    private destroy(key: string) {
+        this.setStore(key, undefined);
     }
 
     insert<D, E>(key: string, item: StoreItem<D, E>): void {
-        item = this.hooks.onInsert(key, item) as StoreItem<D, E>;
-        if (!item) {
-            this.removeData(key);
-            return;
-        }
-
+        this.cache.insert(key, this.destroy.bind(this));
         this.setStore(key, item);
     }
 
     update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
-        const wit = this.hooks.onUpdate(key, partial);
-        if (wit) {
-            const data = wit.data;
-            delete wit.data;
+        const data = partial.data;
+        delete partial.data;
 
-            batch(() => {
-                this.lookupUpsert(key);
+        batch(() => {
+            // make sure to create the item before updating it
+            untrack(() => this.lookupUpsert(key));
 
-                this.setStore(key, wit);
-                if (data) {
-                    this.setStore(key, "data", reconcile(data));
-                }
-            });
-        }
+            this.setStore(key, partial);
+            if (data) {
+                this.setStore(key, "data", reconcile(data));
+            }
+        });
     }
 }

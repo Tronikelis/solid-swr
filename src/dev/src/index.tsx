@@ -1,6 +1,6 @@
 import { Accessor, createEffect, createSignal, For } from "solid-js";
 import { render } from "solid-js/web";
-import { createHooks } from "src/cache";
+import { createCache } from "src/cache";
 import LRU from "src/lru";
 import Store from "src/store";
 import { SwrProvider } from "src/swr";
@@ -12,8 +12,9 @@ function SmolFetcher(props: { key: Accessor<string | undefined> }) {
     return (
         <pre>
             isLoading: {v()?.isLoading ? "true" : "false"}
-            {v()?.data && JSON.stringify(v()!.data)}
-            <div>click</div>
+            {"\n"}
+            {v().data ? JSON.stringify(v().data) : "{}"}
+            <div onClick={revalidate}>click</div>
         </pre>
     );
 }
@@ -24,13 +25,13 @@ function App() {
     const key = () => `https://jsonplaceholder.typicode.com/todos/${counter()}`;
 
     setInterval(() => {
-        setCounter(x => x + 1);
+        setCounter(x => (x + 1) % 10);
     }, 1e3);
 
     return (
         <SwrProvider
             value={{
-                store: new Store(createHooks(new LRU())),
+                store: new Store(createCache(new LRU(7))),
                 fetcher: async key => {
                     return await fetch(key).then(r => r.json());
                 },
