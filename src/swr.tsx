@@ -12,7 +12,7 @@ import {
 } from "solid-js";
 
 import Store from "./store";
-import { tryCatch, uFn } from "./utils";
+import { noop, tryCatch, uFn } from "./utils";
 
 export type FetcherOpts = {
     signal: AbortSignal;
@@ -21,9 +21,22 @@ export type FetcherOpts = {
 export type SwrOpts<D = unknown, E = unknown> = {
     store: Store;
     fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
-    onSuccess: (res: D) => void;
-    onError: (err: E) => void;
+    /** gets direct store references */
+    onSuccess: (key: string, res: D) => void;
+    /** gets direct store references */
+    onError: (key: string, err: E) => void;
+
+    /** gets direct references to response (don't mutate) */
+    onSuccessDeduped: (key: string, res: D) => void;
+    /** gets direct reference to response (don't mutate) */
+    onErrorDeduped: (key: string, err: E) => void;
 };
+
+/**
+ * data will be reconcile'd or produce'd,
+ * if `undefined` is passed, data is deleted
+ * */
+export type Mutator<D> = D | ((draft: D) => void) | undefined;
 
 export const useSwrContext = () => {
     return useContext(Context);
@@ -32,8 +45,10 @@ export const useSwrContext = () => {
 const Context = createContext<SwrOpts>({
     store: new Store(),
     fetcher: k => Promise.resolve(k),
-    onSuccess: () => {},
-    onError: () => {},
+    onSuccess: noop,
+    onError: noop,
+    onSuccessDeduped: noop,
+    onErrorDeduped: noop,
 });
 
 export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Element }) => {
@@ -47,7 +62,7 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
 
 export function useSwrLookup<D, E>(key: Accessor<string | undefined>) {
     const ctx = useSwrContext();
-    return () => ctx.store.lookupUpsert<D, E>(key());
+    return () => ctx.store.lookupOrDef<D, E>(key());
 }
 
 export default function useSwr<D, E>(
@@ -67,12 +82,13 @@ export default function useSwr<D, E>(
         async (): Promise<D | undefined> =>
             // eslint-disable-next-line solid/reactivity
             runWithKey(async k => {
-                const item = ctx.store.lookupUpsert<D, E>(k);
+                const item = ctx.store.lookupOrDef<D, E>(k);
                 if (item._isBusy) return;
 
                 const controller = new AbortController();
                 if (getOwner()) {
                     onCleanup(() => {
+                        ctx.store.update(k, { _isBusy: false });
                         controller.abort();
                     });
                 }
@@ -99,14 +115,19 @@ export default function useSwr<D, E>(
                 batch(() => {
                     ctx.store.update(k, { _isBusy: false, isLoading: false });
 
+                    const item = ctx.store.lookupOrDef(k);
+
                     if (err) {
-                        ctx.store.update(k, { err });
+                        ctx.store.update(k, { err, _onError: item._onError + 1 });
+                        ctx.onErrorDeduped(k, err);
                     } else {
                         ctx.store.update(k, {
                             data: res,
-                            _isBusy: false,
                             isLoading: false,
+                            _isBusy: false,
+                            _onSuccess: item._onSuccess + 1,
                         });
+                        ctx.onSuccessDeduped(k, res as D);
                     }
                 });
 
@@ -114,17 +135,21 @@ export default function useSwr<D, E>(
             })
     );
 
-    const mutate = uFn((producer: (data: D) => void): void =>
+    const mutate = uFn((mutator: Mutator<D>): void =>
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            ctx.store.updateDataProduce<D>(k, producer);
+            if (mutator instanceof Function) {
+                ctx.store.updateDataProduce(k, mutator);
+            } else {
+                ctx.store.update<D, E>(k, { data: mutator });
+            }
         })
     );
 
     uFn(() => {
         // eslint-disable-next-line solid/reactivity
         runWithKey(k => {
-            const item = ctx.store.lookupUpsert<D, E>(k);
+            const item = ctx.store.lookupOrDef<D, E>(k);
             if (!item) return;
             // set defaults here
             ctx.store.update(k, { isLoading: true });
@@ -133,12 +158,34 @@ export default function useSwr<D, E>(
 
     createEffect(on(key, revalidate));
 
+    createEffect(
+        on(
+            () => ctx.store.lookupOrDef(key())._onSuccess,
+            count => {
+                if (count === 0) return;
+                // eslint-disable-next-line solid/reactivity
+                runWithKey(k => {
+                    ctx.onSuccess(k, ctx.store.lookupOrDef(k).data as D);
+                });
+            }
+        )
+    );
+    createEffect(
+        on(
+            () => ctx.store.lookupOrDef(key())._onError,
+            count => {
+                if (count === 0) return;
+                // eslint-disable-next-line solid/reactivity
+                runWithKey(k => {
+                    ctx.onError(k, ctx.store.lookupOrDef(k).err as E);
+                });
+            }
+        )
+    );
+
     return {
-        /** update data with immer-like producer fn */
         mutate,
-        /** calls fetcher, updates store */
         revalidate,
-        /** index into store */
-        v: () => ctx.store.lookupUpsert(key()),
+        v: () => ctx.store.lookupOrDef(key()),
     };
 }

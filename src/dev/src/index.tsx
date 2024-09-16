@@ -1,21 +1,39 @@
 import { Accessor, createEffect, createSignal, For } from "solid-js";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 import { render } from "solid-js/web";
 import { createCache } from "src/cache";
 import LRU from "src/lru";
 import Store from "src/store";
-import { SwrProvider } from "src/swr";
-import useSwrFull, { SwrFullProvider } from "src/swr-full";
+import useSwr, { SwrProvider } from "src/swr";
+import useSwrFull, { SwrFullProvider, useMatchMutate, useSwrInfinite } from "src/swr-full";
+
+function Infinite() {
+    const mutate = useMatchMutate();
+
+    const { setIndex, state } = useSwrInfinite<{ id: number }, unknown>(
+        index => `https://jsonplaceholder.typicode.com/todos/${index + 1}`
+    );
+
+    return (
+        <div>
+            {/* <For each={data()}>{item => <p>{item?.id}</p>}</For> */}
+            <For each={state.data}>{item => <p>{item?.id}</p>}</For>
+
+            <p
+                onClick={() => {
+                    mutate(_ => true, undefined);
+                }}
+            >
+                test
+            </p>
+            <p>isLoading: {state.isLoading ? "y" : "n"}</p>
+            <button onClick={() => setIndex(x => x + 1)}>more</button>
+        </div>
+    );
+}
 
 function SmolFetcher(props: { key: Accessor<string | undefined> }) {
     const { v, mutate, revalidate } = useSwrFull(() => props.key());
-
-    createEffect(() => {
-        console.log("err:", v().err);
-    });
-
-    createEffect(() => {
-        console.log("data:", v().data?.id);
-    });
 
     return (
         <pre>
@@ -40,9 +58,9 @@ function App() {
 
     const key = () => `https://jsonplaceholder.typicode.com/todos/${counter()}`;
 
-    setInterval(() => {
-        setCounter(x => (x + 1) % 10);
-    }, 1e3);
+    // setInterval(() => {
+    //     setCounter(x => (x + 1) % 10);
+    // }, 1e3);
 
     return (
         <SwrProvider
@@ -58,7 +76,8 @@ function App() {
                     keepPreviousData: false,
                 }}
             >
-                <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>
+                <Infinite />
+                <For each={new Array(10).fill(0)}>{() => <SmolFetcher key={key} />}</For>
             </SwrFullProvider>
         </SwrProvider>
     );

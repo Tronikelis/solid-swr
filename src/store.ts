@@ -13,10 +13,12 @@ export type StoreCache = {
 export type StoreItem<D = unknown, E = unknown> = {
     data: D | undefined;
     err: E | undefined;
-
     isLoading: boolean;
+
     /** touch this only if you know what you're doing, this controls deduplication */
     _isBusy: boolean;
+    _onSuccess: number;
+    _onError: number;
 };
 
 type SolidStore = {
@@ -38,6 +40,8 @@ export default class Store {
 
     static defaultItem: StoreItem = {
         _isBusy: false,
+        _onSuccess: 0,
+        _onError: 0,
         isLoading: false,
         err: undefined,
         data: undefined,
@@ -59,16 +63,36 @@ export default class Store {
         return untrack(() => Object.keys(this.store));
     }
 
-    lookupUpsert<D, E>(key?: string): StoreItem<D, E> {
+    updateDataProduce<D>(key: string, producer: (data: D) => void): void {
+        batch(() => {
+            untrack(() => this.makeExist(key));
+            this.setStore(key, "data", produce(producer));
+        });
+    }
+
+    update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
+        const setData = "data" in partial;
+
+        const data = partial.data;
+        // let's give our thanks to the GC that will let us hold on to data above
+        delete partial.data;
+
+        batch(() => {
+            untrack(() => this.makeExist(key));
+
+            this.setStore(key, partial);
+            if (setData) {
+                this.setStore(key, "data", reconcile(data));
+            }
+        });
+    }
+
+    lookupOrDef<D, E>(key?: string): StoreItem<D, E> {
         const def = Store.defaultItem as StoreItem<D, E>;
         if (!key) return def;
 
         const already = this.lookup<D, E>(key);
-        if (already) return already;
-
-        this.insert(key, { ...def });
-
-        return this.lookup<D, E>(key) || def;
+        return already || def;
     }
 
     private lookup<D, E>(key: string): StoreItem<D, E> | undefined {
@@ -80,28 +104,10 @@ export default class Store {
         this.setStore(key, undefined);
     }
 
-    insert<D, E>(key: string, item: StoreItem<D, E>): void {
+    private makeExist(key: string): void {
+        if (this.lookup(key)) return;
         this.cache.insert(key, this.boundDestroy);
-        this.setStore(key, item);
-    }
-
-    updateDataProduce<D>(key: string, producer: (data: D) => void): void {
-        untrack(() => this.lookupUpsert(key));
-        this.setStore(key, "data", produce(producer));
-    }
-
-    update<D, E>(key: string, partial: Partial<StoreItem<D, E>>): void {
-        const data = partial.data;
-        delete partial.data;
-
-        batch(() => {
-            // make sure to create the item before updating it
-            untrack(() => this.lookupUpsert(key));
-
-            this.setStore(key, partial);
-            if (data) {
-                this.setStore(key, "data", reconcile(data));
-            }
-        });
+        // have to copy here
+        this.setStore(key, { ...Store.defaultItem });
     }
 }

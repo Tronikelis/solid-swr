@@ -36,14 +36,14 @@ export default class LRU<K, V> {
         return node.value;
     }
 
-    set(key: K, value: V, onRemove?: OnTrim<K>): void {
+    set(key: K, value: V, onTrim?: OnTrim<K>): void {
         let node = this.lookup.get(key);
         if (!node) {
             node = { value };
             this.length++;
 
             this.prepend(node);
-            this.trimCache(onRemove);
+            this.trimCache(onTrim);
 
             this.lookup.set(key, node);
             this.reverseLookup.set(node, key);
@@ -58,7 +58,7 @@ export default class LRU<K, V> {
         return Array.from(this.lookup.keys());
     }
 
-    private trimCache(onRemove?: OnTrim<K>): void {
+    private trimCache(onTrim?: OnTrim<K>): void {
         if (this.length <= this.capacity) return;
 
         const tail = this.tail as Node<V>;
@@ -68,7 +68,7 @@ export default class LRU<K, V> {
         this.lookup.delete(key);
         this.reverseLookup.delete(tail);
 
-        onRemove?.(key);
+        onTrim?.(key);
     }
 
     private detach(node: Node<V>): void {
