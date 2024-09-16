@@ -17,6 +17,7 @@ import { createStore } from "solid-js/store";
 import { StoreItem } from "./store";
 import useSwr, { Mutator, SwrOpts, useSwrContext } from "./swr";
 import { uFn, useWinEvent } from "./utils";
+import { setDefaultResultOrder } from "dns";
 
 type Fallback = {
     [key: string]: unknown;
@@ -54,26 +55,24 @@ export const SwrFullProvider = (props: {
 
 type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
 
-type InfiniteState<D, E> = {
-    data: (D | undefined)[];
-    err: E | undefined;
-    isLoading: boolean;
-};
-
 type MatchMutateFilter = (key: string) => boolean;
 
 export function useMatchMutate() {
     const ctx = useSwrContext();
 
+    const update = <D,>(key: string, mutator: Mutator<D>) => {
+        if (mutator instanceof Function) {
+            ctx.store.updateDataProduce(key, mutator);
+        } else {
+            ctx.store.update(key, { data: mutator });
+        }
+    };
+
     const mutate = <D,>(filter: MatchMutateFilter, payload: Mutator<D>) => {
         batch(() => {
             const keys = ctx.store.keys().filter(filter);
             for (const key of keys) {
-                if (payload instanceof Function) {
-                    ctx.store.updateDataProduce(key, payload);
-                } else {
-                    ctx.store.update(key, { data: payload });
-                }
+                update(key, payload);
             }
         });
     };
@@ -82,27 +81,37 @@ export function useMatchMutate() {
 }
 
 export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<D, E>>) {
-    const [state, setState] = createStore<InfiniteState<D, E>>({
-        data: [],
-        err: undefined,
-        isLoading: false,
-    });
+    const [data, setData] = createSignal<Accessor<StoreItem<D, E>>[]>([]);
+    const [err, setErr] = createSignal<E | undefined>();
+    const [isLoading, setIsLoading] = createSignal(false);
 
     const [index, setIndex] = createSignal(0);
 
+    const ctx = mergeProps(useSwrContext(), local);
+
     createEffect(
-        on(index, staticIndex => {
-            const key = getKey(staticIndex, state.data?.at(-1));
+        on(index, index => {
+            const key = getKey(index, data().at(-1)?.().data);
             if (!key) return;
 
-            const core = useSwr<D, E>(() => key, {
-                ...local,
-                onSuccess: (_, res) => setState("data", staticIndex, res),
-                onError: (_, err) => setState("err", err),
-            });
+            setIsLoading(true);
+            setErr(undefined);
 
-            createEffect(() => {
-                setState("isLoading", core.v().isLoading);
+            useSwr<D, E>(() => key, {
+                ...local,
+                onSuccess: () => {
+                    setIsLoading(false);
+                    setData(prev => {
+                        prev = [...prev];
+                        // eslint-disable-next-line solid/reactivity
+                        prev[index] = () => ctx.store.lookupOrDef<D, E>(key);
+                        return prev;
+                    });
+                },
+                onError: (_, err) => {
+                    setIsLoading(false);
+                    setErr(() => err);
+                },
             });
         })
     );
@@ -110,7 +119,9 @@ export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<
     return {
         index,
         setIndex,
-        state,
+        isLoading,
+        data,
+        err,
     };
 }
 

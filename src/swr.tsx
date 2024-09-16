@@ -20,6 +20,7 @@ export type FetcherOpts = {
 
 export type SwrOpts<D = unknown, E = unknown> = {
     store: Store;
+
     fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
     /** gets direct store references */
     onSuccess: (key: string, res: D) => void;
