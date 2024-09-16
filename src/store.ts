@@ -34,6 +34,8 @@ export default class Store {
     private store: SolidStore;
     private setStore: SetStoreFunction<SolidStore>;
 
+    private boundDestroy: (key: string) => void;
+
     static defaultItem: StoreItem = {
         _isBusy: false,
         isLoading: false,
@@ -42,6 +44,8 @@ export default class Store {
     };
 
     constructor(cache?: StoreCache) {
+        this.boundDestroy = this.destroy.bind(this);
+
         this.cache = defaultCache;
         if (cache) this.cache = cache;
 
@@ -68,7 +72,7 @@ export default class Store {
     }
 
     private lookup<D, E>(key: string): StoreItem<D, E> | undefined {
-        this.cache.lookup(key, this.destroy.bind(this));
+        this.cache.lookup(key, this.boundDestroy);
         return this.store[key] as StoreItem<D, E>;
     }
 
@@ -77,7 +81,7 @@ export default class Store {
     }
 
     insert<D, E>(key: string, item: StoreItem<D, E>): void {
-        this.cache.insert(key, this.destroy.bind(this));
+        this.cache.insert(key, this.boundDestroy);
         this.setStore(key, item);
     }
 

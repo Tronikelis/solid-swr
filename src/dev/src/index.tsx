@@ -40,9 +40,9 @@ function App() {
 
     const key = () => `https://jsonplaceholder.typicode.com/todos/${counter()}`;
 
-    // setInterval(() => {
-    //     setCounter(x => (x + 1) % 10);
-    // }, 1e3);
+    setInterval(() => {
+        setCounter(x => (x + 1) % 10);
+    }, 1e3);
 
     return (
         <SwrProvider
@@ -55,7 +55,7 @@ function App() {
         >
             <SwrFullProvider
                 value={{
-                    keepPreviousData: true,
+                    keepPreviousData: false,
                 }}
             >
                 <For each={new Array(1000).fill(0)}>{() => <SmolFetcher key={key} />}</For>
