@@ -153,8 +153,8 @@ export default function useSwr<D, E>(
     const revalidator = createRevalidator(() => ctx.store);
     const mutator = createMutator(() => ctx.store);
 
-    const revalidate = () => runWithKey(revalidator);
-    const mutate = (payload: Mutator<D>) => runWithKey(k => mutator(k, payload));
+    const revalidate = () => runWithKey(k => revalidator<D, E>(k));
+    const mutate = (payload: Mutator<D>) => runWithKey(k => mutator<D, E>(k, payload));
 
     createEffect(on(key, k => k && revalidator(k)));
 
@@ -186,6 +186,6 @@ export default function useSwr<D, E>(
     return {
         mutate,
         revalidate,
-        v: () => ctx.store.lookupOrDef(key()),
+        v: () => ctx.store.lookupOrDef<D, E>(key()),
     };
 }
