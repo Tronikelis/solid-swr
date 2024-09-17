@@ -23,9 +23,9 @@ export type SwrOpts<D = unknown, E = unknown> = {
     store: Store;
 
     fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
-    /** gets direct store references */
+    /** gets direct store references (don't mutate) */
     onSuccess: (key: string, res: D) => void;
-    /** gets direct store references */
+    /** gets direct store references (don't mutate) */
     onError: (key: string, err: E) => void;
 
     /** gets direct references to response (don't mutate) */

@@ -23,7 +23,7 @@ import useSwr, {
 import { StoreItem } from "./store";
 import { tryCatch, uFn, useWinEvent } from "./utils";
 
-type Fallback = {
+export type Fallback = {
     [key: string]: unknown;
 };
 
@@ -57,7 +57,7 @@ export const SwrFullProvider = (props: {
     );
 };
 
-type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
+export type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
 
 export function useMatchMutate() {
     const ctx = useSwrContext();

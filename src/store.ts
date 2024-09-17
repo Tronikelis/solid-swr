@@ -25,7 +25,7 @@ export type StoreItem<D = unknown, E = unknown> = {
     _onError: number;
 };
 
-type SolidStore = {
+export type SolidStore = {
     [key: string]: StoreItem | undefined;
 };
 
