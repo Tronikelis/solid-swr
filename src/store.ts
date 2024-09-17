@@ -6,8 +6,10 @@ import { noop } from "./utils";
 export type OnTrimFn = (key: string) => void;
 
 export type StoreCache = {
+    /** item has been inserted into store */
     insert: (key: string, onTrim: OnTrimFn) => void;
-    lookup: (key: string, onTrim: OnTrimFn) => boolean;
+    /** item has been looked up */
+    lookup: (key: string, onTrim: OnTrimFn) => void;
 };
 
 export type StoreItem<D = unknown, E = unknown> = {

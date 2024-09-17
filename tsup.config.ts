@@ -2,9 +2,19 @@ import * as preset from "tsup-preset-solid";
 import { defineConfig } from "tsup";
 
 const presetOptions: preset.PresetOptions = {
-    entries: {
-        entry: "./src/lib/index.ts",
-    },
+    entries: [
+        {
+            entry: "./src/index.ts",
+        },
+        {
+            entry: "./src/extra.tsx",
+            name: "extra",
+        },
+        {
+            entry: "./src/cache.ts",
+            name: "cache",
+        },
+    ],
     drop_console: true,
 };
 

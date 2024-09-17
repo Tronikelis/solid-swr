@@ -6,7 +6,7 @@ type Node<V> = {
 
 type OnTrim<K> = (key: K) => void;
 
-export default class LRU<K, V> {
+export class LRU<K, V> {
     private lookup: Map<K, Node<V>>;
     private reverseLookup: Map<Node<V>, K>;
     private capacity: number;

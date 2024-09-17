@@ -1,7 +1,7 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "4.1.0",
+    "version": "5.0.0",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
@@ -41,9 +41,7 @@
     "peerDependencies": {
         "solid-js": "1.x.x"
     },
-    "dependencies": {
-        "dequal": "^2.0.3"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@solidjs/testing-library": "0.8.5",
         "@testing-library/jest-dom": "6.3.0",
