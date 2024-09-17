@@ -16,10 +16,18 @@
 - [Features](#features)
 - [Install](#install)
 - [Quick start](#quick-start)
-  - [Quick explanation](#quick-explanation)
+  - [Explanation](#explanation)
 - [Ideaology](#ideaology)
+  - [The "key"](#the-key)
   - [Solid store as a source of truth](#solid-store-as-a-source-of-truth)
   - [Behavior can be customized through public core APIs](#behavior-can-be-customized-through-public-core-apis)
+- [Core](#core)
+  - [Store](#store)
+    - [Cache](#cache)
+    - [Mutating](#mutating)
+  - [createRevalidator](#createrevalidator)
+  - [createMutator](#createmutator)
+  - [useSwr](#useswr)
 <!--toc:end-->
 
 # Introduction
@@ -52,14 +60,16 @@ pnpm i solid-swr
 # Quick start
 
 ```tsx
-import { useSwr } from "solid-swr"
+import { useSwr, SwrProvider, Store } from "solid-swr"
+import { LRU } from "solid-swr/cache"
 
 function App() {
     const { v, mutate, revalidate } = useSwr(() => "/api/user/2")
 
     const onClick = () => {
-        mutate({name: "user2"})
-        // revalidate()
+        mutate({ name: "user2" })
+        // if you need to revalidate
+        revalidate()
     }
 
     return (
@@ -69,9 +79,17 @@ function App() {
         </div>
     )
 }
+
+function Root(props) {
+    return (
+        <SwrProvider value={{ store: new Store(new LRU()) }}>
+            {props.children}
+        </SwrProvider>
+    )
+}
 ```
 
-## Quick explanation
+## Explanation
 
 Hook returns 3 values which you can destructure:
 
@@ -82,6 +100,17 @@ Hook returns 3 values which you can destructure:
 # Ideaology
 
 Here I want to share some context about the ideaology of this library and swr in general
+
+## The "key"
+
+The key is a `string` which is used as an ID into some server side state
+
+```ts
+const key = "api/user/id"
+useSwr(() => key)
+```
+
+The key is almost always used as a url to a backend resource
 
 ## Solid store as a source of truth
 
@@ -125,7 +154,109 @@ const mutator = createMutator(() => ctx.store);
 const revalidate = () => runWithKey(k => revalidator<D, E>(k));
 // mutate is exactly the same
 const mutate = (payload: Mutator<D>) => runWithKey(k => mutator<D, E>(k, payload));
-
 ```
+
 If you at any time need a revalidator, or a mutator, just use `createRevalidator` or `createMutator`,
 or create new abstractions with these 2, just like pretty much all hooks in this lib
+
+# Core
+
+This is the most important part of the library which contains all core utilities
+for you to manage server side state with swr
+
+## Store
+
+This is by far **THE** most important part of the library
+
+The store is a solid.js hashmap with the key `string` as the key
+
+```ts
+export type SolidStore = {
+    [key: string]: StoreItem | undefined;
+};
+```
+
+Each item in the store contains these properties:
+
+- `data`: a generic value
+- `err`: a generic value
+- `isLoading`: a boolean
+
+For more info I suggest you looking at the `src/store.ts` everything is there
+
+### Cache
+
+A separate user-provided cache is used to remove items from the store
+
+Connect your cache with the store like so:
+
+```ts
+export type StoreCache = {
+    /** item has been inserted into store */
+    insert: (key: string, onTrim: OnTrimFn) => void;
+    /** item has been looked up */
+    lookup: (key: string, onTrim: OnTrimFn) => void;
+};
+
+```
+
+```ts
+const store = new Store({
+    lookup: (key, onTrim) => lru.get(key),
+    insert: (key, onTrim) => lru.set(key, true, onTrim)
+})
+```
+
+`solid-swr` provides this behavior ootb
+
+
+```ts
+import { LRU, createCache } from "solid-swr/cache"
+
+new Store(createCache(new LRU()))
+```
+
+The `onTrim` is how the store connects to the cache,
+call `onTrim(key)` to remove a key from the solid store
+
+In the case above when `lru` tries to set a key it will trim the cache,
+thus removing (if needed) a key
+
+
+### Mutating
+
+TODO docs
+
+## createRevalidator
+
+```ts
+import { createRevalidator } from "solid-swr"
+```
+
+Create a function that revalidates (calls fetcher) a key
+
+This function also deduplicates requests, so when you call it, the actual fetcher call
+is not guaranteed
+
+## createMutator
+
+```ts
+import { createMutator } from "solid-swr"
+```
+
+Create a function that can change any key in the store
+
+## useSwr
+
+```ts
+import { useSwr } from "solid-swr"
+```
+
+Hook that uses `createRevalidator` and `createMutator` to create the swr behavior
+that we all love
+
+Returns:
+
+- `mutate`: `createMutator` scoped to a key
+- `revalidate`: `createRevalidator` scoped to a key
+- `v`: a function that indexes into a solid store
