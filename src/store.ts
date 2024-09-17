@@ -17,6 +17,10 @@ export type StoreItem<D = unknown, E = unknown> = {
 
     /** touch this only if you know what you're doing, this controls deduplication */
     _isBusy: boolean;
+
+    /** whether this item exists in store */
+    _exists: boolean;
+
     _onSuccess: number;
     _onError: number;
 };
@@ -39,6 +43,7 @@ export default class Store {
     private boundDestroy: (key: string) => void;
 
     static defaultItem: StoreItem = {
+        _exists: false,
         _isBusy: false,
         _onSuccess: 0,
         _onError: 0,
@@ -108,6 +113,6 @@ export default class Store {
         if (this.lookup(key)) return;
         this.cache.insert(key, this.boundDestroy);
         // have to copy here
-        this.setStore(key, { ...Store.defaultItem });
+        this.setStore(key, { ...Store.defaultItem, _exists: true });
     }
 }

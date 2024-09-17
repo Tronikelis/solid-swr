@@ -10,15 +10,20 @@ import useSwrFull, { SwrFullProvider, useMatchMutate, useSwrInfinite } from "src
 function Infinite() {
     const mutate = useMatchMutate();
 
-    const { setIndex, data } = useSwrInfinite<{ id: number }, unknown>(
+    const { setIndex, data, isLoading } = useSwrInfinite<{ id: number }, unknown>(
         index => `https://jsonplaceholder.typicode.com/todos/${index + 1}`
     );
 
     return (
         <div>
             {/* <For each={data()}>{item => <p>{item?.id}</p>}</For> */}
-            <For each={data()}>{item => <p>{item().data?.id}</p>}</For>
-
+            <For each={data()}>
+                {item => (
+                    <p>
+                        {item().data?.id} -- {item()._exists ? "exists" : "not exist"}
+                    </p>
+                )}
+            </For>
             <p
                 onClick={() => {
                     mutate(_ => true, undefined);
@@ -26,6 +31,7 @@ function Infinite() {
             >
                 test
             </p>
+            <p>isLoading: {isLoading() ? "y" : "n"}</p>{" "}
             <button onClick={() => setIndex(x => x + 1)}>more</button>
         </div>
     );

@@ -12,12 +12,16 @@ import {
     untrack,
     useContext,
 } from "solid-js";
-import { createStore } from "solid-js/store";
 
 import { StoreItem } from "./store";
-import useSwr, { Mutator, SwrOpts, useSwrContext } from "./swr";
-import { uFn, useWinEvent } from "./utils";
-import { setDefaultResultOrder } from "dns";
+import useSwr, {
+    createMutator,
+    createRevalidator,
+    Mutator,
+    SwrOpts,
+    useSwrContext,
+} from "./swr";
+import { tryCatch, uFn, useWinEvent } from "./utils";
 
 type Fallback = {
     [key: string]: unknown;
@@ -55,29 +59,59 @@ export const SwrFullProvider = (props: {
 
 type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
 
-type MatchMutateFilter = (key: string) => boolean;
-
 export function useMatchMutate() {
     const ctx = useSwrContext();
+    const mutator = createMutator(() => ctx.store);
 
-    const update = <D,>(key: string, mutator: Mutator<D>) => {
-        if (mutator instanceof Function) {
-            ctx.store.updateDataProduce(key, mutator);
-        } else {
-            ctx.store.update(key, { data: mutator });
-        }
-    };
-
-    const mutate = <D,>(filter: MatchMutateFilter, payload: Mutator<D>) => {
+    const mutate = <D,>(filter: (key: string) => boolean, payload: Mutator<D>) => {
         batch(() => {
             const keys = ctx.store.keys().filter(filter);
+
             for (const key of keys) {
-                update(key, payload);
+                mutator(key, payload);
             }
         });
     };
 
     return uFn(mutate);
+}
+
+export function useSwrMutation<A, D, E>(
+    key: Accessor<string | undefined>,
+    fetcher: (arg: A) => Promise<D>
+) {
+    const [isTriggering, setIsTriggering] = createSignal(false);
+    const [err, setErr] = createSignal<E | undefined>();
+
+    const revalidator = createRevalidator();
+    const revalidate = () => {
+        const k = key();
+        if (!k) return;
+        return revalidator(k);
+    };
+
+    /** this throws on errors */
+    const trigger = uFn(async (arg: A): Promise<D> => {
+        setErr(undefined);
+
+        setIsTriggering(true);
+        const [err, res] = await tryCatch<D, E>(() => fetcher(arg));
+        setIsTriggering(false);
+
+        if (err) {
+            setErr(() => err);
+            throw err;
+        }
+
+        return res as D;
+    });
+
+    return {
+        err,
+        isTriggering,
+        trigger,
+        revalidate,
+    };
 }
 
 export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<D, E>>) {
@@ -157,15 +191,17 @@ export default function useSwrFull<D, E>(
     });
 
     const v = createMemo((): StoreItem<D, E> => {
-        const item = ctx.store.lookupOrDef<D, E>(key());
-        if (!ctx.keepPreviousData) return item;
+        let item = ctx.store.lookupOrDef<D, E>(key());
 
         const lazy = ctx.store.lookupOrDef<D, E>(lazyKey());
+        const keepPrev = ctx.keepPreviousData;
 
         // untrack here to not track all item properties when v is accessed
         return untrack(() => {
+            if (keepPrev) item = lazy;
+
             const fallback = key() ? ctx.fallback[key()!] : undefined;
-            const data = item.data || lazy.data || fallback;
+            const data = item.data || fallback;
             // eslint-disable-next-line solid/reactivity
             return mergeProps(item, { data }) as StoreItem<D, E>;
         });

@@ -8,6 +8,7 @@ import {
     mergeProps,
     on,
     onCleanup,
+    untrack,
     useContext,
 } from "solid-js";
 
@@ -66,6 +67,82 @@ export function useSwrLookup<D, E>(key: Accessor<string | undefined>) {
     return () => ctx.store.lookupOrDef<D, E>(key());
 }
 
+export function createRevalidator(store?: Accessor<Store>) {
+    const ctx = useSwrContext();
+
+    return <D, E>(key: string) =>
+        // eslint-disable-next-line solid/reactivity
+        untrack(async () => {
+            const s = store?.() || ctx.store;
+
+            const item = s.lookupOrDef<D, E>(key);
+            if (item._isBusy) return;
+
+            const controller = new AbortController();
+            if (getOwner()) {
+                onCleanup(() => {
+                    s.update(key, { _isBusy: false });
+                    controller.abort();
+                });
+            }
+
+            s.update(key, {
+                err: undefined,
+                _isBusy: true,
+                isLoading: true,
+            });
+
+            const [err, res] = await tryCatch<D, E>(
+                // eslint-disable-next-line solid/reactivity
+                () => ctx.fetcher(key, { signal: controller.signal }) as Promise<D>
+            );
+
+            if (
+                controller.signal.aborted &&
+                err instanceof DOMException &&
+                err.name === "AbortError"
+            ) {
+                return;
+            }
+
+            batch(() => {
+                s.update(key, { _isBusy: false, isLoading: false });
+
+                const item = s.lookupOrDef(key);
+
+                if (err) {
+                    s.update(key, { err, _onError: item._onError + 1 });
+                    ctx.onErrorDeduped(key, err);
+                } else {
+                    s.update(key, {
+                        data: res,
+                        isLoading: false,
+                        _isBusy: false,
+                        _onSuccess: item._onSuccess + 1,
+                    });
+                    ctx.onSuccessDeduped(key, res as D);
+                }
+            });
+
+            return res as D;
+        });
+}
+
+export function createMutator(store?: Accessor<Store>) {
+    const ctx = useSwrContext();
+
+    return <D, E>(key: string, mutator: Mutator<D>) =>
+        untrack(() => {
+            const s = store?.() || ctx.store;
+
+            if (mutator instanceof Function) {
+                s.updateDataProduce(key, mutator);
+            } else {
+                s.update<D, E>(key, { data: mutator });
+            }
+        });
+}
+
 export default function useSwr<D, E>(
     key: Accessor<string | undefined>,
     local?: Partial<SwrOpts<D, E>>
@@ -78,74 +155,11 @@ export default function useSwr<D, E>(
         return fn(k);
     };
 
-    // eslint-disable-next-line solid/reactivity
-    const revalidate = uFn(
-        async (): Promise<D | undefined> =>
-            // eslint-disable-next-line solid/reactivity
-            runWithKey(async k => {
-                const item = ctx.store.lookupOrDef<D, E>(k);
-                if (item._isBusy) return;
+    const revalidator = createRevalidator(() => ctx.store);
+    const mutator = createMutator(() => ctx.store);
 
-                const controller = new AbortController();
-                if (getOwner()) {
-                    onCleanup(() => {
-                        ctx.store.update(k, { _isBusy: false });
-                        controller.abort();
-                    });
-                }
-
-                ctx.store.update(k, {
-                    err: undefined,
-                    _isBusy: true,
-                    isLoading: true,
-                });
-
-                const [err, res] = await tryCatch<D, E>(
-                    // eslint-disable-next-line solid/reactivity
-                    () => ctx.fetcher(k, { signal: controller.signal }) as Promise<D>
-                );
-
-                if (
-                    controller.signal.aborted &&
-                    err instanceof DOMException &&
-                    err.name === "AbortError"
-                ) {
-                    return;
-                }
-
-                batch(() => {
-                    ctx.store.update(k, { _isBusy: false, isLoading: false });
-
-                    const item = ctx.store.lookupOrDef(k);
-
-                    if (err) {
-                        ctx.store.update(k, { err, _onError: item._onError + 1 });
-                        ctx.onErrorDeduped(k, err);
-                    } else {
-                        ctx.store.update(k, {
-                            data: res,
-                            isLoading: false,
-                            _isBusy: false,
-                            _onSuccess: item._onSuccess + 1,
-                        });
-                        ctx.onSuccessDeduped(k, res as D);
-                    }
-                });
-
-                return res as D;
-            })
-    );
-
-    const mutate = uFn((mutator: Mutator<D>): void =>
-        // eslint-disable-next-line solid/reactivity
-        runWithKey(k => {
-            if (mutator instanceof Function) {
-                ctx.store.updateDataProduce(k, mutator);
-            } else {
-                ctx.store.update<D, E>(k, { data: mutator });
-            }
-        })
-    );
+    const revalidate = () => runWithKey(revalidator);
+    const mutate = (payload: Mutator<D>) => runWithKey(k => mutator(k, payload));
 
     uFn(() => {
         // eslint-disable-next-line solid/reactivity
@@ -157,7 +171,7 @@ export default function useSwr<D, E>(
         });
     })();
 
-    createEffect(on(key, revalidate));
+    createEffect(on(key, k => k && revalidator(k)));
 
     createEffect(
         on(
