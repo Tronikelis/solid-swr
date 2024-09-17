@@ -13,14 +13,14 @@ import {
     useContext,
 } from "solid-js";
 
-import { StoreItem } from "./store";
 import useSwr, {
     createMutator,
     createRevalidator,
     Mutator,
     SwrOpts,
     useSwrContext,
-} from "./swr";
+} from "./core";
+import { StoreItem } from "./store";
 import { tryCatch, uFn, useWinEvent } from "./utils";
 
 type Fallback = {

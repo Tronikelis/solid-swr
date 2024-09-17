@@ -13,7 +13,7 @@ import {
 } from "solid-js";
 
 import Store from "./store";
-import { noop, tryCatch, uFn } from "./utils";
+import { noop, tryCatch } from "./utils";
 
 export type FetcherOpts = {
     signal: AbortSignal;
@@ -61,11 +61,6 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
         </Context.Provider>
     );
 };
-
-export function useSwrLookup<D, E>(key: Accessor<string | undefined>) {
-    const ctx = useSwrContext();
-    return () => ctx.store.lookupOrDef<D, E>(key());
-}
 
 export function createRevalidator(store?: Accessor<Store>) {
     const ctx = useSwrContext();
@@ -160,16 +155,6 @@ export default function useSwr<D, E>(
 
     const revalidate = () => runWithKey(revalidator);
     const mutate = (payload: Mutator<D>) => runWithKey(k => mutator(k, payload));
-
-    uFn(() => {
-        // eslint-disable-next-line solid/reactivity
-        runWithKey(k => {
-            const item = ctx.store.lookupOrDef<D, E>(k);
-            if (!item) return;
-            // set defaults here
-            ctx.store.update(k, { isLoading: true });
-        });
-    })();
 
     createEffect(on(key, k => k && revalidator(k)));
 

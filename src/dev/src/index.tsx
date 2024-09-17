@@ -4,8 +4,8 @@ import { render } from "solid-js/web";
 import { createCache } from "src/cache";
 import LRU from "src/lru";
 import Store from "src/store";
-import useSwr, { SwrProvider } from "src/swr";
-import useSwrFull, { SwrFullProvider, useMatchMutate, useSwrInfinite } from "src/swr-full";
+import useSwr, { SwrProvider } from "src/core";
+import useSwrFull, { SwrFullProvider, useMatchMutate, useSwrInfinite } from "src/extra";
 
 function Infinite() {
     const mutate = useMatchMutate();
