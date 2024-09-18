@@ -60,26 +60,24 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
     );
 };
 
-export function createRevalidator(store?: Accessor<Store>) {
-    const ctx = useSwrContext();
+export function createRevalidator(opts?: SwrOpts) {
+    const ctx = opts || useSwrContext();
 
     return <D, E>(key: string) =>
         // eslint-disable-next-line solid/reactivity
         untrack(async () => {
-            const s = store?.() || ctx.store;
-
-            const item = s.lookupOrDef<D, E>(key);
+            const item = ctx.store.lookupOrDef<D, E>(key);
             if (item._isBusy) return;
 
             const controller = new AbortController();
             if (getOwner()) {
                 onCleanup(() => {
-                    s.update(key, { _isBusy: false });
+                    ctx.store.update(key, { _isBusy: false });
                     controller.abort();
                 });
             }
 
-            s.update(key, {
+            ctx.store.update(key, {
                 err: undefined,
                 _isBusy: true,
                 isLoading: true,
@@ -99,18 +97,16 @@ export function createRevalidator(store?: Accessor<Store>) {
             }
 
             batch(() => {
-                s.update(key, { _isBusy: false, isLoading: false });
+                ctx.store.update(key, { _isBusy: false, isLoading: false });
 
-                const item = s.lookupOrDef(key);
+                const item = ctx.store.lookupOrDef(key);
 
                 if (err) {
-                    s.update(key, { err, _onError: item._onError + 1 });
+                    ctx.store.update(key, { err, _onError: item._onError + 1 });
                     ctx.onErrorDeduped(key, err);
                 } else {
-                    s.update(key, {
+                    ctx.store.update(key, {
                         data: res,
-                        isLoading: false,
-                        _isBusy: false,
                         _onSuccess: item._onSuccess + 1,
                     });
                     ctx.onSuccessDeduped(key, res as D);
@@ -121,17 +117,15 @@ export function createRevalidator(store?: Accessor<Store>) {
         });
 }
 
-export function createMutator(store?: Accessor<Store>) {
-    const ctx = useSwrContext();
+export function createMutator(opts?: SwrOpts) {
+    const ctx = opts || useSwrContext();
 
     return <D, E>(key: string, mutator: Mutator<D>) =>
         untrack(() => {
-            const s = store?.() || ctx.store;
-
             if (mutator instanceof Function) {
-                s.updateDataProduce(key, mutator);
+                ctx.store.updateDataProduce(key, mutator);
             } else {
-                s.update<D, E>(key, { data: mutator });
+                ctx.store.update<D, E>(key, { data: mutator });
             }
         });
 }
@@ -148,8 +142,8 @@ export function useSwr<D, E>(
         return fn(k);
     };
 
-    const revalidator = createRevalidator(() => ctx.store);
-    const mutator = createMutator(() => ctx.store);
+    const revalidator = createRevalidator(ctx as SwrOpts);
+    const mutator = createMutator(ctx as SwrOpts);
 
     const revalidate = () => runWithKey(k => revalidator<D, E>(k));
     const mutate = (payload: Mutator<D>) => runWithKey(k => mutator<D, E>(k, payload));

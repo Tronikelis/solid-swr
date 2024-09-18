@@ -36,6 +36,7 @@
   - [useMatchMutate](#usematchmutate)
   - [useSwrInfinite](#useswrinfinite)
   - [useSwrMutation](#useswrmutation)
+  - [createSwrImmutable](#createswrimmutable)
 <!--toc:end-->
 
 # Introduction
@@ -155,8 +156,8 @@ const runWithKey = <T extends (k: string) => any>(fn: T): ReturnType<T> | undefi
     return fn(k);
 };
 
-const revalidator = createRevalidator(() => ctx.store);
-const mutator = createMutator(() => ctx.store);
+const revalidator = createRevalidator(ctx);
+const mutator = createMutator(ctx);
 
 // as you can see, revalidate is just a convenience method to call revalidtor
 const revalidate = () => runWithKey(k => revalidator<D, E>(k));
@@ -377,4 +378,20 @@ mutation.revalidate()
 mutation.isTriggering()
 // errors will be thrown from `.trigger()` and also be set in here
 mutation.err()
+```
+
+## createSwrImmutable
+
+A util that indexes into a store with a key and
+freezes the data contained within after first truthy assignment
+
+Note that this util **COPIES** the data **ONCE**
+
+```ts
+import { createSwrImmutable } from "solid-swr/extra"
+
+const { v } = createSwrImmutable(() => "foo")
+
+// data for "foo" in here
+v()
 ```

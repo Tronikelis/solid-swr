@@ -12,6 +12,7 @@ import {
     untrack,
     useContext,
 } from "solid-js";
+import { createStore, reconcile, unwrap } from "solid-js/store";
 
 import {
     createMutator,
@@ -62,7 +63,7 @@ export type GetKey<D> = (index: number, prev: D | undefined) => string | undefin
 
 export function useMatchMutate() {
     const ctx = useSwrContext();
-    const mutator = createMutator(() => ctx.store);
+    const mutator = createMutator(ctx);
 
     const mutate = <D,>(filter: (key: string) => boolean, payload: Mutator<D>) => {
         batch(() => {
@@ -212,4 +213,29 @@ export function useSwrFull<D, E>(
         ...core,
         v,
     };
+}
+
+/** freezes data after first truthy assignment of it */
+export function createSwrImmutable<D, E>(key: Accessor<string | undefined>) {
+    const ctx = useSwrContext();
+
+    const [data, setData] = createStore<{ v: D | undefined }>({
+        v: undefined,
+    });
+
+    let set = false;
+
+    const trySet = () => {
+        const current = unwrap(ctx.store.lookupOrDef<D, E>(key())).data;
+        if (!current || set) return;
+
+        set = true;
+        setData("v", reconcile(current));
+    };
+
+    trySet();
+
+    createEffect(trySet);
+
+    return { v: () => data.v };
 }
