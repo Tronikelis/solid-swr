@@ -18,11 +18,7 @@
         "strict": true,
         "noFallthroughCasesInSwitch": true,
         "noUncheckedIndexedAccess": true,
-
-        "paths": {
-            "~/*": ["./src/lib/*"]
-        }
     },
 
-    "include": ["src"]
+    "include": ["src"],
 }

@@ -33,7 +33,7 @@ export type SolidStore = {
 
 const defaultCache: StoreCache = {
     insert: noop,
-    lookup: () => true,
+    lookup: noop,
 };
 
 export default class Store {
