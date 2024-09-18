@@ -52,12 +52,10 @@ const Context = createContext<SwrOpts>({
 export const useSwrContext = () => useContext(Context);
 
 export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Element }) => {
-    return (
-        // eslint-disable-next-line solid/reactivity
-        <Context.Provider value={mergeProps(useSwrContext(), props.value)}>
-            {props.children}
-        </Context.Provider>
-    );
+    // eslint-disable-next-line solid/reactivity
+    const value = mergeProps(useSwrContext(), props.value);
+
+    return <Context.Provider value={value}>{props.children}</Context.Provider>;
 };
 
 export function createRevalidator(opts?: SwrOpts) {

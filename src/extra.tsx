@@ -51,12 +51,10 @@ export const SwrFullProvider = (props: {
     children: JSX.Element;
     value: Partial<SwrFullOpts>;
 }) => {
-    return (
-        // eslint-disable-next-line solid/reactivity
-        <Context.Provider value={mergeProps(useSwrFullContext(), props.value)}>
-            {props.children}
-        </Context.Provider>
-    );
+    // eslint-disable-next-line solid/reactivity
+    const value = mergeProps(useSwrFullContext(), props.value);
+
+    return <Context.Provider value={value}>{props.children}</Context.Provider>;
 };
 
 export type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
