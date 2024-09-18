@@ -44,7 +44,7 @@ export const useSwrContext = () => useContext(Context);
 
 const Context = createContext<SwrOpts>({
     store: new Store(),
-    fetcher: k => Promise.resolve(k),
+    fetcher: () => Promise.reject(new Error("pass your own fetcher")),
     onSuccess: noop,
     onError: noop,
     onSuccessDeduped: noop,
