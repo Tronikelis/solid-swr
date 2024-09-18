@@ -40,9 +40,7 @@ export type SwrOpts<D = unknown, E = unknown> = {
  * */
 export type Mutator<D> = D | ((draft: D) => void) | undefined;
 
-export const useSwrContext = () => {
-    return useContext(Context);
-};
+export const useSwrContext = () => useContext(Context);
 
 const Context = createContext<SwrOpts>({
     store: new Store(),

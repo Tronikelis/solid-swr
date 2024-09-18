@@ -24,10 +24,18 @@
 - [Core](#core)
   - [Store](#store)
     - [Cache](#cache)
-    - [Mutating](#mutating)
+    - [Methods](#methods)
   - [createRevalidator](#createrevalidator)
   - [createMutator](#createmutator)
   - [useSwr](#useswr)
+  - [Options](#options)
+    - [Passing options](#passing-options)
+    - [Reading options](#reading-options)
+- [Extra](#extra)
+  - [useSwrFull](#useswrfull)
+  - [useMatchMutate](#usematchmutate)
+  - [useSwrInfinite](#useswrinfinite)
+  - [useSwrMutation](#useswrmutation)
 <!--toc:end-->
 
 # Introduction
@@ -126,7 +134,7 @@ thus:
 
 <details>
     <summary>Simple graph explaining what I've said</summary>
-    <img src="https://github.com/user-attachments/assets/73bfc7ce-c466-4efd-a037-753d5c1816f0">
+    <img src="https://github.com/user-attachments/assets/e6b54292-d51e-4c3f-a83c-10a796437ce2">
 </details>
 
 ## Behavior can be customized through public core APIs
@@ -168,7 +176,7 @@ for you to manage server side state with swr
 
 This is by far **THE** most important part of the library
 
-The store is a solid.js hashmap with the key `string` as the key
+The store is a solid.js store object with the key `string` as the key
 
 ```ts
 export type SolidStore = {
@@ -223,9 +231,13 @@ In the case above when `lru` tries to set a key it will trim the cache,
 thus removing (if needed) a key
 
 
-### Mutating
+### Methods
 
-TODO docs
+Store can be mutated / read with its public methods
+
+- `lookupOrDef`: gets the correct item or returns default
+- `update`: update store while reconciling data
+- `updateProduce`: update store with solid `produce` util
 
 ## createRevalidator
 
@@ -260,3 +272,109 @@ Returns:
 - `mutate`: `createMutator` scoped to a key
 - `revalidate`: `createRevalidator` scoped to a key
 - `v`: a function that indexes into a solid store
+
+
+## Options
+
+```
+src/core.ts
+```
+
+```ts
+export type SwrOpts<D = unknown, E = unknown> = {
+    store: Store;
+
+    fetcher: (key: string, { signal }: FetcherOpts) => Promise<unknown>;
+    /** gets direct store references (don't mutate) */
+    onSuccess: (key: string, res: D) => void;
+    /** gets direct store references (don't mutate) */
+    onError: (key: string, err: E) => void;
+
+    /** gets direct references to response (don't mutate) */
+    onSuccessDeduped: (key: string, res: D) => void;
+    /** gets direct reference to response (don't mutate) */
+    onErrorDeduped: (key: string, err: E) => void;
+};
+```
+
+### Passing options
+
+Options can be passed either to a `useSwr` hook instance or
+with `SwrProvider`
+
+### Reading options
+
+Options can be read with `useSwrContext`
+
+# Extra
+
+```ts
+import * as extra from "solid-swr/extra"
+```
+
+All of the recipes shown here could have been created by using the [#core](#Core) utils
+
+If you have come up with an awesome recipe that's not shown here,
+I would love to add it to `solid-swr`
+
+I encourage you to take a look at `src/extra.tx` to get more context about inner
+workings of these recipes
+
+## useSwrFull
+
+This is similar to the default swr in `solid-swr@v4`
+
+Basically it is [core](#useswr) hook with extra options:
+
+```ts
+export type SwrFullOpts = {
+    keepPreviousData: boolean;
+    revalidateOnFocus: boolean;
+    revalidateOnOnline: boolean;
+    fallback: Fallback;
+    refreshInterval: number;
+};
+```
+
+Setting these options is the same as [in core](#options) but with `useSwrFull*` utils
+
+## useMatchMutate
+
+Uses [createMutator](#createmutator) to mutate multiple keys at once
+
+## useSwrInfinite
+
+Used for infinite loading, returns an array of accessors into correct store index
+
+```ts
+import { useSwrInfinite } from "solid-swr/store"
+
+const { data } = useSwrInfinite((index, prevData) => `https://example.com?page=${index}`)
+
+// here we get first item, then we access the store with second ()
+// then get the actual `data` that we need
+const firstItemData = data()[0]().data
+```
+
+## useSwrMutation
+
+While I added this because it was in v4, I doubt the use cases of this util,
+I believe using `createRevalidator` / `createMutator` or the methods returned by
+[useSwr](#useswr) is the simplest way to go without having an extra abstraction
+
+Anyways, this util is used as a helper for remote mutations
+
+```ts
+import { useSwrMutation } from "solid-swr/extra"
+
+const mutation = useSwrMutation(() => "user", (arg) => fetcher.post("/user", arg))
+
+// call "fetcher.post"
+mutation.trigger()
+// revalidate "user" key
+mutation.revalidate()
+// check if "fetcher.post" is triggering right now
+mutation.isTriggering()
+// errors will be thrown from `.trigger()` and also be set in here
+mutation.err()
+```
