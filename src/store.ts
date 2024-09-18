@@ -36,7 +36,7 @@ const defaultCache: StoreCache = {
     lookup: noop,
 };
 
-export default class Store {
+export class Store {
     private cache: StoreCache;
 
     private store: SolidStore;

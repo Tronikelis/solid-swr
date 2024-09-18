@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import Store, { StoreCache } from "./store";
+import { Store, StoreCache } from "./store";
 import { noop } from "./utils";
 
 describe("store", () => {

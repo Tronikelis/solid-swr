@@ -12,7 +12,7 @@ import {
     useContext,
 } from "solid-js";
 
-import Store from "./store";
+import { Store } from "./store";
 import { noop, tryCatch } from "./utils";
 
 export type FetcherOpts = {
