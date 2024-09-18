@@ -171,13 +171,13 @@ export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<
 
 export function useSwrFull<D, E>(
     key: Accessor<string | undefined>,
-    opts?: Partial<SwrFullOpts & SwrOpts<D, E>>
+    _opts?: Partial<SwrFullOpts & SwrOpts<D, E>>
 ): ReturnType<typeof useSwr<D, E>> {
-    const ctx = mergeProps(useSwrContext(), useSwrFullContext(), opts);
+    const ctx = mergeProps(useSwrContext(), useSwrFullContext(), _opts);
 
     const [lazyKey, setLazyKey] = createSignal("");
 
-    const core = useSwr<D, E>(key, opts);
+    const core = useSwr<D, E>(key, ctx);
 
     createEffect(() => {
         if (ctx.refreshInterval <= 0) return;
