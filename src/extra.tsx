@@ -78,26 +78,33 @@ export function useMatchMutate() {
     return uFn(mutate);
 }
 
-export function useSwrMutation<A, D, E>(
+export function useSwrMutation<A, TD, TE, DD, DE>(
     key: Accessor<string | undefined>,
-    fetcher: (arg: A) => Promise<D>
+    fetcher: (arg: A) => Promise<TD>
 ) {
     const [isTriggering, setIsTriggering] = createSignal(false);
-    const [err, setErr] = createSignal<E | undefined>();
+    const [err, setErr] = createSignal<TE | undefined>();
 
     const revalidator = createRevalidator();
     const revalidate = () => {
         const k = key();
         if (!k) return;
-        return revalidator(k);
+        return revalidator<DD, DE>(k);
+    };
+
+    const mutator = createMutator();
+    const mutate = (payload: Mutator<DD>) => {
+        const k = key();
+        if (!k) return;
+        return mutator<DD, DE>(k, payload);
     };
 
     /** this throws on errors */
-    const trigger = uFn(async (arg: A): Promise<D> => {
+    const trigger = uFn(async (arg: A): Promise<TD> => {
         setErr(undefined);
 
         setIsTriggering(true);
-        const [err, res] = await tryCatch<D, E>(() => fetcher(arg));
+        const [err, res] = await tryCatch<TD, TE>(() => fetcher(arg));
         setIsTriggering(false);
 
         if (err) {
@@ -105,14 +112,15 @@ export function useSwrMutation<A, D, E>(
             throw err;
         }
 
-        return res as D;
+        return res as TD;
     });
 
     return {
         err,
-        isTriggering,
         trigger,
+        mutate,
         revalidate,
+        isTriggering,
     };
 }
 

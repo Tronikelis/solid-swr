@@ -372,7 +372,9 @@ const mutation = useSwrMutation(() => "user", (arg) => fetcher.post("/user", arg
 
 // call "fetcher.post"
 mutation.trigger()
-// revalidate "user" key
+// optimistically mutate a key, (createMutator)
+mutation.mutate()
+// revalidate "user" key (createRevalidator)
 mutation.revalidate()
 // check if "fetcher.post" is triggering right now
 mutation.isTriggering()
