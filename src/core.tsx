@@ -136,7 +136,7 @@ export function createMutator(store?: Accessor<Store>) {
         });
 }
 
-export default function useSwr<D, E>(
+export function useSwr<D, E>(
     key: Accessor<string | undefined>,
     local?: Partial<SwrOpts<D, E>>
 ) {

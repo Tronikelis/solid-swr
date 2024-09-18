@@ -13,11 +13,12 @@ import {
     useContext,
 } from "solid-js";
 
-import useSwr, {
+import {
     createMutator,
     createRevalidator,
     Mutator,
     SwrOpts,
+    useSwr,
     useSwrContext,
 } from "./core";
 import { StoreItem } from "./store";
@@ -159,7 +160,7 @@ export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<
     };
 }
 
-export default function useSwrFull<D, E>(
+export function useSwrFull<D, E>(
     key: Accessor<string | undefined>,
     opts?: Partial<SwrFullOpts & SwrOpts<D, E>>
 ): ReturnType<typeof useSwr<D, E>> {
