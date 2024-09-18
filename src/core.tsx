@@ -40,8 +40,6 @@ export type SwrOpts<D = unknown, E = unknown> = {
  * */
 export type Mutator<D> = D | ((draft: D) => void) | undefined;
 
-export const useSwrContext = () => useContext(Context);
-
 const Context = createContext<SwrOpts>({
     store: new Store(),
     fetcher: () => Promise.reject(new Error("pass your own fetcher")),
@@ -50,6 +48,8 @@ const Context = createContext<SwrOpts>({
     onSuccessDeduped: noop,
     onErrorDeduped: noop,
 });
+
+export const useSwrContext = () => useContext(Context);
 
 export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Element }) => {
     return (
