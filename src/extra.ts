@@ -1,6 +1,7 @@
 import {
     Accessor,
     batch,
+    createComponent,
     createContext,
     createEffect,
     createMemo,
@@ -54,7 +55,14 @@ export const SwrFullProvider = (props: {
     // eslint-disable-next-line solid/reactivity
     const value = mergeProps(useSwrFullContext(), props.value);
 
-    return <Context.Provider value={value}>{props.children}</Context.Provider>;
+    return createComponent(Context.Provider, {
+        get value() {
+            return value;
+        },
+        get children() {
+            return props.children;
+        },
+    });
 };
 
 export type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
@@ -63,7 +71,7 @@ export function useMatchMutate() {
     const ctx = useSwrContext();
     const mutator = createMutator(ctx);
 
-    const mutate = <D,>(filter: (key: string) => boolean, payload: Mutator<D>) => {
+    const mutate = <D>(filter: (key: string) => boolean, payload: Mutator<D>) => {
         batch(() => {
             const keys = ctx.store.keys().filter(filter);
 

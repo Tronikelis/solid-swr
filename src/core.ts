@@ -1,6 +1,7 @@
 import {
     Accessor,
     batch,
+    createComponent,
     createContext,
     createEffect,
     getOwner,
@@ -55,7 +56,14 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
     // eslint-disable-next-line solid/reactivity
     const value = mergeProps(useSwrContext(), props.value);
 
-    return <Context.Provider value={value}>{props.children}</Context.Provider>;
+    return createComponent(Context.Provider, {
+        get value() {
+            return value;
+        },
+        get children() {
+            return props.children;
+        },
+    });
 };
 
 export function createRevalidator(opts?: SwrOpts) {

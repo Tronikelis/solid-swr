@@ -22,7 +22,7 @@
         "./extra": {
             "import": {
                 "types": "./dist/extra.d.ts",
-                "default": "./dist/extra.jsx"
+                "default": "./dist/extra.js"
             }
         }
     },
