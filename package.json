@@ -9,20 +9,20 @@
     "exports": {
         ".": {
             "import": {
-                "types": "./dist/index.js",
-                "default": "./dist/index.d.ts"
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
             }
         },
         "./cache": {
             "import": {
-                "types": "./dist/cache.js",
-                "default": "./dist/cache.d.ts"
+                "types": "./dist/cache.d.ts",
+                "default": "./dist/cache.js"
             }
         },
         "./extra": {
             "import": {
-                "types": "./dist/extra.jsx",
-                "default": "./dist/extra.d.ts"
+                "types": "./dist/extra.d.ts",
+                "default": "./dist/extra.jsx"
             }
         }
     },
