@@ -57,9 +57,7 @@ export const SwrProvider = (props: { value: Partial<SwrOpts>; children: JSX.Elem
     const value = mergeProps(useSwrContext(), props.value);
 
     return createComponent(Context.Provider, {
-        get value() {
-            return value;
-        },
+        value,
         get children() {
             return props.children;
         },

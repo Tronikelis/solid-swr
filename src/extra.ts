@@ -56,9 +56,7 @@ export const SwrFullProvider = (props: {
     const value = mergeProps(useSwrFullContext(), props.value);
 
     return createComponent(Context.Provider, {
-        get value() {
-            return value;
-        },
+        value,
         get children() {
             return props.children;
         },
