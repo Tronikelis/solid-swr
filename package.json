@@ -3,27 +3,26 @@
     "description": "The beloved swr package ported over to solid",
     "version": "5.0.0",
     "type": "module",
-    "main": "./dist/index/index.js",
-    "types": "./dist/index/index.d.ts",
-    "module": "./dist/index/index.js",
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "module": "./dist/index.js",
     "exports": {
         ".": {
             "import": {
-                "types": "./dist/index/index.d.ts",
-                "default": "./dist/index/index.js"
+                "types": "./dist/index.js",
+                "default": "./dist/index.d.ts"
             }
         },
         "./cache": {
             "import": {
-                "types": "./dist/cache/index.d.ts",
-                "default": "./dist/cache/index.js"
+                "types": "./dist/cache.js",
+                "default": "./dist/cache.d.ts"
             }
         },
         "./extra": {
-            "solid": "./dist/extra/index.jsx",
             "import": {
-                "types": "./dist/extra/index.d.ts",
-                "default": "./dist/extra/index.js"
+                "types": "./dist/extra.jsx",
+                "default": "./dist/extra.d.ts"
             }
         }
     },
@@ -48,7 +47,7 @@
     "license": "MIT",
     "scripts": {
         "dev": "vite",
-        "build": "tsup",
+        "build": "tsc",
         "lint": "eslint . -c ./.eslintrc.cjs",
         "test": "vitest",
         "tsc": "tsc --noEmit"
@@ -66,8 +65,6 @@
         "jsdom": "24.0.0",
         "prettier": "3.2.4",
         "prettier-config-tronikelis": "3.0.0",
-        "tsup": "8.0.1",
-        "tsup-preset-solid": "2.2.0",
         "typescript": "5.3.3",
         "vite": "5.0.12",
         "vite-plugin-solid": "2.9.1",
