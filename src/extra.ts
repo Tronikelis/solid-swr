@@ -176,12 +176,16 @@ export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<
 export function useSwrFull<D, E>(
     key: Accessor<string | undefined>,
     _opts?: Partial<SwrFullOpts & SwrOpts<D, E>>
-): ReturnType<typeof useSwr<D, E>> {
+) {
     const ctx = mergeProps(useSwrContext(), useSwrFullContext(), _opts);
 
     const [lazyKey, setLazyKey] = createSignal("");
 
     const core = useSwr<D, E>(key, ctx);
+
+    const [hasFetched, setHasFetched] = createSignal(false);
+    // untrack is probably not needed here
+    setHasFetched(untrack(() => !!core.v().data));
 
     createEffect(() => {
         if (ctx.refreshInterval <= 0) return;
@@ -201,7 +205,10 @@ export function useSwrFull<D, E>(
 
     createEffect(() => {
         const k = key();
-        if (ctx.keepPreviousData && core.v()?.data && k) setLazyKey(k);
+        if (core.v().data) {
+            setHasFetched(true);
+            if (ctx.keepPreviousData && k) setLazyKey(k);
+        }
     });
 
     const v = createMemo((): StoreItem<D, E> => {
@@ -223,6 +230,7 @@ export function useSwrFull<D, E>(
 
     return {
         ...core,
+        hasFetched,
         v,
     };
 }
