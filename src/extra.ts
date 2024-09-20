@@ -204,11 +204,12 @@ export function useSwrFull<D, E>(
     });
 
     createEffect(() => {
+        if (core.v().data || core.v().err) setHasFetched(true);
+    });
+
+    createEffect(() => {
         const k = key();
-        if (core.v().data) {
-            setHasFetched(true);
-            if (ctx.keepPreviousData && k) setLazyKey(k);
-        }
+        if (ctx.keepPreviousData && core.v().data && k) setLazyKey(k);
     });
 
     const v = createMemo((): StoreItem<D, E> => {
