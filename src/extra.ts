@@ -234,19 +234,19 @@ export function useSwrFull<D, E>(
     });
 
     const v = createMemo((): StoreItem<D, E> => {
-        let item = ctx.store.lookupOrDef<D, E>(key());
+        const item = ctx.store.lookupOrDef<D, E>(key());
 
         const lazy = ctx.store.lookupOrDef<D, E>(lazyKey());
         const keepPrev = ctx.keepPreviousData;
 
         // untrack here to not track all item properties when v is accessed
         return untrack(() => {
-            if (keepPrev) item = lazy;
+            let data = item.data;
+            if (keepPrev && lazy.data) data = lazy.data;
 
             const fallback = key() ? ctx.fallback[key()!] : undefined;
-            const data = item.data || fallback;
             // eslint-disable-next-line solid/reactivity
-            return mergeProps(item, { data }) as StoreItem<D, E>;
+            return mergeProps(item, { data: data || fallback }) as StoreItem<D, E>;
         });
     });
 
