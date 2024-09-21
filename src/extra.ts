@@ -65,8 +65,8 @@ export const SwrFullProvider = (props: {
 
 export type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
 
-export function useMatchRevalidate() {
-    const ctx = useSwrContext();
+export function useMatchRevalidate(opts?: SwrOpts) {
+    const ctx = opts || useSwrContext();
     const revalidator = createRevalidator(ctx);
 
     const revalidate = (filter: (key: string) => boolean) => {
@@ -82,8 +82,8 @@ export function useMatchRevalidate() {
     return uFn(revalidate);
 }
 
-export function useMatchMutate() {
-    const ctx = useSwrContext();
+export function useMatchMutate(opts?: SwrOpts) {
+    const ctx = opts || useSwrContext();
     const mutator = createMutator(ctx);
 
     const mutate = <D>(filter: (key: string) => boolean, payload: Mutator<D>) => {
