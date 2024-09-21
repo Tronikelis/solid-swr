@@ -24,7 +24,7 @@ import {
     useSwrContext,
 } from "./core";
 import { StoreItem } from "./store";
-import { tryCatch, uFn, useWinEvent } from "./utils";
+import { runIfTruthy, tryCatch, uFn, useWinEvent } from "./utils";
 
 export type Fallback = {
     [key: string]: unknown;
@@ -65,6 +65,23 @@ export const SwrFullProvider = (props: {
 
 export type GetKey<D> = (index: number, prev: D | undefined) => string | undefined;
 
+export function useMatchRevalidate() {
+    const ctx = useSwrContext();
+    const revalidator = createRevalidator(ctx);
+
+    const revalidate = (filter: (key: string) => boolean) => {
+        batch(() => {
+            const keys = ctx.store.keys().filter(filter);
+
+            for (const key of keys) {
+                void revalidator(key);
+            }
+        });
+    };
+
+    return uFn(revalidate);
+}
+
 export function useMatchMutate() {
     const ctx = useSwrContext();
     const mutator = createMutator(ctx);
@@ -84,24 +101,28 @@ export function useMatchMutate() {
 
 export function useSwrMutation<A, TD, TE, DD, DE>(
     key: Accessor<string | undefined>,
-    fetcher: (arg: A) => Promise<TD>
+    fetcher: (arg: A) => Promise<TD>,
+    filter?: (theirs: string, ours: string) => boolean
 ) {
     const [isTriggering, setIsTriggering] = createSignal(false);
     const [err, setErr] = createSignal<TE | undefined>();
 
+    const matchMutate = useMatchMutate();
+    const matchRevalidate = useMatchRevalidate();
+
     const revalidator = createRevalidator();
-    const revalidate = () => {
-        const k = key();
-        if (!k) return;
-        return revalidator<DD, DE>(k);
-    };
+    const revalidate = () =>
+        runIfTruthy(key, k => {
+            if (filter) return matchRevalidate(theirs => filter(theirs, k));
+            return revalidator<DD, DE>(k);
+        });
 
     const mutator = createMutator();
-    const mutate = (payload: Mutator<DD>) => {
-        const k = key();
-        if (!k) return;
-        return mutator<DD, DE>(k, payload);
-    };
+    const mutate = (payload: Mutator<DD>) =>
+        runIfTruthy(key, k => {
+            if (filter) return matchMutate(theirs => filter(theirs, k), payload);
+            return mutator<DD, DE>(k, payload);
+        });
 
     /** this throws on errors */
     const trigger = uFn(async (arg: A): Promise<TD> => {

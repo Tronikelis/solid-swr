@@ -14,7 +14,7 @@ import {
 } from "solid-js";
 
 import { Store } from "./store";
-import { noop, tryCatch } from "./utils";
+import { noop, runIfTruthy, tryCatch } from "./utils";
 
 export type FetcherOpts = {
     signal: AbortSignal;
@@ -140,11 +140,8 @@ export function useSwr<D, E>(
 ) {
     const ctx = mergeProps(useSwrContext(), local);
 
-    const runWithKey = <T extends (k: string) => any>(fn: T): ReturnType<T> | undefined => {
-        const k = key();
-        if (!k) return;
-        return fn(k);
-    };
+    const runWithKey = <T extends (k: string) => any>(fn: T): ReturnType<T> | undefined =>
+        runIfTruthy(key, fn);
 
     const revalidator = createRevalidator(ctx as SwrOpts);
     const mutator = createMutator(ctx as SwrOpts);
