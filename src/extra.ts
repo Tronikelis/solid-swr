@@ -99,56 +99,6 @@ export function useMatchMutate(opts?: SwrOpts) {
     return uFn(mutate);
 }
 
-export function useSwrMutation<A, TD, TE, DD, DE>(
-    key: Accessor<string | undefined>,
-    fetcher: (arg: A) => Promise<TD>,
-    filter?: (theirs: string, ours: string) => boolean
-) {
-    const [isTriggering, setIsTriggering] = createSignal(false);
-    const [err, setErr] = createSignal<TE | undefined>();
-
-    const matchMutate = useMatchMutate();
-    const matchRevalidate = useMatchRevalidate();
-
-    const revalidator = createRevalidator();
-    const revalidate = () =>
-        runIfTruthy(key, k => {
-            if (filter) return matchRevalidate(theirs => filter(theirs, k));
-            return revalidator<DD, DE>(k);
-        });
-
-    const mutator = createMutator();
-    const mutate = (payload: Mutator<DD>) =>
-        runIfTruthy(key, k => {
-            if (filter) return matchMutate(theirs => filter(theirs, k), payload);
-            return mutator<DD, DE>(k, payload);
-        });
-
-    /** this throws on errors */
-    const trigger = uFn(async (arg: A): Promise<TD> => {
-        setErr(undefined);
-
-        setIsTriggering(true);
-        const [err, res] = await tryCatch<TD, TE>(() => fetcher(arg));
-        setIsTriggering(false);
-
-        if (err) {
-            setErr(() => err);
-            throw err;
-        }
-
-        return res as TD;
-    });
-
-    return {
-        err,
-        trigger,
-        mutate,
-        revalidate,
-        isTriggering,
-    };
-}
-
 export function useSwrInfinite<D, E>(getKey: GetKey<D>, local?: Partial<SwrOpts<D, E>>) {
     const [data, setData] = createSignal<Accessor<StoreItem<D, E>>[]>([]);
     const [err, setErr] = createSignal<E | undefined>();
