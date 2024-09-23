@@ -70,7 +70,7 @@ pnpm i solid-swr
 
 ```tsx
 import { useSwr, SwrProvider, Store } from "solid-swr"
-import { LRU } from "solid-swr/cache"
+import { LRU, createCache } from "solid-swr/cache"
 
 function App() {
     const { v, mutate, revalidate } = useSwr(() => "/api/user/2")
@@ -91,7 +91,7 @@ function App() {
 
 function Root(props) {
     return (
-        <SwrProvider value={{ store: new Store(new LRU()) }}>
+        <SwrProvider value={{ store: new Store(createCache(new LRU())) }}>
             {props.children}
         </SwrProvider>
     )
