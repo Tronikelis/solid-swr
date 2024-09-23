@@ -357,30 +357,6 @@ const { data } = useSwrInfinite((index, prevData) => `https://example.com?page=$
 const firstItemData = data()[0]().data
 ```
 
-## useSwrMutation
-
-While I added this because it was in v4, I doubt the use cases of this util,
-I believe using `createRevalidator` / `createMutator` or the methods returned by
-[useSwr](#useswr) is the simplest way to go without having an extra abstraction
-
-Anyways, this util is used as a helper for remote mutations
-
-```ts
-import { useSwrMutation } from "solid-swr/extra"
-
-const mutation = useSwrMutation(() => "user", (arg) => fetcher.post("/user", arg))
-
-// call "fetcher.post"
-mutation.trigger()
-// optimistically mutate a key, (createMutator)
-mutation.mutate()
-// revalidate "user" key (createRevalidator)
-mutation.revalidate()
-// check if "fetcher.post" is triggering right now
-mutation.isTriggering()
-// errors will be thrown from `.trigger()` and also be set in here
-mutation.err()
-```
 
 ## createSwrImmutable
 
