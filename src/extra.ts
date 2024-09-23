@@ -24,7 +24,7 @@ import {
     useSwrContext,
 } from "./core";
 import { StoreItem } from "./store";
-import { runIfTruthy, tryCatch, uFn, useWinEvent } from "./utils";
+import { uFn, useWinEvent } from "./utils";
 
 export type Fallback = {
     [key: string]: unknown;
