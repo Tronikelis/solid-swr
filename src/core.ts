@@ -9,7 +9,6 @@ import {
     mergeProps,
     on,
     onCleanup,
-    onMount,
     untrack,
     useContext,
 } from "solid-js";
