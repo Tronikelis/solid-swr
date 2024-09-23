@@ -104,7 +104,7 @@ Hook returns 3 values which you can destructure:
 
 - `v`: function that indexes into solid store
 - `mutate`: basically `setStore` but scoped to the key
-- `revalidate`: call fetcher again (not guaranteed to be called due to deduplication)
+- `revalidate`: call fetcher again (not guaranteed to be called due to deduplication), this function returns the result of the fetch call
 
 # Ideaology
 
