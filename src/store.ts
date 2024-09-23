@@ -23,8 +23,12 @@ export type StoreItem<D = unknown, E = unknown> = {
     /** whether this item exists in store */
     _exists: boolean;
 
+    /** used to call onSuccess for every hook */
     _onSuccess: number;
+    /** used to call onError for every hook */
     _onError: number;
+
+    /** how many hooks are attached to this item */
     _mountedCount: number;
 };
 

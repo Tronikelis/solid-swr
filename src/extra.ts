@@ -71,7 +71,11 @@ export function useMatchRevalidate(opts?: SwrOpts) {
 
     const revalidate = (filter: (key: string) => boolean) => {
         batch(() => {
-            const keys = ctx.store.keys().filter(filter);
+            const keys = ctx.store
+                .keys()
+                .filter(filter)
+                // reduce unnecessary network requests
+                .filter(x => ctx.store.lookupOrDef(x)._mountedCount > 0);
 
             for (const key of keys) {
                 void revalidator(key);

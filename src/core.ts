@@ -71,7 +71,7 @@ export function createRevalidator(opts?: SwrOpts) {
         // eslint-disable-next-line solid/reactivity
         untrack(async () => {
             const item = ctx.store.lookupOrDef<D, E>(key);
-            if (item._isBusy || item._mountedCount === 0) return;
+            if (item._isBusy) return;
 
             const controller = new AbortController();
             if (getOwner()) {
@@ -152,11 +152,12 @@ export function useSwr<D, E>(
     createEffect(
         on(key, k => {
             if (!k) return;
+            // rn only used in `useMatchRevalidate`
+            // to reduce network requests for not used items
             ctx.store.mount(k);
+            onCleanup(() => ctx.store.unmount(k));
 
             void revalidator(k);
-
-            onCleanup(() => ctx.store.unmount(k));
         })
     );
 
