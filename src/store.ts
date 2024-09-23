@@ -25,6 +25,7 @@ export type StoreItem<D = unknown, E = unknown> = {
 
     _onSuccess: number;
     _onError: number;
+    _mountedCount: number;
 };
 
 export type SolidStore = {
@@ -45,6 +46,7 @@ export class Store {
     private boundDestroy: (key: string) => void;
 
     static defaultItem: StoreItem = {
+        _mountedCount: 0,
         _exists: false,
         _isBusy: false,
         _onSuccess: 0,
@@ -92,6 +94,15 @@ export class Store {
                 this.setStore(key, "data", reconcile(data));
             }
         });
+    }
+
+    mount(key: string) {
+        const n = untrack(() => this.lookupOrDef(key)._mountedCount + 1);
+        this.update(key, { _mountedCount: n });
+    }
+    unmount(key: string) {
+        const n = untrack(() => this.lookupOrDef(key)._mountedCount - 1);
+        this.update(key, { _mountedCount: Math.max(n, 0) });
     }
 
     lookupOrDef<D, E>(key?: string): StoreItem<D, E> {

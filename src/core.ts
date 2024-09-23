@@ -9,6 +9,7 @@ import {
     mergeProps,
     on,
     onCleanup,
+    onMount,
     untrack,
     useContext,
 } from "solid-js";
@@ -71,7 +72,7 @@ export function createRevalidator(opts?: SwrOpts) {
         // eslint-disable-next-line solid/reactivity
         untrack(async () => {
             const item = ctx.store.lookupOrDef<D, E>(key);
-            if (item._isBusy) return;
+            if (item._isBusy || item._mountedCount === 0) return;
 
             const controller = new AbortController();
             if (getOwner()) {
@@ -148,6 +149,16 @@ export function useSwr<D, E>(
 
     const revalidate = () => runWithKey(k => revalidator<D, E>(k));
     const mutate = (payload: Mutator<D>) => runWithKey(k => mutator<D, E>(k, payload));
+
+    // this is used to track which store items are used
+    // used to skip unnecessary revalidations
+    createEffect(() => {
+        // eslint-disable-next-line solid/reactivity
+        runWithKey(k => {
+            ctx.store.mount(k);
+            onCleanup(() => ctx.store.unmount(k));
+        });
+    });
 
     createEffect(on(key, k => k && revalidator(k)));
 
