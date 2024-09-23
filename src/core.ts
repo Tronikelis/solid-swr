@@ -149,17 +149,16 @@ export function useSwr<D, E>(
     const revalidate = () => runWithKey(k => revalidator<D, E>(k));
     const mutate = (payload: Mutator<D>) => runWithKey(k => mutator<D, E>(k, payload));
 
-    // this is used to track which store items are used
-    // used to skip unnecessary revalidations
-    createEffect(() => {
-        // eslint-disable-next-line solid/reactivity
-        runWithKey(k => {
+    createEffect(
+        on(key, k => {
+            if (!k) return;
             ctx.store.mount(k);
-            onCleanup(() => ctx.store.unmount(k));
-        });
-    });
 
-    createEffect(on(key, k => k && revalidator(k)));
+            void revalidator(k);
+
+            onCleanup(() => ctx.store.unmount(k));
+        })
+    );
 
     createEffect(
         on(
