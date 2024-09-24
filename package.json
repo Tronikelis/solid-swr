@@ -1,15 +1,29 @@
 {
     "name": "solid-swr",
     "description": "The beloved swr package ported over to solid",
-    "version": "4.1.0",
+    "version": "5.0.0",
     "type": "module",
     "main": "./dist/index.js",
     "types": "./dist/index.d.ts",
     "module": "./dist/index.js",
     "exports": {
-        "import": {
-            "types": "./dist/index.d.ts",
-            "default": "./dist/index.js"
+        ".": {
+            "import": {
+                "types": "./dist/index.d.ts",
+                "default": "./dist/index.js"
+            }
+        },
+        "./cache": {
+            "import": {
+                "types": "./dist/cache.d.ts",
+                "default": "./dist/cache.js"
+            }
+        },
+        "./extra": {
+            "import": {
+                "types": "./dist/extra.d.ts",
+                "default": "./dist/extra.js"
+            }
         }
     },
     "files": [
@@ -33,7 +47,7 @@
     "license": "MIT",
     "scripts": {
         "dev": "vite",
-        "build": "tsup",
+        "build": "tsc",
         "lint": "eslint . -c ./.eslintrc.cjs",
         "test": "vitest",
         "tsc": "tsc --noEmit"
@@ -41,9 +55,7 @@
     "peerDependencies": {
         "solid-js": "1.x.x"
     },
-    "dependencies": {
-        "dequal": "^2.0.3"
-    },
+    "dependencies": {},
     "devDependencies": {
         "@solidjs/testing-library": "0.8.5",
         "@testing-library/jest-dom": "6.3.0",
@@ -53,8 +65,6 @@
         "jsdom": "24.0.0",
         "prettier": "3.2.4",
         "prettier-config-tronikelis": "3.0.0",
-        "tsup": "8.0.1",
-        "tsup-preset-solid": "2.2.0",
         "typescript": "5.3.3",
         "vite": "5.0.12",
         "vite-plugin-solid": "2.9.1",
@@ -62,6 +72,5 @@
         "vitest": "1.2.2"
     },
     "browser": {},
-    "typesVersions": {},
     "packageManager": "pnpm@8.15.8+sha512.d1a029e1a447ad90bc96cd58b0fad486d2993d531856396f7babf2d83eb1823bb83c5a3d0fc18f675b2d10321d49eb161fece36fe8134aa5823ecd215feed392"
 }
