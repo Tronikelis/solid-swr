@@ -210,28 +210,3 @@ export function useSwrFull<D, E>(
         v,
     };
 }
-
-/** freezes data after first truthy assignment of it */
-export function createSwrImmutable<D, E>(key: Accessor<string | undefined>) {
-    const ctx = useSwrContext();
-
-    const [data, setData] = createStore<{ v: D | undefined }>({
-        v: undefined,
-    });
-
-    let set = false;
-
-    const trySet = () => {
-        const current = unwrap(ctx.store.lookupOrDef<D, E>(key())).data;
-        if (!current || set) return;
-
-        set = true;
-        setData("v", reconcile(current));
-    };
-
-    trySet();
-
-    createEffect(trySet);
-
-    return { v: () => data.v };
-}

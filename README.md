@@ -34,9 +34,8 @@
 - [Extra](#extra)
   - [useSwrFull](#useswrfull)
   - [useMatchMutate](#usematchmutate)
+  - [useMatchRevalidate](#usematchrevalidate)
   - [useSwrInfinite](#useswrinfinite)
-  - [useSwrMutation](#useswrmutation)
-  - [createSwrImmutable](#createswrimmutable)
 <!--toc:end-->
 
 # Introduction
@@ -343,6 +342,13 @@ Setting these options is the same as [in core](#options) but with `useSwrFull*` 
 
 Uses [createMutator](#createmutator) to mutate multiple keys at once
 
+## useMatchRevalidate
+
+Uses [createRevalidator](#createrevalidator) to revalidate multiple keys at once
+
+This hook also skips revalidating items from the store which do not have any hooks attached to them,
+this is known by looking at `_mountedCount` number
+
 ## useSwrInfinite
 
 Used for infinite loading, returns an array of accessors into correct store index
@@ -358,18 +364,3 @@ const firstItemData = data()[0]().data
 ```
 
 
-## createSwrImmutable
-
-A util that indexes into a store with a key and
-freezes the data contained within after first truthy assignment
-
-Note that this util **COPIES** the data **ONCE**
-
-```ts
-import { createSwrImmutable } from "solid-swr/extra"
-
-const { v } = createSwrImmutable(() => "foo")
-
-// data for "foo" in here
-v()
-```
