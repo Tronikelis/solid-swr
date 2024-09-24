@@ -28,7 +28,7 @@ export type StoreItem<D = unknown, E = unknown> = {
     /** used to call onError for every hook */
     _onError: number;
 
-    /** how many hooks are attached to this item */
+    /** how many hooks (useSwr from core) are attached to this item */
     _mountedCount: number;
 };
 
