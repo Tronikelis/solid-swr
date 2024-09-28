@@ -76,7 +76,7 @@ export class Store {
         return untrack(() => Object.keys(this.store));
     }
 
-    updateDataProduce<D>(key: string, producer: (data: D) => void): void {
+    updateDataProduce<D>(key: string, producer: (data: D | undefined) => void): void {
         batch(() => {
             untrack(() => this.makeExist(key));
             this.setStore(key, "data", produce(producer));

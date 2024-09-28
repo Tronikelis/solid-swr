@@ -39,7 +39,7 @@ export type SwrOpts<D = unknown, E = unknown> = {
  * data will be reconcile'd or produce'd,
  * if `undefined` is passed, data is deleted
  * */
-export type Mutator<D> = D | ((draft: D) => void) | undefined;
+export type Mutator<D> = D | ((draft: D | undefined) => void) | undefined;
 
 const Context = createContext<SwrOpts>({
     store: new Store(),
