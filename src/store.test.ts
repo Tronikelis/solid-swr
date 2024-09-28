@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { Store, StoreCache } from "./store";
@@ -59,5 +61,19 @@ describe("store", () => {
         store.update("3", {});
 
         expect(store.keys()).toEqual(["2", "3"]);
+    });
+
+    it("can update with produce", () => {
+        store.update("1", { data: { foo: { bar: {} } } } as any);
+
+        store.updateDataProduce("1", (prev: any) => {
+            prev.foo.bar = { bar: 2 };
+        });
+
+        expect(store.lookupOrDef("1").data).toEqual(
+            expect.objectContaining({
+                foo: { bar: { bar: 2 } },
+            })
+        );
     });
 });
